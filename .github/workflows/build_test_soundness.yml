@@ -1,0 +1,45 @@
+name: Build And Test
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: swift:6.0.3-amazonlinux2
+
+    steps:
+      # GitHub checkout action has a dep on NodeJS 20 which is not running on Amazonlinux2
+      # workaround is to manually checkout the repository
+      # https://github.com/actions/checkout/issues/1487
+      - name: Manually Clone repository
+        run: |
+          git clone https://github.com/${{ github.repository }} .
+      - name: Build
+        run: swift build
+
+  test:
+    runs-on: ubuntu-latest
+    container: swift:6.0.3-amazonlinux2
+
+    steps:
+      # GitHub checkout action has a dep on NodeJS 20 which is not running on Amazonlinux2
+      # workaround is to manually checkout the repository
+      # https://github.com/actions/checkout/issues/1487
+      - name: Manually Clone repository
+        run: |
+          git clone https://github.com/${{ github.repository }} .
+      - name: Run tests
+        run: swift test
+
+  soundness:
+    name: Soundness
+    uses: swiftlang/github-workflows/.github/workflows/soundness.yml@main
+    with:
+      license_header_check_enabled: true
+      license_header_check_project_name: "Swift Foundation Models Playground"
+      shell_check_enabled: false
+      python_lint_check_enabled: false
+      api_breakage_check_enabled: false
+      docs_check_container_image: "swift:6.0-noble"
+      format_check_container_image: "swift:6.0-noble"
+      yamllint_check_enabled: true
