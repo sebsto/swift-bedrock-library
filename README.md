@@ -8,18 +8,14 @@ This library is a work in progress, feel free to open an issue, but do not use i
 
 First add dependencies: 
 ```bash
-swift package add-dependency https://github.com/monadierickx/swift-bedrock-library.git --branch main
-swift swift package add-target-dependency BedrockService ProjectName
+swift package add-dependency https://github.com/sebsto/swift-bedrock-library.git --branch main
+swift package add-target-dependency BedrockService TargetName
 ```
 
 Next up add `platforms` configuration after `name`
 
 ```swift
-platforms: [
-    .macOS(.v14),
-    .iOS(.v18),
-    .tvOS(.v18)
-],
+platforms: [.macOS(.v15), .iOS(.v18), .tvOS(.v18)],
 ```
 
 Your `Package.swift` should now look something like this: 
@@ -28,19 +24,15 @@ import PackageDescription
 
 let package = Package(
     name: "ProjectName",
-    platforms: [
-        .macOS(.v14),
-        .iOS(.v17),
-        .tvOS(.v17),
-    ],
+    platforms: [.macOS(.v15), .iOS(.v18), .tvOS(.v18)],
     dependencies: [
-        .package(url: "https://github.com/build-on-aws/swift-fm-playground.git", branch: "main")
+        .package(url: "https://github.com/sebsto/swift-bedrock-library.git", branch: "main"),
     ],
     targets: [
         .executableTarget(
-            name: "testje",
+            name: "TargetName",
             dependencies: [
-                .target(name: "BedrockService")
+                .product(name: "BedrockService", package: "swift-bedrock-library"),
             ]
         )
     ]
