@@ -20,9 +20,9 @@ import Foundation
 public struct ConverseResponse {
     let message: Message
 
-    public init(_ message: Message) {
-        self.message = message
-    }
+    // public init(_ message: Message) {
+    //     self.message = message
+    // }
 
     public init(_ output: BedrockRuntimeClientTypes.ConverseOutput) throws {
         guard case .message(let sdkMessage) = output else {
@@ -31,19 +31,19 @@ public struct ConverseResponse {
         self.message = try Message(from: sdkMessage)
     }
 
-    func getReply() -> String {
-        switch message.content.first {
-        case .text(let text):
-            return text
-        default:
-            return "Not found"  // FIXME
-        }
-    }
+    // func getReply() -> String {
+    //     switch message.content.first {
+    //     case .text(let text):
+    //         return text
+    //     default:
+    //         return "Not found"  // FIXME
+    //     }
+    // }
 
-    func getToolUse() -> ToolUseBlock? {
-        if case .toolUse(let toolUse) = message.content.last {
-            return toolUse
-        }
-        return nil
-    }
+    // func getToolUse() -> ToolUseBlock? {
+    //     if case .toolUse(let toolUse) = message.content.last {
+    //         return toolUse
+    //     }
+    //     return nil
+    // }
 }
