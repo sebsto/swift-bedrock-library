@@ -13,7 +13,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-public struct ConverseReply {
+public struct ConverseReply: Codable {
     let history: [Message]
     let textReply: String?
     let toolUse: ToolUseBlock?
