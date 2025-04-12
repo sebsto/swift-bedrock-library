@@ -13,13 +13,21 @@
 //
 //===----------------------------------------------------------------------===//
 
-public struct ConverseReply: Codable {
+public struct ConverseReply: Codable, CustomStringConvertible  {
     let history: [Message]
     let textReply: String?
     let toolUse: ToolUseBlock?
     let imageBlock: ImageBlock?
     let videoBlock: VideoBlock?
     // let reasoningBlock: ReasoningBlock?
+
+    public var description: String {
+        if let textReply  {
+            return textReply
+        } else {
+            return "No text reply found in the last message."
+        }
+    }
 
     // MARK: Initializers
 
@@ -112,5 +120,15 @@ public struct ConverseReply: Codable {
             throw BedrockServiceError.invalidConverseReply("No Video block found in last message.")
         }
         return videoBlock
+    }
+}
+
+/// StringInterpolation for ConverseReply, returns textReply if not nil, throws if textReply is nil
+extension String.StringInterpolation {
+    mutating func appendInterpolation(_ reply: ConverseReply) throws {
+        guard let text = reply.textReply else {
+            throw BedrockServiceError.invalidConverseReply("No text block found in last message.")
+        }
+        appendLiteral(text)
     }
 }
