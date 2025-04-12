@@ -21,6 +21,7 @@ public enum BedrockServiceError: Error {
     case invalidPrompt(String)
     case invalidStopSequences([String], String)
     case invalidURI(String)
+    case invalidConverseReply(String)
     case invalidSDKResponse(String)
     case invalidSDKResponseBody(Data?)
     case completionNotFound(String)
