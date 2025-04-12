@@ -211,14 +211,14 @@ guard model.hasConverseModality() else {
     print("\(model.name) does not support converse")
 }
 
-var (reply, history) = try await bedrock.converse(
+var reply = try await bedrock.converse(
     with: model,
     prompt: "Tell me about rainbows"
 )
 
 print("Assistant: \(reply)")
 
-(reply, history) = try await bedrock.converse(
+reply = try await bedrock.converse(
     with: model,
     prompt: "Do you think birds can see them too?",
     history: history
@@ -230,7 +230,7 @@ print("Assistant: \(reply)")
 Optionally add inference parameters. 
 
 ```swift
-var (reply, history) = try await bedrock.converse(
+var reply = try await bedrock.converse(
     with: model,
     prompt: "Tell me about rainbows",
     history: history,
@@ -252,7 +252,7 @@ guard model.hasConverseModality(.vision) else {
     print("\(model.name) does not support converse")
 }
 
-let (reply, history) = try await bedrock.converse(
+let reply = try await bedrock.converse(
     with model: model,
     prompt: "Can you tell me about this plant?",
     imageFormat: .jpeg,
@@ -266,7 +266,7 @@ print("Assistant: \(reply)")
 Optionally add inference parameters. 
 
 ```swift
-var (reply, history) = try await bedrock.converse(
+var reply = try await bedrock.converse(
     with model: model,
     prompt: "Can you tell me about this plant?",
     imageFormat: .jpeg,
@@ -304,7 +304,7 @@ let inputSchema = JSON([
 let tool = Tool(name: "top_song", inputSchema: inputSchema, description: "Get the most popular song played on a radio station.")
 
 // pass a prompt and the tool to converse
-var (reply, history) = try await bedrock.converse(
+var reply = try await bedrock.converse(
     with model: model,
     prompt: "What is the most popular song on WZPZ?",
     tools: [tool]
@@ -314,17 +314,17 @@ print("Assistant: \(reply)")
 // The reply will be similar to this: "I need to use the \"top_song\" tool to find the most popular song on the radio station WZPZ. I will input the call sign \"WZPZ\" into the tool to get the required information."
 // The last message in the history will contain the tool use request
 
-if case .toolUse(let toolUse) = history.last?.content.last {
-    let id = toolUse.id
-    let name = toolUse.name
-    let input = toolUse.input
+if reply.hasToolUse() {
+    let id = reply.toolUse.id
+    let name = reply.toolUse.name
+    let input = reply.toolUse.input
 
     // Logic to use the tool here
     
     let toolResult = ToolResultBlock("The Best Song Ever", id: id)
 
     // Send the toolResult back to the model
-    (reply, history) = try await bedrock.converse(
+    reply = try await bedrock.converse(
     with: model,
     history: history,
     tools: [tool],
