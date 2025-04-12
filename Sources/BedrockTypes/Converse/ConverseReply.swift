@@ -13,7 +13,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-public struct ConverseReply: Codable, CustomStringConvertible  {
+public struct ConverseReply: Codable, CustomStringConvertible {
     let history: [Message]
     let textReply: String?
     let toolUse: ToolUseBlock?
@@ -22,7 +22,7 @@ public struct ConverseReply: Codable, CustomStringConvertible  {
     // let reasoningBlock: ReasoningBlock?
 
     public var description: String {
-        if let textReply  {
+        if let textReply {
             return textReply
         } else {
             return "No text reply found in the last message."
