@@ -77,10 +77,10 @@ extension BedrockServiceTests {
     @Test("ToolResultBlock Initializer with Data object")
     func toolResultBlockCodable() async throws {
         let data = """
-        {
-            "key": "value"
-        }
-        """.data(using: .utf8)!
+            {
+                "key": "value"
+            }
+            """.data(using: .utf8)!
         let block = try! ToolResultBlock(data, id: "block5")
 
         #expect(block.id == "block5")
