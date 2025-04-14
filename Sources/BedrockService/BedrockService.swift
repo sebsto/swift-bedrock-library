@@ -44,7 +44,7 @@ public struct BedrockService: Sendable {
         bedrockClient: BedrockClientProtocol? = nil,
         bedrockRuntimeClient: BedrockRuntimeClientProtocol? = nil,
         useSSO: Bool = false,
-        ssoProfileName: String? = nil
+        profileName: String? = nil
     ) async throws {
         self.logger = logger ?? BedrockService.createLogger("bedrock.service")
         self.logger.trace(
@@ -61,7 +61,7 @@ public struct BedrockService: Sendable {
             self.bedrockClient = try await BedrockService.createBedrockClient(
                 region: region,
                 useSSO: useSSO,
-                ssoProfileName: ssoProfileName
+                profileName: profileName
             )
             self.logger.trace(
                 "Created bedrockClient",
@@ -76,7 +76,7 @@ public struct BedrockService: Sendable {
             self.bedrockRuntimeClient = try await BedrockService.createBedrockRuntimeClient(
                 region: region,
                 useSSO: useSSO,
-                ssoProfileName: ssoProfileName
+                profileName: profileName
             )
             self.logger.trace(
                 "Created bedrockRuntimeClient",
@@ -99,7 +99,7 @@ public struct BedrockService: Sendable {
         logger.logLevel =
             ProcessInfo.processInfo.environment["BEDROCK_SERVICE_LOG_LEVEL"].flatMap {
                 Logger.Level(rawValue: $0.lowercased())
-            } ?? .trace  // FIXME: trace for me, later .info
+            } ?? .info
         return logger
     }
 
@@ -112,7 +112,7 @@ public struct BedrockService: Sendable {
     static private func createBedrockClient(
         region: Region,
         useSSO: Bool = false,
-        ssoProfileName: String? = nil
+        profileName: String? = nil
     ) async throws
         -> BedrockClientProtocol
     {
@@ -120,7 +120,7 @@ public struct BedrockService: Sendable {
             region: region.rawValue
         )
         if useSSO {
-            config.awsCredentialIdentityResolver = try SSOAWSCredentialIdentityResolver(profileName: ssoProfileName)
+            config.awsCredentialIdentityResolver = try SSOAWSCredentialIdentityResolver(profileName: profileName)
         }
         return BedrockClient(config: config)
     }
@@ -134,7 +134,7 @@ public struct BedrockService: Sendable {
     static private func createBedrockRuntimeClient(
         region: Region,
         useSSO: Bool = false,
-        ssoProfileName: String? = nil
+        profileName: String? = nil
     )
         async throws
         -> BedrockRuntimeClientProtocol
@@ -144,7 +144,7 @@ public struct BedrockService: Sendable {
                 region: region.rawValue
             )
         if useSSO {
-            config.awsCredentialIdentityResolver = try SSOAWSCredentialIdentityResolver(profileName: ssoProfileName)
+            config.awsCredentialIdentityResolver = try SSOAWSCredentialIdentityResolver(profileName: profileName)
         }
         return BedrockRuntimeClient(config: config)
     }
