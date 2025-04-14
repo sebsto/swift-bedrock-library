@@ -48,10 +48,10 @@ public struct ConverseReply: Codable, CustomStringConvertible {
     // MARK: Public functions
 
     /// Returns the conversation history
-    func getHistory() -> [Message] { history }
+    public func getHistory() -> [Message] { history }
 
     /// Returns the latest text reply or throws if the latest message does not contain a text reply
-    func getTextReply() throws -> String {
+    public func getTextReply() throws -> String {
         guard let textReply else {
             throw BedrockServiceError.invalidConverseReply("No text block found in last message.")
         }
@@ -59,7 +59,7 @@ public struct ConverseReply: Codable, CustomStringConvertible {
     }
 
     /// Returns the latest tool use request or throws if the latest message does not contain a tool use request
-    func getToolUse() throws -> ToolUseBlock {
+    public func getToolUse() throws -> ToolUseBlock {
         guard let toolUse else {
             throw BedrockServiceError.invalidConverseReply("No ToolUse block found in last message.")
         }
@@ -67,7 +67,7 @@ public struct ConverseReply: Codable, CustomStringConvertible {
     }
 
     /// Returns the latest image block or throws if the latest message does not contain an image block
-    func getImageBlock() throws -> ImageBlock {
+    public func getImageBlock() throws -> ImageBlock {
         guard let imageBlock else {
             throw BedrockServiceError.invalidConverseReply("No Image block found in last message.")
         }
@@ -75,7 +75,7 @@ public struct ConverseReply: Codable, CustomStringConvertible {
     }
 
     /// Returns the latest video block or throws if the latest message does not contain a video block
-    func getVideoBlock() throws -> VideoBlock {
+    public func getVideoBlock() throws -> VideoBlock {
         guard let videoBlock else {
             throw BedrockServiceError.invalidConverseReply("No Video block found in last message.")
         }
@@ -130,4 +130,3 @@ extension String.StringInterpolation {
         appendLiteral(text)
     }
 }
-
