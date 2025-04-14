@@ -27,7 +27,9 @@ public struct Tool: Codable {
             throw BedrockServiceError.invalidToolName("Tool name is not allowed to be empty")
         }
         guard name.contains(/[a-zA-Z0-9_-]+/) else {
-            throw BedrockServiceError.invalidToolName("Tool name must consist of only lowercase letter, uppercase letters, digits, underscores and hyphens")
+            throw BedrockServiceError.invalidToolName(
+                "Tool name must consist of only lowercase letter, uppercase letters, digits, underscores and hyphens"
+            )
         }
         self.name = name
         self.inputSchema = inputSchema
