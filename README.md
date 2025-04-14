@@ -9,7 +9,7 @@ This library is a work in progress, feel free to open an issue, but do not use i
 First add dependencies: 
 ```bash
 swift package add-dependency https://github.com/sebsto/swift-bedrock-library.git --branch main
-swift package add-target-dependency BedrockService TargetName
+swift package add-target-dependency BedrockService TargetName --package swift-bedrock-library
 ```
 
 Next up add `platforms` configuration after `name`
@@ -39,7 +39,7 @@ let package = Package(
 )
 ```
 
-2. Import the BedrockService and BedrockTypes
+1. Import the BedrockService and BedrockTypes
 
 ```swift 
 import BedrockService
@@ -79,16 +79,18 @@ Choose a BedrockModel that supports text generation, you can verify this using t
 The function returns a `TextCompletion` object containg the generated text.
 
 ```swift
-let model = .anthropicClaude3Sonnet
+let model: BedrockModel = .nova_micro
 
 guard model.hasTextModality() else {
-    print("\(model.name) does not support text completion")
+    throw MyError.incorrectModality("\(model.name) does not support text generation")
 }
 
 let textCompletion = try await bedrock.completeText(
     "Write a story about a space adventure",
     with: model
 )
+
+print(textCompletion.completion)
 ```
 
 Optionally add inference parameters.
@@ -126,12 +128,12 @@ let model: BedrockModel = .nova_canvas
 
 guard model.hasImageModality(),
       model.hasTextToImageModality() else {
-    print("\(model.name) does not support image generation")
+    throw MyError.incorrectModality("\(model.name) does not support image generation")
 }
 
 let imageGeneration = try await bedrock.generateImage(
     "A serene landscape with mountains at sunset",
-    with: model,
+    with: model
 )
 ```
 
@@ -171,7 +173,7 @@ let model: BedrockModel = .nova_canvas
 
 guard model.hasImageVariationModality(),
       model.hasImageVariationModality() else {
-    print("\(model.name) does not support image variations")
+    throw MyError.incorrectModality("\(model.name) does not support image variation generation")
 }
 
 let imageVariations = try await bedrock.generateImageVariation(
@@ -208,7 +210,7 @@ Note that the minimum, maximum and default values for each parameter are model s
 let model: BedrockModel = .nova_lite
 
 guard model.hasConverseModality() else {
-    print("\(model.name) does not support converse")
+    throw MyError.incorrectModality("\(model.name) does not support converse")
 }
 
 var reply = try await bedrock.converse(
@@ -249,11 +251,11 @@ var reply = try await bedrock.converse(
 let model: BedrockModel = .nova_lite
 
 guard model.hasConverseModality(.vision) else {
-    print("\(model.name) does not support converse")
+    throw MyError.incorrectModality("\(model.name) does not support converse")
 }
 
 let reply = try await bedrock.converse(
-    with model: model,
+    with: model,
     prompt: "Can you tell me about this plant?",
     imageFormat: .jpeg,
     imageBytes: base64EncodedImage
@@ -283,7 +285,7 @@ let model: BedrockModel = .nova_lite
 
 // verify that the model supports tool usage
 guard model.hasConverseModality(.toolUse) else {
-    print("\(model.name) does not support converse tools")
+    throw MyError.incorrectModality("\(model.name) does not support converse tools")
 }
 
 // define the inputschema for your tool
@@ -301,23 +303,19 @@ let inputSchema = JSON([
 ])
 
 // create a Tool object
-let tool = Tool(name: "top_song", inputSchema: inputSchema, description: "Get the most popular song played on a radio station.")
+let tool = try Tool(name: "top_song", inputSchema: inputSchema, description: "Get the most popular song played on a radio station.")
 
 // pass a prompt and the tool to converse
 var reply = try await bedrock.converse(
-    with model: model,
+    with: model,
     prompt: "What is the most popular song on WZPZ?",
     tools: [tool]
 )
 
-print("Assistant: \(reply)")  
-// The reply will be similar to this: "I need to use the \"top_song\" tool to find the most popular song on the radio station WZPZ. I will input the call sign \"WZPZ\" into the tool to get the required information."
-// The last message in the history will contain the tool use request
-
-if reply.hasToolUse() {
-    let id = reply.toolUse.id
-    let name = reply.toolUse.name
-    let input = reply.toolUse.input
+if let toolUse = try? reply.getToolUse() {
+    let id = toolUse.id
+    let name = toolUse.name
+    let input = toolUse.input
 
     // Logic to use the tool here
     
@@ -326,7 +324,7 @@ if reply.hasToolUse() {
     // Send the toolResult back to the model
     reply = try await bedrock.converse(
     with: model,
-    history: history,
+    history: reply.getHistory(),
     tools: [tool],
     toolResult: toolResult
     )
@@ -371,6 +369,72 @@ let replyMessage = try await bedrock.converse(
     tools: [toolA, toolB]
 )
 ```
+
+### JSON
+
+The `JSON` struct is a lightweight and flexible wrapper for working with JSON-like data in Swift. It provides convenient methods and initializers to parse, access, and manipulate JSON data while maintaining type safety and versatility.
+
+#### Creating a JSON Object
+
+You can create a `JSON` object by wrapping raw values or constructing nested structures:
+```swift
+let json = JSON([
+    "name": JSON("Jane Doe"),
+    "age": JSON(30),
+    "isMember": JSON(true),
+])
+```
+#### Creating JSON object from String
+
+The `JSON` struct provides an initializer to parse valid JSON strings into a `JSON` object:
+
+```swift
+let validJSONString = """
+{
+    "name": "Jane Doe",
+    "age": 30,
+    "isMember": true
+}
+"""
+
+do {
+    let json = try JSON(from: validJSONString)
+    print(json.getValue("name") ?? "No name") // Output: Jane Doe
+} catch {
+    print("Failed to parse JSON:", error)
+}
+```
+
+#### Accessing values using `getValue`
+
+The `getValue(_ key: String)` method retrieves values of the specified type from the JSON object:
+
+```swift
+if let name: String = json.getValue("name") {
+    print("Name:", name) // Output: Name: Jane Doe
+}
+
+if let age: Int = json.getValue("age") {
+    print("Age:", age) // Output: Age: 30
+}
+
+if let isMember: Bool = json.getValue("isMember") {
+    print("Is Member:", isMember) // Output: Is Member: true
+}
+```
+
+#### Accessing values using subscripts
+
+You can also access values dynamically using subscripts:
+
+```swift
+let name = json["name"].value as? String
+print("Name:", name ?? "Unknown") // Output: Name: Jane Doe
+
+let nonExistent = json["nonExistentKey"].value
+print(nonExistent == nil) // Output: true
+```
+
 
 ## How to add a BedrockModel
 

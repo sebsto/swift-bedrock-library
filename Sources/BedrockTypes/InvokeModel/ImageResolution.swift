@@ -16,6 +16,6 @@
 import Foundation
 
 public struct ImageResolution: Codable, Equatable, Sendable {
-    let width: Int
-    let height: Int
+    public let width: Int
+    public let height: Int
 }
