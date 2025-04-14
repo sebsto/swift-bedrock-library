@@ -16,10 +16,41 @@
 import Foundation
 
 public struct JSON: Codable {
-    var value: Any?
+    public var value: Any?
+
+    subscript(key: String) -> JSON {
+        get {
+            if let dictionary = value as? [String: JSON] {
+                return dictionary[key] ?? JSON(nil)
+            }
+            return JSON(nil)
+        }
+    }
+
+    public func getValue<T>(_ key: String) -> T? {
+        if let dictionary = value as? [String: JSON] {
+            return dictionary[key]?.value as? T
+        }
+        return nil
+    }
+
+    // MARK: Initializers
 
     public init(_ value: Any?) {
         self.value = value
+    }
+
+    public init(from string: String) throws {
+        guard let data = string.data(using: .utf8) else {
+            throw BedrockServiceError.encodingError("Could not encode String to Data")
+        }
+        guard let decodedValue = try? JSONSerialization.jsonObject(with: data, options: []) else {
+            throw BedrockServiceError.decodingError("Could not decode value from Data")
+        }
+        guard let dictionary = decodedValue as? [String: Any] else {
+            throw BedrockServiceError.decodingError("Could not decode JSON from Data")
+        }
+        self.value = dictionary.mapValues { JSON($0) }
     }
 
     public init(from decoder: Decoder) throws {
@@ -42,6 +73,8 @@ public struct JSON: Codable {
             throw DecodingError.dataCorruptedError(in: container, debugDescription: "Unsupported type")
         }
     }
+
+    // MARK: Public Methods
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
