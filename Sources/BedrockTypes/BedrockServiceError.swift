@@ -31,4 +31,5 @@ public enum BedrockServiceError: Error {
     case notImplemented(String)
     case notSupported(String)
     case notFound(String)
+    case authenticationFailed(String)
 }

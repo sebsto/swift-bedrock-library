@@ -17,13 +17,14 @@
 @preconcurrency import AWSBedrockRuntime
 import AWSClientRuntime
 import AWSSDKIdentity
+import AwsCommonRuntimeKit
 import BedrockTypes
 import Foundation
 import Logging
 
 public struct BedrockService: Sendable {
     package let region: Region
-    package let logger: Logger
+    package let logger: Logging.Logger
     package let bedrockClient: BedrockClientProtocol
     package let bedrockRuntimeClient: BedrockRuntimeClientProtocol
 
@@ -39,7 +40,7 @@ public struct BedrockService: Sendable {
     /// - Throws: Error if client initialization fails
     public init(
         region: Region = .useast1,
-        logger: Logger? = nil,
+        logger: Logging.Logger? = nil,
         bedrockClient: BedrockClientProtocol? = nil,
         bedrockRuntimeClient: BedrockRuntimeClientProtocol? = nil,
         useSSO: Bool = false,
@@ -93,8 +94,8 @@ public struct BedrockService: Sendable {
     /// Creates Logger using either the loglevel saved as environment variable `BEDROCK_SERVICE_LOG_LEVEL` or with default `.trace`
     /// - Parameter name: The name/label for the logger
     /// - Returns: Configured Logger instance
-    static private func createLogger(_ name: String) -> Logger {
-        var logger: Logger = Logger(label: name)
+    static private func createLogger(_ name: String) -> Logging.Logger {
+        var logger: Logging.Logger = Logger(label: name)
         logger.logLevel =
             ProcessInfo.processInfo.environment["BEDROCK_SERVICE_LOG_LEVEL"].flatMap {
                 Logger.Level(rawValue: $0.lowercased())
@@ -177,8 +178,27 @@ public struct BedrockService: Sendable {
                 ]
             )
             return modelsInfo
+
+        } catch let commonError as CommonRunTimeError {
+            switch commonError {
+            case .crtError(let crtError):
+                switch crtError.code {
+                case 6153:
+                    throw BedrockServiceError.authenticationFailed(
+                        "No valid credentials found: \(crtError.message)"
+                    )
+                case 6170:
+                    throw BedrockServiceError.authenticationFailed(
+                        "AWS SSO token expired: \(crtError.message)"
+                    )
+                default:
+                    throw BedrockServiceError.authenticationFailed(
+                        "Authentication failed: \(crtError.message)"
+                    )
+                }
+            }
         } catch {
-            logger.trace("Error while listing foundation models", metadata: ["error": "\(error)"])
+            // logger.trace("Error while listing foundation models", metadata: ["error": "\(error)"])
             throw error
         }
     }
