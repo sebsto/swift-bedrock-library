@@ -1,0 +1,125 @@
+//===----------------------------------------------------------------------===//
+//
+// This source file is part of the Swift Foundation Models Playground open source project
+//
+// Copyright (c) 2025 Amazon.com, Inc. or its affiliates
+//                    and the Swift Foundation Models Playground project authors
+// Licensed under Apache License v2.0
+//
+// See LICENSE.txt for license information
+// See CONTRIBUTORS.txt for the list of Swift Foundation Models Playground project authors
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+//===----------------------------------------------------------------------===//
+
+import Foundation
+import Testing
+
+@testable import BedrockTypes
+
+// MARK: ToolResultBlockTests
+
+extension BedrockServiceTests {
+
+    @Test("ToolResultBlock Initializer with ID and String Content")
+    func toolResultBlockInitializerWithString() async throws {
+        let block = ToolResultBlock("Hello, Swift!", id: "block1")
+        #expect(block.id == "block1")
+        #expect(block.content.count == 1)
+        var reply: String
+        if case .text(let text) = block.content.first {
+            reply = text
+        } else {
+            reply = ""
+        }
+        #expect(reply == "Hello, Swift!")
+        #expect(block.status == .success)
+    }
+
+    @Test("ToolResultBlock Initializer with ID and JSON Content")
+    func toolResultBlockInitializerWithJSON() async throws {
+        let json = JSON(["key": JSON("value")])
+        let block = ToolResultBlock(json, id: "block2")
+        #expect(block.id == "block2")
+        #expect(block.content.count == 1)
+        if case .json(let json) = block.content.first {
+            #expect(json.getValue("key") == "value")
+        } else {
+            #expect(false, "Expected .json case in content")
+        }
+        #expect(block.status == .success)
+    }
+
+    @Test("ToolResultBlock Initializer with ID and Image Content")
+    func toolResultBlockInitializerWithImage() async throws {
+        let image = ImageBlock(format: .jpeg, source: "mockmockmockmockmockmockmockmockmock")
+        let block = ToolResultBlock(image, id: "block3")
+        #expect(block.id == "block3")
+        #expect(block.content.count == 1)
+
+        if case .image(let imageContent) = block.content.first {
+            #expect(imageContent.format == image.format)
+        } else {
+            #expect(false, "Expected .image case in content")
+        }
+        #expect(block.status == .success)
+    }
+
+    @Test("ToolResultBlock Initializer with Failed Status")
+    func toolResultBlockFailedInitializer() async throws {
+        let block = ToolResultBlock.failed("block4")
+        #expect(block.id == "block4")
+        #expect(block.content.isEmpty)
+        #expect(block.status == .error)
+    }
+
+    @Test("ToolResultBlock Initializer with Data object")
+    func toolResultBlockCodable() async throws {
+        let data = """
+        {
+            "key": "value"
+        }
+        """.data(using: .utf8)!
+        let block = try! ToolResultBlock(data, id: "block5")
+
+        #expect(block.id == "block5")
+        #expect(block.content.count == 1)
+        if case .json(let json) = block.content.first {
+            #expect(json.getValue("key") == "value")
+        } else {
+            #expect(false, "Expected .json case in content")
+        }
+        #expect(block.status == block.status)
+    }
+
+    @Test("ToolResultBlock Initializer with Codable Object")
+    func toolResultBlockInitializerWithCodableObject() async throws {
+        struct TestObject: Codable {
+            let name: String
+            let age: Int
+        }
+
+        let object = TestObject(name: "Jane", age: 30)
+        let block = try ToolResultBlock(object, id: "block6")
+
+        #expect(block.id == "block6")
+        #expect(block.content.count == 1)
+
+        if case .json(let jsonContent) = block.content.first {
+            #expect(jsonContent.getValue("name") == "Jane")
+            #expect(jsonContent.getValue("age") == 30)
+        } else {
+            #expect(false, "Expected .json case in content")
+        }
+    }
+
+    @Test("ToolResultBlock Initializer with Invalid Data Throws Error")
+    func toolResultBlockInitializerWithInvalidData() async throws {
+        let invalidData = Data([0x00, 0x01, 0x02])  // Invalid data for JSON decoding
+
+        #expect(throws: BedrockServiceError.self) {
+            let _ = try ToolResultBlock(invalidData, id: "block7")
+        }
+    }
+}

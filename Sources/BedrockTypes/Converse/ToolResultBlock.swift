@@ -57,6 +57,22 @@ public struct ToolResultBlock: Codable {
         self.init(id: id, content: [], status: .error)
     }
 
+    /// convenience initializer for ToolResultBlock for Data
+    public init(_ data: Data, id: String) throws {
+        guard let json = try? JSON(from: data) else {
+            throw BedrockServiceError.decodingError("Could not decode JSON from Data")
+        }
+        self.init(json, id: id)
+    }
+
+    /// convenience initializer for ToolResultBlock for any Codable
+    public init<T: Codable>(_ object: T, id: String) throws {
+        guard let data = try? JSONEncoder().encode(object) else {
+            throw BedrockServiceError.encodingError("Could not encode object to JSON")
+        }
+        try self.init(data, id: id)
+    }
+
     public init(from sdkToolResultBlock: BedrockRuntimeClientTypes.ToolResultBlock) throws {
         guard let sdkToolResultContent = sdkToolResultBlock.content else {
             throw BedrockServiceError.decodingError(

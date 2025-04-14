@@ -53,6 +53,16 @@ public struct JSON: Codable {
         self.value = dictionary.mapValues { JSON($0) }
     }
 
+    public init(from data: Data) throws {
+        guard let decodedValue = try? JSONSerialization.jsonObject(with: data, options: []) else {
+            throw BedrockServiceError.decodingError("Could not decode value from Data")
+        }
+        guard let dictionary = decodedValue as? [String: Any] else {
+            throw BedrockServiceError.decodingError("Could not decode JSON from Data")
+        }
+        self.value = dictionary.mapValues { JSON($0) }
+    }
+
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         if container.decodeNil() {
