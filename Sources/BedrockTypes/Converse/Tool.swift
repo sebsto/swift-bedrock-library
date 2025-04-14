@@ -22,7 +22,13 @@ public struct Tool: Codable {
     public let inputSchema: JSON
     public let description: String?
 
-    public init(name: String, inputSchema: JSON, description: String? = nil) {
+    public init(name: String, inputSchema: JSON, description: String? = nil) throws {
+        guard !name.isEmpty else {
+            throw BedrockServiceError.invalidToolName("Tool name is not allowed to be empty")
+        }
+        guard name.contains(/[a-zA-Z0-9_-]+/) else {
+            throw BedrockServiceError.invalidToolName("Tool name must consist of only lowercase letter, uppercase letters, digits, underscores and hyphens")
+        }
         self.name = name
         self.inputSchema = inputSchema
         self.description = description
@@ -45,7 +51,7 @@ public struct Tool: Codable {
             )
         }
         let inputSchema = try smithyDocument.toJSON()
-        self = Tool(
+        self = try Tool(
             name: name,
             inputSchema: inputSchema,
             description: sdkToolSpecification.description

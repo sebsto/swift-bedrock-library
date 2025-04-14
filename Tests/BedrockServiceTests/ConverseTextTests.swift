@@ -28,11 +28,11 @@ extension BedrockServiceTests {
         arguments: NovaTestConstants.TextGeneration.validPrompts
     )
     func converseWithValidPrompt(prompt: String) async throws {
-        let (output, _) = try await bedrock.converse(
+        let output = try await bedrock.converse(
             with: BedrockModel.nova_micro,
             prompt: prompt
         )
-        #expect(output == "Your prompt was: \(prompt)")
+        #expect(output.textReply == "Your prompt was: \(prompt)")
     }
 
     @Test(
@@ -55,12 +55,12 @@ extension BedrockServiceTests {
     )
     func converseWithValidTemperature(temperature: Double) async throws {
         let prompt = "This is a test"
-        let (output, _) = try await bedrock.converse(
+        let output = try await bedrock.converse(
             with: BedrockModel.nova_micro,
             prompt: prompt,
             temperature: temperature
         )
-        #expect(output == "Your prompt was: \(prompt)")
+        #expect(output.textReply == "Your prompt was: \(prompt)")
     }
 
     @Test(
@@ -85,12 +85,12 @@ extension BedrockServiceTests {
     )
     func converseWithValidMaxTokens(maxTokens: Int) async throws {
         let prompt = "This is a test"
-        let (output, _) = try await bedrock.converse(
+        let output = try await bedrock.converse(
             with: BedrockModel.nova_micro,
             prompt: prompt,
             maxTokens: maxTokens
         )
-        #expect(output == "Your prompt was: \(prompt)")
+        #expect(output.textReply == "Your prompt was: \(prompt)")
     }
 
     @Test(
@@ -115,12 +115,12 @@ extension BedrockServiceTests {
     )
     func converseWithValidTopP(topP: Double) async throws {
         let prompt = "This is a test"
-        let (output, _) = try await bedrock.converse(
+        let output = try await bedrock.converse(
             with: BedrockModel.nova_micro,
             prompt: prompt,
             topP: topP
         )
-        #expect(output == "Your prompt was: \(prompt)")
+        #expect(output.textReply == "Your prompt was: \(prompt)")
     }
 
     @Test(
@@ -145,11 +145,11 @@ extension BedrockServiceTests {
     )
     func converseWithValidTopK(stopSequences: [String]) async throws {
         let prompt = "This is a test"
-        let (output, _) = try await bedrock.converse(
+        let output = try await bedrock.converse(
             with: BedrockModel.nova_micro,
             prompt: prompt,
             stopSequences: stopSequences
         )
-        #expect(output == "Your prompt was: \(prompt)")
+        #expect(output.textReply == "Your prompt was: \(prompt)")
     }
 }

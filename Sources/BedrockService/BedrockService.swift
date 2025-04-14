@@ -90,13 +90,13 @@ public struct BedrockService: Sendable {
 
     // MARK: - Private Helpers
 
-    /// Creates Logger using either the loglevel saved as environment variable `SWIFT_BEDROCK_LOG_LEVEL` or with default `.trace`
+    /// Creates Logger using either the loglevel saved as environment variable `BEDROCK_SERVICE_LOG_LEVEL` or with default `.trace`
     /// - Parameter name: The name/label for the logger
     /// - Returns: Configured Logger instance
     static private func createLogger(_ name: String) -> Logger {
         var logger: Logger = Logger(label: name)
         logger.logLevel =
-            ProcessInfo.processInfo.environment["SWIFT_BEDROCK_LOG_LEVEL"].flatMap {
+            ProcessInfo.processInfo.environment["BEDROCK_SERVICE_LOG_LEVEL"].flatMap {
                 Logger.Level(rawValue: $0.lowercased())
             } ?? .trace  // FIXME: trace for me, later .info
         return logger

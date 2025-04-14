@@ -13,7 +13,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Testing
+ import Testing
 
 @testable import BedrockService
 @testable import BedrockTypes
@@ -23,6 +23,7 @@ struct BedrockServiceTests {
     let bedrock: BedrockService
 
     init() async throws {
+        print("checkpoint: init")
         self.bedrock = try await BedrockService(
             bedrockClient: MockBedrockClient(),
             bedrockRuntimeClient: MockBedrockRuntimeClient()
@@ -33,6 +34,7 @@ struct BedrockServiceTests {
 
     @Test("List all models")
     func listModels() async throws {
+        print("checkpoint: list models")
         let models: [ModelSummary] = try await bedrock.listModels()
         #expect(models.count == 3)
         #expect(models[0].modelId == "anthropic.claude-instant-v1")

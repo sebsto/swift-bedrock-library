@@ -48,7 +48,7 @@ import BedrockTypes
 
 3. Initialize the BedrockService
 
-Choose what Region to use, whether to use AWS SSO authentication instead of standard credentials and pass a logger. If no region is passed it will default to `.useast1`, if no logger is provided a default logger with the name `bedrock.service` is created. The log level will be set to the environment variable `SWIFT_BEDROCK_LOG_LEVEL` or default to `.trace`. If `useSSO` is not defined it will default to `false` and use the standard credentials for authentication.
+Choose what Region to use, whether to use AWS SSO authentication instead of standard credentials and pass a logger. If no region is passed it will default to `.useast1`, if no logger is provided a default logger with the name `bedrock.service` is created. The log level will be set to the environment variable `BEDROCK_SERVICE_LOG_LEVEL` or default to `.trace`. If `useSSO` is not defined it will default to `false` and use the standard credentials for authentication.
 
 ```swift 
 let bedrock = try await BedrockService(
@@ -122,7 +122,7 @@ Choose a BedrockModel that supports image generation - you can verify this using
 The function returns an ImageGenerationOutput object containing an array of generated images in base64 format.
 
 ```swift
-let model = .nova_canvas
+let model: BedrockModel = .nova_canvas
 
 guard model.hasImageModality(),
       model.hasTextToImageModality() else {
@@ -167,7 +167,7 @@ Choose a BedrockModel that supports image variations - you can verify this using
 This function returns an `ImageGenerationOutput` object containing an array of generated image variations in base64 format. Each variation will maintain key characteristics of the source images while introducing creative differences.
 
 ```swift
-let model = .nova_canvas
+let model: BedrockModel = .nova_canvas
 
 guard model.hasImageVariationModality(),
       model.hasImageVariationModality() else {
@@ -205,7 +205,7 @@ Note that the minimum, maximum and default values for each parameter are model s
 ### Text prompt
 
 ```swift
-let model = .nova_lite
+let model: BedrockModel = .nova_lite
 
 guard model.hasConverseModality() else {
     print("\(model.name) does not support converse")
@@ -246,7 +246,7 @@ var reply = try await bedrock.converse(
 ### Vision
 
 ```swift
-let model = .nova_lite
+let model: BedrockModel = .nova_lite
 
 guard model.hasConverseModality(.vision) else {
     print("\(model.name) does not support converse")
@@ -279,7 +279,7 @@ var reply = try await bedrock.converse(
 ### Tools
 
 ```swift
-let model = .nova_lite
+let model: BedrockModel = .nova_lite
 
 // verify that the model supports tool usage
 guard model.hasConverseModality(.toolUse) else {
@@ -342,13 +342,13 @@ Alternatively use the `converse` function that does not take a `prompt`, `toolRe
 
 ```swift
 // Message with prompt
-let (reply, history) = try await bedrock.converse(
+let replyMessage = try await bedrock.converse(
     with: model,
     conversation: [Message("What day of the week is it?")]
 )
 
 // Optionally add inference parameters
-let (reply, history) = try await bedrock.converse(
+let replyMessage = try await bedrock.converse(
     with: model,
     conversation: [Message("What day of the week is it?")],
     maxTokens: 512,
@@ -359,13 +359,13 @@ let (reply, history) = try await bedrock.converse(
 )
 
 // Message with an image and prompt
-let (reply, history) = try await bedrock.converse(
+let replyMessage = try await bedrock.converse(
     with: model,
     conversation: [Message("What is in the this teacup?", imageFormat: .jpeg, imageBytes: base64EncodedImage)],
 )
 
 // Message with toolResult
-let (reply, history) = try await bedrock.converse(
+let replyMessage = try await bedrock.converse(
     with: model,
     conversation: [Message(toolResult)],
     tools: [toolA, toolB]
