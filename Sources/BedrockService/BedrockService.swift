@@ -198,7 +198,7 @@ public struct BedrockService: Sendable {
                 }
             }
         } catch {
-            // logger.trace("Error while listing foundation models", metadata: ["error": "\(error)"])
+            logger.trace("Error while listing foundation models", metadata: ["error": "\(error)"])
             throw error
         }
     }
