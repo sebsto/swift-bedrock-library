@@ -20,5 +20,4 @@ import Testing
 @Suite("BedrockTypes Tests")
 struct BedrockTypesTests {
 
-    
 }
