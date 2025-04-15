@@ -262,6 +262,8 @@ extension BedrockService {
         with model: BedrockModel,
         prompt: String? = nil,
         image: ImageBlock? = nil,
+        document: DocumentBlock? = nil,
+        history: [Message]? = [],
         maxTokens: Int? = nil,
         temperature: Double? = nil,
         topP: Double? = nil,
@@ -270,11 +272,12 @@ extension BedrockService {
         tools: [Tool]? = nil,
         toolResult: ToolResultBlock? = nil
     ) async throws -> ConverseReply {
-        var history: [Message] = []
+        var history = history ?? []
         return try await converse(
             with: model,
             prompt: prompt,
             image: image,
+            document: document,
             history: &history,
             maxTokens: maxTokens,
             temperature: temperature,
