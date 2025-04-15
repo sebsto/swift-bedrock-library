@@ -43,11 +43,11 @@ extension BedrockTypesTests {
         let block = ToolResultBlock(json, id: "block2")
         #expect(block.id == "block2")
         #expect(block.content.count == 1)
+        var value = ""
         if case .json(let json) = block.content.first {
-            #expect(json.getValue("key") == "value")
-        } else {
-            #expect(false, "Expected .json case in content")
+            value = json.getValue("key") ?? ""
         }
+        #expect(value == "value")
         #expect(block.status == .success)
     }
 
@@ -57,12 +57,12 @@ extension BedrockTypesTests {
         let block = ToolResultBlock(image, id: "block3")
         #expect(block.id == "block3")
         #expect(block.content.count == 1)
-
-        if case .image(let imageContent) = block.content.first {
-            #expect(imageContent.format == image.format)
-        } else {
-            #expect(false, "Expected .image case in content")
+        var imageContent: ImageBlock = ImageBlock(format: .png, source: "")
+        if case .image(let img) = block.content.first {
+            imageContent = img
         }
+        #expect(imageContent.source == image.source)
+        #expect(imageContent.format == image.format)
         #expect(block.status == .success)
     }
 
@@ -85,11 +85,11 @@ extension BedrockTypesTests {
 
         #expect(block.id == "block5")
         #expect(block.content.count == 1)
+        var value = ""
         if case .json(let json) = block.content.first {
-            #expect(json.getValue("key") == "value")
-        } else {
-            #expect(false, "Expected .json case in content")
+            value = json.getValue("key") ?? ""
         }
+        #expect(value == "value")
         #expect(block.status == block.status)
     }
 
@@ -99,19 +99,18 @@ extension BedrockTypesTests {
             let name: String
             let age: Int
         }
-
         let object = TestObject(name: "Jane", age: 30)
         let block = try ToolResultBlock(object, id: "block6")
-
         #expect(block.id == "block6")
         #expect(block.content.count == 1)
-
+        var name = ""
+        var age = 0
         if case .json(let jsonContent) = block.content.first {
-            #expect(jsonContent.getValue("name") == "Jane")
-            #expect(jsonContent.getValue("age") == 30)
-        } else {
-            #expect(false, "Expected .json case in content")
+            name = jsonContent.getValue("name") ?? ""
+            age = jsonContent.getValue("age") ?? 0
         }
+        #expect(name == "Jane")
+        #expect(age == 30)
     }
 
     @Test("ToolResultBlock Initializer with Invalid Data Throws Error")

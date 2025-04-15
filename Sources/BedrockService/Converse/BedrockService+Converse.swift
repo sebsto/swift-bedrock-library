@@ -14,6 +14,7 @@
 //===----------------------------------------------------------------------===//
 
 @preconcurrency import AWSBedrockRuntime
+import AwsCommonRuntimeKit
 import BedrockTypes
 import Foundation
 
@@ -107,6 +108,24 @@ extension BedrockService {
             }
             let converseResponse = try ConverseResponse(converseOutput)
             return converseResponse.message
+        } catch let commonError as CommonRunTimeError {
+            switch commonError {
+            case .crtError(let crtError):
+                switch crtError.code {
+                case 6153:
+                    throw BedrockServiceError.authenticationFailed(
+                        "No valid credentials found: \(crtError.message)"
+                    )
+                case 6170:
+                    throw BedrockServiceError.authenticationFailed(
+                        "AWS SSO token expired: \(crtError.message)"
+                    )
+                default:
+                    throw BedrockServiceError.authenticationFailed(
+                        "Authentication failed: \(crtError.message)"
+                    )
+                }
+            }
         } catch {
             logger.trace("Error while conversing", metadata: ["error": "\(error)"])
             throw error
@@ -196,6 +215,11 @@ extension BedrockService {
                         Message(prompt, imageFormat: imageFormat, imageBytes: imageBytes)
                     )
                 } else {
+                    guard imageFormat == nil, imageBytes == nil else {
+                        throw BedrockServiceError.invalidPrompt(
+                            "Image format and image bytes must both be provided or neither."
+                        )
+                    }
                     messages.append(Message(prompt))
                 }
             }
@@ -271,5 +295,53 @@ extension BedrockService {
         )
         history = reply.getHistory()
         return reply
+    }
+
+    /// Use Converse API without needing to make Messages
+    /// - Parameters:
+    ///   - model: The BedrockModel to converse with
+    ///   - prompt: Optional text prompt for the conversation
+    ///   - image: ImageBlock to include in the message
+    ///   - history: Optional array of previous messages
+    ///   - maxTokens: Optional maximum number of tokens to generate
+    ///   - temperature: Optional temperature parameter for controlling randomness
+    ///   - topP: Optional top-p parameter for nucleus sampling
+    ///   - stopSequences: Optional array of sequences where generation should stop
+    ///   - systemPrompts: Optional array of system prompts to guide the conversation
+    ///   - tools: Optional array of tools the model can use
+    ///   - toolResult: Optional result from a previous tool invocation
+    /// - Throws: BedrockServiceError.notSupported for parameters or functionalities that are not supported
+    ///           BedrockServiceError.invalidParameter for invalid parameters
+    ///           BedrockServiceError.invalidPrompt if the prompt is empty or too long
+    ///           BedrockServiceError.invalidModality for invalid modality from the selected model
+    ///           BedrockServiceError.invalidSDKResponse if the response body is missing
+    /// - Returns: A ConverseReply object
+    public func converse(
+        with model: BedrockModel,
+        prompt: String? = nil,
+        image: ImageBlock,
+        history: [Message] = [],
+        maxTokens: Int? = nil,
+        temperature: Double? = nil,
+        topP: Double? = nil,
+        stopSequences: [String]? = nil,
+        systemPrompts: [String]? = nil,
+        tools: [Tool]? = nil,
+        toolResult: ToolResultBlock? = nil
+    ) async throws -> ConverseReply {
+        try await converse(
+            with: model,
+            prompt: prompt,
+            imageFormat: image.format,
+            imageBytes: image.source,
+            history: history,
+            maxTokens: maxTokens,
+            temperature: temperature,
+            topP: topP,
+            stopSequences: stopSequences,
+            systemPrompts: systemPrompts,
+            tools: tools,
+            toolResult: toolResult
+        )
     }
 }
