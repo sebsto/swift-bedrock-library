@@ -223,7 +223,7 @@ print("Assistant: \(reply)")
 reply = try await bedrock.converse(
     with: model,
     prompt: "Do you think birds can see them too?",
-    history: history
+    history: &history
 )
 
 print("Assistant: \(reply)")
@@ -235,7 +235,7 @@ Optionally add inference parameters.
 var reply = try await bedrock.converse(
     with: model,
     prompt: "Tell me about rainbows",
-    history: history,
+    history: &history,
     maxTokens: 1024,
     temperature: 0.2,
     topP: 0.8,
