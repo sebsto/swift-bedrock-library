@@ -428,10 +428,10 @@ if let isMember: Bool = json.getValue("isMember") {
 You can also access values dynamically using subscripts:
 
 ```swift
-let name = json["name"].value as? String
+let name: String = json["name"]
 print("Name:", name ?? "Unknown") // Output: Name: Jane Doe
 
-let nonExistent = json["nonExistentKey"].value
+let nonExistent = json["nonExistentKey"]
 print(nonExistent == nil) // Output: true
 ```
 

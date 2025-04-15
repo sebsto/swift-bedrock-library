@@ -172,7 +172,7 @@ extension BedrockService {
             }
 
             if let toolResult {
-                guard let _: [Tool] = tools else {
+                guard let _ = tools else {
                     throw BedrockServiceError.invalidPrompt("Tool result is defined but tools are not.")
                 }
                 guard case .toolUse(_) = messages.last?.content.last else {
