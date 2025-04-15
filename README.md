@@ -254,7 +254,7 @@ guard model.hasConverseModality(.vision) else {
     throw MyError.incorrectModality("\(model.name) does not support converse vision")
 }
 
-let image = ImageBlock(format: .jpeg, source: base64EncodedImage)
+let image = try ImageBlock(format: .jpeg, source: base64EncodedImage)
 var history: [Message] = []
 
 let reply = try await bedrock.converse(
