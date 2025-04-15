@@ -137,7 +137,8 @@ extension BedrockService {
         with model: BedrockModel,
         prompt: String? = nil,
         image: ImageBlock? = nil,
-        history: [Message] = [],
+        document: DocumentBlock? = nil,
+        history: inout [Message],
         maxTokens: Int? = nil,
         temperature: Double? = nil,
         topP: Double? = nil,
@@ -155,7 +156,6 @@ extension BedrockService {
             ]
         )
         do {
-            var messages = history
             let modality: ConverseModality = try model.getConverseModality()
 
             try validateConverseParams(modality: modality, prompt: prompt)
@@ -170,18 +170,25 @@ extension BedrockService {
                 }
             }
 
+            var content: [Content] = []
+
+            // tool result
             if let toolResult {
                 guard let _ = tools else {
                     throw BedrockServiceError.invalidPrompt("Tool result is defined but tools are not.")
                 }
-                guard case .toolUse(_) = messages.last?.content.last else {
+                guard case .toolUse(_) = history.last?.content.last else {
                     throw BedrockServiceError.invalidPrompt("Tool result is defined but last message is not tool use.")
                 }
-                messages.append(Message(toolResult))
+                content.append(.toolResult(toolResult))
             } else {
+                // text prompt
                 guard let prompt = prompt else {
                     throw BedrockServiceError.invalidPrompt("Prompt is not defined.")
                 }
+                content.append(.text(prompt))
+
+                // image prompt
                 if let image {
                     guard model.hasConverseModality(.vision) else {
                         throw BedrockServiceError.invalidModality(
@@ -190,16 +197,27 @@ extension BedrockService {
                             "This model does not support converse vision."
                         )
                     }
-                    messages.append(
-                        Message(prompt, imageBlock: image)
-                    )
-                } else {
-                    messages.append(Message(prompt))
+                    content.append(.image(image))
+                }
+
+                // document prompt
+                if let document {
+                    guard model.hasConverseModality(.document) else {
+                        throw BedrockServiceError.invalidModality(
+                            model,
+                            modality,
+                            "This model does not support converse document."
+                        )
+                    }
+                    content.append(.document(document))
                 }
             }
-            let message = try await converse(
+
+            history.append(Message(from: .user, content: content))
+
+            let assistantMessage = try await converse(
                 with: model,
-                conversation: messages,
+                conversation: history,
                 maxTokens: maxTokens,
                 temperature: temperature,
                 topP: topP,
@@ -207,12 +225,14 @@ extension BedrockService {
                 systemPrompts: systemPrompts,
                 tools: tools
             )
-            messages.append(message)
+
+            history.append(assistantMessage)
+
             logger.trace(
                 "Received message",
-                metadata: ["replyMessage": "\(message)", "messages.count": "\(messages.count)"]
+                metadata: ["replyMessage": "\(assistantMessage)", "history.count": "\(history.count)"]
             )
-            return try ConverseReply(messages)
+            return try ConverseReply(history)
         } catch {
             logger.trace("Error while conversing", metadata: ["error": "\(error)"])
             throw error
@@ -241,8 +261,7 @@ extension BedrockService {
     public func converse(
         with model: BedrockModel,
         prompt: String? = nil,
-        image: ImageBlock,
-        history: inout [Message],
+        image: ImageBlock? = nil,
         maxTokens: Int? = nil,
         temperature: Double? = nil,
         topP: Double? = nil,
@@ -251,11 +270,12 @@ extension BedrockService {
         tools: [Tool]? = nil,
         toolResult: ToolResultBlock? = nil
     ) async throws -> ConverseReply {
-        let reply = try await converse(
+        var history: [Message] = []
+        return try await converse(
             with: model,
             prompt: prompt,
             image: image,
-            history: history,
+            history: &history,
             maxTokens: maxTokens,
             temperature: temperature,
             topP: topP,
@@ -264,8 +284,6 @@ extension BedrockService {
             tools: tools,
             toolResult: toolResult
         )
-        history = reply.getHistory()
-        return reply
     }
 
     /// Use Converse API without needing to make Messages
@@ -293,7 +311,7 @@ extension BedrockService {
         prompt: String? = nil,
         imageFormat: ImageBlock.Format,
         imageBytes: String,
-        history: [Message] = [],
+        history: inout [Message],
         maxTokens: Int? = nil,
         temperature: Double? = nil,
         topP: Double? = nil,
@@ -306,7 +324,7 @@ extension BedrockService {
             with: model,
             prompt: prompt,
             image: ImageBlock(format: imageFormat, source: imageBytes),
-            history: history,
+            history: &history,
             maxTokens: maxTokens,
             temperature: temperature,
             topP: topP,

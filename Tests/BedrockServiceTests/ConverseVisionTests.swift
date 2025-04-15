@@ -24,12 +24,14 @@ extension BedrockServiceTests {
 
     @Test("Converse with vision")
     func converseVision() async throws {
+        var history: [Message] = []
         let bytes = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
         let reply = try await bedrock.converse(
             with: BedrockModel.nova_lite,
             prompt: "What is this?",
             imageFormat: .jpeg,
-            imageBytes: bytes
+            imageBytes: bytes,
+            history: &history
         )
         #expect(reply.textReply == "Image received")
     }
