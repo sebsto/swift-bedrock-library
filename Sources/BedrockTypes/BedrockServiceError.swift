@@ -19,6 +19,7 @@ public enum BedrockServiceError: Error {
     case invalidParameter(ParameterName, String)
     case invalidModality(BedrockModel, Modality, String)
     case invalidPrompt(String)
+    case invalid(String)
     case invalidStopSequences([String], String)
     case invalidURI(String)
     case invalidConverseReply(String)
@@ -32,4 +33,5 @@ public enum BedrockServiceError: Error {
     case notSupported(String)
     case notFound(String)
     case authenticationFailed(String)
+    case unknownError(String)
 }

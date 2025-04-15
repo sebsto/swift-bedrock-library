@@ -26,7 +26,7 @@ public struct MockBedrockRuntimeClient: BedrockRuntimeClientProtocol {
     // MARK: converse
     public func converse(input: ConverseInput) async throws -> ConverseOutput {
         guard let messages = input.messages,
-            let content = messages.last?.content?.first
+            let content = messages.last?.content?.last
         else {
             throw AWSBedrockRuntime.ValidationException(message: "Missing required message content")
         }
@@ -55,10 +55,19 @@ public struct MockBedrockRuntimeClient: BedrockRuntimeClientProtocol {
                 content: [.text("Your prompt was: \(prompt)")],
                 role: .assistant
             )
-        case .toolresult(let _):
+        case .toolresult(_):
             message = BedrockRuntimeClientTypes.Message(
                 content: [.text("Tool result received")],
-                // content: [.text("Your tool result was: \(toolresult)")],
+                role: .assistant
+            )
+        case .image(_):
+            message = BedrockRuntimeClientTypes.Message(
+                content: [.text("Image received")],
+                role: .assistant
+            )
+        case .document(_):
+            message = BedrockRuntimeClientTypes.Message(
+                content: [.text("Document received")],
                 role: .assistant
             )
         default:
@@ -72,24 +81,20 @@ public struct MockBedrockRuntimeClient: BedrockRuntimeClientProtocol {
     // MARK: invokeModel
 
     public func invokeModel(input: InvokeModelInput) async throws -> InvokeModelOutput {
-        print("checkpoint 1")
         guard let modelId = input.modelId else {
             throw AWSBedrockRuntime.ValidationException(
                 message: "Malformed input request, please reformat your input and try again."
             )
         }
-        print("checkpoint 2")
         guard let inputBody = input.body else {
             throw AWSBedrockRuntime.ValidationException(
                 message: "Malformed input request, please reformat your input and try again."
             )
         }
         let model: BedrockModel = BedrockModel(rawValue: modelId)!
-        print("checkpoint 3")
 
         switch model.modality.getName() {
         case "Amazon Image Generation":
-            print("checkpoint 3.1")
             return InvokeModelOutput(body: try getImageGeneration(body: inputBody))
         case "Nova Text Generation":
             return InvokeModelOutput(body: try invokeNovaModel(body: inputBody))
@@ -100,13 +105,11 @@ public struct MockBedrockRuntimeClient: BedrockRuntimeClientProtocol {
         default:
             throw AWSBedrockRuntime.ValidationException(
                 message: "Malformed input request, please reformat your input and try again."
-                    // message: "Hier in de default! model: \(String(describing: model))"
             )
         }
     }
 
     private func getImageGeneration(body: Data) throws -> Data {
-        print("Checking image generation input")
         guard
             let json: [String: Any] = try? JSONSerialization.jsonObject(
                 with: body,
@@ -119,8 +122,6 @@ public struct MockBedrockRuntimeClient: BedrockRuntimeClientProtocol {
                 message: "Malformed input request, please reformat your input and try again."
             )
         }
-        print("Returning mockimage(s)")
-
         let nrOfImages = imageGenerationConfig["numberOfImages"] as? Int ?? 1
         let mockBase64Image =
             "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="

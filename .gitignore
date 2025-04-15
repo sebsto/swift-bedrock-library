@@ -19,3 +19,4 @@ xcuserdata/
 .env
 img/generated_images
 .vscode
+Makefile

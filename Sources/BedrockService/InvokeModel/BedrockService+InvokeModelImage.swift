@@ -14,6 +14,7 @@
 //===----------------------------------------------------------------------===//
 
 @preconcurrency import AWSBedrockRuntime
+import AwsCommonRuntimeKit
 import BedrockTypes
 import Foundation
 
@@ -105,8 +106,8 @@ extension BedrockService {
             )
             return try invokemodelResponse.getGeneratedImage()
         } catch {
-            logger.trace("Error while generating image", metadata: ["error": "\(error)"])
-            throw error
+            try handleCommonError(error, context: "listing foundation models")
+            throw BedrockServiceError.unknownError("\(error)")  // FIXME: handleCommonError will always throw
         }
     }
 
@@ -208,8 +209,8 @@ extension BedrockService {
             )
             return try invokemodelResponse.getGeneratedImage()
         } catch {
-            logger.trace("Error while generating image variations", metadata: ["error": "\(error)"])
-            throw error
+            try handleCommonError(error, context: "listing foundation models")
+            throw BedrockServiceError.unknownError("\(error)")  // FIXME: handleCommonError will always throw
         }
     }
 

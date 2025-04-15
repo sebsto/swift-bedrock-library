@@ -181,6 +181,32 @@ public struct BedrockService: Sendable {
         }
     }
 
+    func handleCommonError(_ error: Error, context: String) throws {
+        if let commonError = error as? CommonRunTimeError {
+            logger.trace("CommonRunTimeError while \(context)", metadata: ["error": "\(error)"])
+            switch commonError {
+            case .crtError(let crtError):
+                switch crtError.code {
+                case 6153:
+                    throw BedrockServiceError.authenticationFailed(
+                        "No valid credentials found: \(crtError.message)"
+                    )
+                case 6170:
+                    throw BedrockServiceError.authenticationFailed(
+                        "AWS SSO token expired: \(crtError.message)"
+                    )
+                default:
+                    throw BedrockServiceError.authenticationFailed(
+                        "Authentication failed: \(crtError.message)"
+                    )
+                }
+            }
+        } else {
+            logger.trace("Error while \(context)", metadata: ["error": "\(error)"])
+            throw error
+        }
+    }
+
     // MARK: Public Methods
 
     /// Lists all available foundation models from Amazon Bedrock
@@ -210,28 +236,9 @@ public struct BedrockService: Sendable {
                 ]
             )
             return modelsInfo
-
-        } catch let commonError as CommonRunTimeError {
-            switch commonError {
-            case .crtError(let crtError):
-                switch crtError.code {
-                case 6153:
-                    throw BedrockServiceError.authenticationFailed(
-                        "No valid credentials found: \(crtError.message)"
-                    )
-                case 6170:
-                    throw BedrockServiceError.authenticationFailed(
-                        "AWS SSO token expired: \(crtError.message)"
-                    )
-                default:
-                    throw BedrockServiceError.authenticationFailed(
-                        "Authentication failed: \(crtError.message)"
-                    )
-                }
-            }
         } catch {
-            logger.trace("Error while listing foundation models", metadata: ["error": "\(error)"])
-            throw error
+            try handleCommonError(error, context: "listing foundation models")
+            throw BedrockServiceError.unknownError("\(error)")  // FIXME: handleCommonError will always throw
         }
     }
 }

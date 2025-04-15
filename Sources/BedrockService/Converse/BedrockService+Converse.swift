@@ -14,6 +14,7 @@
 //===----------------------------------------------------------------------===//
 
 @preconcurrency import AWSBedrockRuntime
+import AwsCommonRuntimeKit
 import BedrockTypes
 import Foundation
 
@@ -108,8 +109,8 @@ extension BedrockService {
             let converseResponse = try ConverseResponse(converseOutput)
             return converseResponse.message
         } catch {
-            logger.trace("Error while conversing", metadata: ["error": "\(error)"])
-            throw error
+            try handleCommonError(error, context: "listing foundation models")
+            throw BedrockServiceError.unknownError("\(error)")  // FIXME: handleCommonError will always throw
         }
     }
 
@@ -117,8 +118,7 @@ extension BedrockService {
     /// - Parameters:
     ///   - model: The BedrockModel to converse with
     ///   - prompt: Optional text prompt for the conversation
-    ///   - imageFormat: Optional format for image input
-    ///   - imageBytes: Optional base64 encoded image data
+    ///   - image: ImageBlock to include in the message
     ///   - history: Optional array of previous messages
     ///   - maxTokens: Optional maximum number of tokens to generate
     ///   - temperature: Optional temperature parameter for controlling randomness
@@ -136,8 +136,7 @@ extension BedrockService {
     public func converse(
         with model: BedrockModel,
         prompt: String? = nil,
-        imageFormat: ImageBlock.Format? = nil,
-        imageBytes: String? = nil,
+        image: ImageBlock? = nil,
         history: [Message] = [],
         maxTokens: Int? = nil,
         temperature: Double? = nil,
@@ -183,8 +182,7 @@ extension BedrockService {
                 guard let prompt = prompt else {
                     throw BedrockServiceError.invalidPrompt("Prompt is not defined.")
                 }
-
-                if let imageFormat, let imageBytes {
+                if let image {
                     guard model.hasConverseModality(.vision) else {
                         throw BedrockServiceError.invalidModality(
                             model,
@@ -193,7 +191,7 @@ extension BedrockService {
                         )
                     }
                     messages.append(
-                        Message(prompt, imageFormat: imageFormat, imageBytes: imageBytes)
+                        Message(prompt, imageBlock: image)
                     )
                 } else {
                     messages.append(Message(prompt))
@@ -225,8 +223,7 @@ extension BedrockService {
     /// - Parameters:
     ///   - model: The BedrockModel to converse with
     ///   - prompt: Optional text prompt for the conversation
-    ///   - imageFormat: Optional format for image input
-    ///   - imageBytes: Optional base64 encoded image data
+    ///   - image: ImageBlock to include in the message
     ///   - history: Array of previous messages that will be updated with the new conversation
     ///   - maxTokens: Optional maximum number of tokens to generate
     ///   - temperature: Optional temperature parameter for controlling randomness
@@ -244,8 +241,7 @@ extension BedrockService {
     public func converse(
         with model: BedrockModel,
         prompt: String? = nil,
-        imageFormat: ImageBlock.Format? = nil,
-        imageBytes: String? = nil,
+        image: ImageBlock,
         history: inout [Message],
         maxTokens: Int? = nil,
         temperature: Double? = nil,
@@ -258,8 +254,7 @@ extension BedrockService {
         let reply = try await converse(
             with: model,
             prompt: prompt,
-            imageFormat: imageFormat,
-            imageBytes: imageBytes,
+            image: image,
             history: history,
             maxTokens: maxTokens,
             temperature: temperature,
@@ -271,5 +266,54 @@ extension BedrockService {
         )
         history = reply.getHistory()
         return reply
+    }
+
+    /// Use Converse API without needing to make Messages
+    /// - Parameters:
+    ///   - model: The BedrockModel to converse with
+    ///   - prompt: Optional text prompt for the conversation
+    ///   - imageFormat: Optional format for image input
+    ///   - imageBytes: Optional base64 encoded image data
+    ///   - history: Optional array of previous messages
+    ///   - maxTokens: Optional maximum number of tokens to generate
+    ///   - temperature: Optional temperature parameter for controlling randomness
+    ///   - topP: Optional top-p parameter for nucleus sampling
+    ///   - stopSequences: Optional array of sequences where generation should stop
+    ///   - systemPrompts: Optional array of system prompts to guide the conversation
+    ///   - tools: Optional array of tools the model can use
+    ///   - toolResult: Optional result from a previous tool invocation
+    /// - Throws: BedrockServiceError.notSupported for parameters or functionalities that are not supported
+    ///           BedrockServiceError.invalidParameter for invalid parameters
+    ///           BedrockServiceError.invalidPrompt if the prompt is empty or too long
+    ///           BedrockServiceError.invalidModality for invalid modality from the selected model
+    ///           BedrockServiceError.invalidSDKResponse if the response body is missing
+    /// - Returns: A ConverseReply object
+    public func converse(
+        with model: BedrockModel,
+        prompt: String? = nil,
+        imageFormat: ImageBlock.Format,
+        imageBytes: String,
+        history: [Message] = [],
+        maxTokens: Int? = nil,
+        temperature: Double? = nil,
+        topP: Double? = nil,
+        stopSequences: [String]? = nil,
+        systemPrompts: [String]? = nil,
+        tools: [Tool]? = nil,
+        toolResult: ToolResultBlock? = nil
+    ) async throws -> ConverseReply {
+        try await converse(
+            with: model,
+            prompt: prompt,
+            image: ImageBlock(format: imageFormat, source: imageBytes),
+            history: history,
+            maxTokens: maxTokens,
+            temperature: temperature,
+            topP: topP,
+            stopSequences: stopSequences,
+            systemPrompts: systemPrompts,
+            tools: tools,
+            toolResult: toolResult
+        )
     }
 }
