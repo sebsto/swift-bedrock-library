@@ -107,7 +107,7 @@ extension BedrockService {
             return try invokemodelResponse.getGeneratedImage()
         } catch {
             try handleCommonError(error, context: "listing foundation models")
-            throw BedrockServiceError.unknownError("\(error)") // FIXME: handleCommonError will always throw
+            throw BedrockServiceError.unknownError("\(error)")  // FIXME: handleCommonError will always throw
         }
     }
 
@@ -210,7 +210,7 @@ extension BedrockService {
             return try invokemodelResponse.getGeneratedImage()
         } catch {
             try handleCommonError(error, context: "listing foundation models")
-            throw BedrockServiceError.unknownError("\(error)") // FIXME: handleCommonError will always throw
+            throw BedrockServiceError.unknownError("\(error)")  // FIXME: handleCommonError will always throw
         }
     }
 

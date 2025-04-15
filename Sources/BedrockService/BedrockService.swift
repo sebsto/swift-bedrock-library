@@ -238,7 +238,7 @@ public struct BedrockService: Sendable {
             return modelsInfo
         } catch {
             try handleCommonError(error, context: "listing foundation models")
-            throw BedrockServiceError.unknownError("\(error)") // FIXME: handleCommonError will always throw
+            throw BedrockServiceError.unknownError("\(error)")  // FIXME: handleCommonError will always throw
         }
     }
 }
