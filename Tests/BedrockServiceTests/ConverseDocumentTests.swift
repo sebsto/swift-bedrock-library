@@ -20,4 +20,30 @@ import Testing
 
 // Converse document
 
-// extension BedrockServiceTests
+extension BedrockServiceTests {
+
+    // @Test("Converse with document")
+    // func converseDocument() async throws {
+    //     let bytes = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
+    //     let reply = try await bedrock.converse(
+    //         with: BedrockModel.nova_lite,
+    //         prompt: "What is this?",
+    //         documentName: "doc",
+    //         documentFormat: .jpeg,
+    //         documentBytes: bytes
+    //     )
+    //     #expect(reply.textReply == "Image received")
+    // }
+
+    // @Test("Converse with document")
+    // func converseDocumentUsingDocumentBlock() async throws {
+    //     let source = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
+    //     let documentBlock = DocumentBlock(name: "doc", format: .pdf, source: source)
+    //     let reply = try await bedrock.converse(
+    //         with: BedrockModel.nova_lite,
+    //         prompt: "What is this?",
+    //         document: documentBlock
+    //     )
+    //     #expect(reply.textReply == "Image received")
+    // }
+}

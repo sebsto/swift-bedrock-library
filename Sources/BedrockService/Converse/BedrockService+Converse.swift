@@ -136,8 +136,7 @@ extension BedrockService {
     /// - Parameters:
     ///   - model: The BedrockModel to converse with
     ///   - prompt: Optional text prompt for the conversation
-    ///   - imageFormat: Optional format for image input
-    ///   - imageBytes: Optional base64 encoded image data
+    ///   - image: ImageBlock to include in the message
     ///   - history: Optional array of previous messages
     ///   - maxTokens: Optional maximum number of tokens to generate
     ///   - temperature: Optional temperature parameter for controlling randomness
@@ -155,8 +154,7 @@ extension BedrockService {
     public func converse(
         with model: BedrockModel,
         prompt: String? = nil,
-        imageFormat: ImageBlock.Format? = nil,
-        imageBytes: String? = nil,
+        image: ImageBlock? = nil,
         history: [Message] = [],
         maxTokens: Int? = nil,
         temperature: Double? = nil,
@@ -202,8 +200,7 @@ extension BedrockService {
                 guard let prompt = prompt else {
                     throw BedrockServiceError.invalidPrompt("Prompt is not defined.")
                 }
-
-                if let imageFormat, let imageBytes {
+                if let image {
                     guard model.hasConverseModality(.vision) else {
                         throw BedrockServiceError.invalidModality(
                             model,
@@ -212,14 +209,9 @@ extension BedrockService {
                         )
                     }
                     messages.append(
-                        Message(prompt, imageFormat: imageFormat, imageBytes: imageBytes)
+                        Message(prompt, imageBlock: image)
                     )
                 } else {
-                    guard imageFormat == nil, imageBytes == nil else {
-                        throw BedrockServiceError.invalidPrompt(
-                            "Image format and image bytes must both be provided or neither."
-                        )
-                    }
                     messages.append(Message(prompt))
                 }
             }
@@ -249,8 +241,7 @@ extension BedrockService {
     /// - Parameters:
     ///   - model: The BedrockModel to converse with
     ///   - prompt: Optional text prompt for the conversation
-    ///   - imageFormat: Optional format for image input
-    ///   - imageBytes: Optional base64 encoded image data
+    ///   - image: ImageBlock to include in the message
     ///   - history: Array of previous messages that will be updated with the new conversation
     ///   - maxTokens: Optional maximum number of tokens to generate
     ///   - temperature: Optional temperature parameter for controlling randomness
@@ -268,8 +259,7 @@ extension BedrockService {
     public func converse(
         with model: BedrockModel,
         prompt: String? = nil,
-        imageFormat: ImageBlock.Format? = nil,
-        imageBytes: String? = nil,
+        image: ImageBlock,
         history: inout [Message],
         maxTokens: Int? = nil,
         temperature: Double? = nil,
@@ -282,8 +272,7 @@ extension BedrockService {
         let reply = try await converse(
             with: model,
             prompt: prompt,
-            imageFormat: imageFormat,
-            imageBytes: imageBytes,
+            image: image,
             history: history,
             maxTokens: maxTokens,
             temperature: temperature,
@@ -301,7 +290,8 @@ extension BedrockService {
     /// - Parameters:
     ///   - model: The BedrockModel to converse with
     ///   - prompt: Optional text prompt for the conversation
-    ///   - image: ImageBlock to include in the message
+    ///   - imageFormat: Optional format for image input
+    ///   - imageBytes: Optional base64 encoded image data
     ///   - history: Optional array of previous messages
     ///   - maxTokens: Optional maximum number of tokens to generate
     ///   - temperature: Optional temperature parameter for controlling randomness
@@ -319,7 +309,8 @@ extension BedrockService {
     public func converse(
         with model: BedrockModel,
         prompt: String? = nil,
-        image: ImageBlock,
+        imageFormat: ImageBlock.Format,
+        imageBytes: String,
         history: [Message] = [],
         maxTokens: Int? = nil,
         temperature: Double? = nil,
@@ -332,8 +323,7 @@ extension BedrockService {
         try await converse(
             with: model,
             prompt: prompt,
-            imageFormat: image.format,
-            imageBytes: image.source,
+            image: ImageBlock(format: imageFormat, source: imageBytes),
             history: history,
             maxTokens: maxTokens,
             temperature: temperature,

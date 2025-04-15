@@ -18,7 +18,7 @@ import Foundation
 public struct JSON: Codable {
     public var value: Any?
 
-    subscript<T>(key: String) -> T? {
+    public subscript<T>(key: String) -> T? {
         get {
             getValue(key)
         }

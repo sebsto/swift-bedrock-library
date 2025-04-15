@@ -59,26 +59,26 @@ extension BedrockServiceTests {
         }
     }
 
-    @Test("Converse with vision")
-    func converseVisionWithoutFormat() async throws {
-        let bytes = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
-        await #expect(throws: BedrockServiceError.self) {
-            let _ = try await bedrock.converse(
-                with: BedrockModel.nova_lite,
-                prompt: "What is this?",
-                imageBytes: bytes
-            )
-        }
-    }
+    // @Test("Converse with vision")
+    // func converseVisionWithoutFormat() async throws {
+    //     let bytes = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
+    //     await #expect(throws: BedrockServiceError.self) {
+    //         let _ = try await bedrock.converse(
+    //             with: BedrockModel.nova_lite,
+    //             prompt: "What is this?",
+    //             imageBytes: bytes
+    //         )
+    //     }
+    // }
 
-    @Test("Converse with vision")
-    func converseVisionWithoutBytes() async throws {
-        await #expect(throws: BedrockServiceError.self) {
-            let _ = try await bedrock.converse(
-                with: BedrockModel.nova_lite,
-                prompt: "What is this?",
-                imageFormat: .jpeg
-            )
-        }
-    }
+    // @Test("Converse with vision")
+    // func converseVisionWithoutBytes() async throws {
+    //     await #expect(throws: BedrockServiceError.self) {
+    //         let _ = try await bedrock.converse(
+    //             with: BedrockModel.nova_lite,
+    //             prompt: "What is this?",
+    //             imageFormat: .jpeg
+    //         )
+    //     }
+    // }
 }

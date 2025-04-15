@@ -65,6 +65,11 @@ public struct MockBedrockRuntimeClient: BedrockRuntimeClientProtocol {
                 content: [.text("Image received")],
                 role: .assistant
             )
+        case .document(_):
+            message = BedrockRuntimeClientTypes.Message(
+                content: [.text("Document received")],
+                role: .assistant
+            )
         default:
             throw AWSBedrockRuntime.ValidationException(
                 message: "Malformed input request, please reformat your input and try again."
