@@ -19,25 +19,23 @@ import Testing
 @testable import BedrockService
 @testable import BedrockTypes
 
-@Suite("BedrockService Tests")
-struct BedrockServiceTests {
-    let bedrock: BedrockService
+// MARK: authentication
+extension BedrockServiceTests {
 
-    init() async throws {
-        self.bedrock = try await BedrockService(
-            bedrockClient: MockBedrockClient(),
-            bedrockRuntimeClient: MockBedrockRuntimeClient()
-        )
+    @Test("Authentication Error: no valid credentials")
+    func authErrorNoValidCredentials() async throws {
+        await #expect(throws: BedrockServiceError.self) {
+            let bedrock = try await BedrockService()
+            let _ = try await bedrock.listModels()
+        }
     }
 
-    // MARK: listModels
-
-    @Test("List all models")
-    func listModels() async throws {
-        let models: [ModelSummary] = try await bedrock.listModels()
-        #expect(models.count == 3)
-        #expect(models[0].modelId == "anthropic.claude-instant-v1")
-        #expect(models[0].modelName == "Claude Instant")
-        #expect(models[0].providerName == "Anthropic")
-    }
+    // Only works when SSO is actually expired
+    // @Test("Authentication Error: SSO expired")
+    // func authErrorSSOExpired() async throws {
+    //     await #expect(throws: BedrockServiceError.self) {
+    //         let bedrock = try await BedrockService(useSSO: true)
+    //         let _ = try await bedrock.listModels()
+    //     }
+    // }
 }

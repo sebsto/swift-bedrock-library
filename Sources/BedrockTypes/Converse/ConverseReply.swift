@@ -45,6 +45,43 @@ public struct ConverseReply: Codable, CustomStringConvertible {
         self.videoBlock = try? ConverseReply.getVideoBlock(lastMessage)
     }
 
+    // MARK: Public functions
+
+    /// Returns the conversation history
+    public func getHistory() -> [Message] { history }
+
+    /// Returns the latest text reply or throws if the latest message does not contain a text reply
+    public func getTextReply() throws -> String {
+        guard let textReply else {
+            throw BedrockServiceError.invalidConverseReply("No text block found in last message.")
+        }
+        return textReply
+    }
+
+    /// Returns the latest tool use request or throws if the latest message does not contain a tool use request
+    public func getToolUse() throws -> ToolUseBlock {
+        guard let toolUse else {
+            throw BedrockServiceError.invalidConverseReply("No ToolUse block found in last message.")
+        }
+        return toolUse
+    }
+
+    /// Returns the latest image block or throws if the latest message does not contain an image block
+    public func getImageBlock() throws -> ImageBlock {
+        guard let imageBlock else {
+            throw BedrockServiceError.invalidConverseReply("No Image block found in last message.")
+        }
+        return imageBlock
+    }
+
+    /// Returns the latest video block or throws if the latest message does not contain a video block
+    public func getVideoBlock() throws -> VideoBlock {
+        guard let videoBlock else {
+            throw BedrockServiceError.invalidConverseReply("No Video block found in last message.")
+        }
+        return videoBlock
+    }
+
     // MARK: Private functions
 
     static private func getTextReply(_ reply: Message) throws -> String {
@@ -81,45 +118,6 @@ public struct ConverseReply: Codable, CustomStringConvertible {
             }
         }
         throw BedrockServiceError.invalidConverseReply("No Video block found in last message.")
-    }
-
-    // MARK: Public functions
-
-    func hasTextReply() -> Bool { textReply != nil }
-    func hasToolUse() -> Bool { toolUse != nil }
-    func hasImage() -> Bool { imageBlock != nil }
-    func hasVideo() -> Bool { videoBlock != nil }
-
-    /// Returns the latest text reply or throws if the latest message does not contain a text reply
-    func getTextReply(_ reply: Message) throws -> String {
-        guard let textReply else {
-            throw BedrockServiceError.invalidConverseReply("No text block found in last message.")
-        }
-        return textReply
-    }
-
-    /// Returns the latest tool use request or throws if the latest message does not contain a tool use request
-    func getToolUse(_ reply: Message) throws -> ToolUseBlock {
-        guard let toolUse else {
-            throw BedrockServiceError.invalidConverseReply("No ToolUse block found in last message.")
-        }
-        return toolUse
-    }
-
-    /// Returns the latest image block or throws if the latest message does not contain an image block
-    func getImageBlock(_ reply: Message) throws -> ImageBlock {
-        guard let imageBlock else {
-            throw BedrockServiceError.invalidConverseReply("No Image block found in last message.")
-        }
-        return imageBlock
-    }
-
-    /// Returns the latest video block or throws if the latest message does not contain a video block
-    func getVideoBlock(_ reply: Message) throws -> VideoBlock {
-        guard let videoBlock else {
-            throw BedrockServiceError.invalidConverseReply("No Video block found in last message.")
-        }
-        return videoBlock
     }
 }
 

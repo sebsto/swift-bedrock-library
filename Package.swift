@@ -5,7 +5,7 @@ import PackageDescription
 
 let package = Package(
     name: "SwiftBedrockLibrary",
-    platforms: [.macOS(.v14), .iOS(.v18), .tvOS(.v18)],
+    platforms: [.macOS(.v15), .iOS(.v18), .tvOS(.v18)],
     products: [
         .library(name: "BedrockService", targets: ["BedrockService"]),
         .library(name: "BedrockTypes", targets: ["BedrockTypes"]),
@@ -15,7 +15,7 @@ let package = Package(
         .package(url: "https://github.com/awslabs/aws-sdk-swift", from: "1.2.54"),
         .package(url: "https://github.com/smithy-lang/smithy-swift", from: "0.118.0"),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.5.0"),
-        .package(url: "https://github.com/swiftlang/swift-testing", branch: "main"),
+        .package(url: "https://github.com/awslabs/aws-crt-swift", from: "0.5.0"),
     ],
     targets: [
         .target(
@@ -27,6 +27,7 @@ let package = Package(
                 .product(name: "AWSBedrockRuntime", package: "aws-sdk-swift"),
                 .product(name: "Smithy", package: "smithy-swift"),
                 .product(name: "Logging", package: "swift-log"),
+                .product(name: "AwsCommonRuntimeKit", package: "aws-crt-swift"),
             ],
             path: "Sources/BedrockService"
         ),
@@ -43,9 +44,16 @@ let package = Package(
             name: "BedrockServiceTests",
             dependencies: [
                 .target(name: "BedrockService"),
-                .product(name: "Testing", package: "swift-testing"),
+                .target(name: "BedrockTypes"),
             ],
             path: "Tests/BedrockServiceTests"
+        ),
+        .testTarget(
+            name: "BedrockTypesTests",
+            dependencies: [
+                .target(name: "BedrockTypes")
+            ],
+            path: "Tests/BedrockTypesTests"
         ),
     ]
 )

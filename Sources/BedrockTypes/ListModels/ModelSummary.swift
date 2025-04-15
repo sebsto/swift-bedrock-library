@@ -17,13 +17,13 @@
 import Foundation
 
 public struct ModelSummary: Encodable {
-    let modelName: String
-    let providerName: String
-    let modelId: String
-    let modelArn: String
-    let modelLifecylceStatus: String
-    let responseStreamingSupported: Bool
-    let bedrockModel: BedrockModel?
+    public let modelName: String
+    public let providerName: String
+    public let modelId: String
+    public let modelArn: String
+    public let modelLifecylceStatus: String
+    public let responseStreamingSupported: Bool
+    public let bedrockModel: BedrockModel?
 
     public static func getModelSummary(from sdkModelSummary: BedrockClientTypes.FoundationModelSummary) throws -> Self {
 

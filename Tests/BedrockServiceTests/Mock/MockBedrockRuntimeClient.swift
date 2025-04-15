@@ -26,16 +26,46 @@ public struct MockBedrockRuntimeClient: BedrockRuntimeClientProtocol {
     // MARK: converse
     public func converse(input: ConverseInput) async throws -> ConverseOutput {
         guard let messages = input.messages,
-            let content = messages.first?.content?.first,
-            case let .text(prompt) = content
+            let content = messages.last?.content?.first
         else {
             throw AWSBedrockRuntime.ValidationException(message: "Missing required message content")
         }
-
-        let message = BedrockRuntimeClientTypes.Message(
-            content: [.text("Your prompt was: \(prompt)")],
-            role: .assistant
-        )
+        var message: BedrockRuntimeClientTypes.Message
+        print("start switch")
+        switch content {
+        case .text(let prompt):
+            if prompt == "Use tool", let _ = input.toolConfig?.tools {
+                let toolInputJson = JSON(["code": "abc"])
+                let toolInput = try? toolInputJson.toDocument()
+                let message = BedrockRuntimeClientTypes.Message(
+                    content: [
+                        .tooluse(
+                            BedrockRuntimeClientTypes.ToolUseBlock(
+                                input: toolInput,
+                                name: "toolName",
+                                toolUseId: "toolId"
+                            )
+                        )
+                    ],
+                    role: .assistant
+                )
+                return ConverseOutput(output: .message(message))
+            }
+            message = BedrockRuntimeClientTypes.Message(
+                content: [.text("Your prompt was: \(prompt)")],
+                role: .assistant
+            )
+        case .toolresult(let _):
+            message = BedrockRuntimeClientTypes.Message(
+                content: [.text("Tool result received")],
+                // content: [.text("Your tool result was: \(toolresult)")],
+                role: .assistant
+            )
+        default:
+            throw AWSBedrockRuntime.ValidationException(
+                message: "Malformed input request, please reformat your input and try again."
+            )
+        }
         return ConverseOutput(output: .message(message))
     }
 

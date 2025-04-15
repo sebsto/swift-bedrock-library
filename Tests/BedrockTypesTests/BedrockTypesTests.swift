@@ -13,9 +13,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
+import Testing
 
-public struct ImageResolution: Codable, Equatable, Sendable {
-    public let width: Int
-    public let height: Int
+@testable import BedrockTypes
+
+@Suite("BedrockTypes Tests")
+struct BedrockTypesTests {
+
 }

@@ -20,7 +20,7 @@ public struct Message: Codable {
     public let role: Role
     public let content: [Content]
 
-    package init(from role: Role, content: [Content]) {
+    public init(from role: Role, content: [Content]) {
         self.role = role
         self.content = content
     }
@@ -30,9 +30,14 @@ public struct Message: Codable {
         self.init(from: .user, content: [.text(prompt)])
     }
 
-    /// convenience initializer for message with only a ToolResultBlock
+    /// convenience initializer for message from the user with only a ToolResultBlock
     public init(_ toolResult: ToolResultBlock) {
         self.init(from: .user, content: [.toolResult(toolResult)])
+    }
+
+    /// convenience initializer for message from the assistant with only a ToolUseBlock
+    public init(_ toolUse: ToolUseBlock) {
+        self.init(from: .assistant, content: [.toolUse(toolUse)])
     }
 
     /// convenience initializer for message with only an ImageBlock

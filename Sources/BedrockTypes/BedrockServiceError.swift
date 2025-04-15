@@ -22,6 +22,7 @@ public enum BedrockServiceError: Error {
     case invalidStopSequences([String], String)
     case invalidURI(String)
     case invalidConverseReply(String)
+    case invalidToolName(String)
     case invalidSDKResponse(String)
     case invalidSDKResponseBody(Data?)
     case completionNotFound(String)
@@ -30,4 +31,5 @@ public enum BedrockServiceError: Error {
     case notImplemented(String)
     case notSupported(String)
     case notFound(String)
+    case authenticationFailed(String)
 }

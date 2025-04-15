@@ -17,13 +17,15 @@
 @preconcurrency import AWSBedrockRuntime
 import AWSClientRuntime
 import AWSSDKIdentity
+import AwsCommonRuntimeKit
 import BedrockTypes
 import Foundation
 import Logging
+import SmithyIdentity
 
 public struct BedrockService: Sendable {
     package let region: Region
-    package let logger: Logger
+    package let logger: Logging.Logger
     package let bedrockClient: BedrockClientProtocol
     package let bedrockRuntimeClient: BedrockRuntimeClientProtocol
 
@@ -36,14 +38,15 @@ public struct BedrockService: Sendable {
     ///   - bedrockClient: Optional custom Bedrock client
     ///   - bedrockRuntimeClient: Optional custom Bedrock Runtime client
     ///   - useSSO: Whether to use SSO authentication (defaults to false)
+    ///   - profileName: Optional profile name to use for AWS credentials
     /// - Throws: Error if client initialization fails
     public init(
         region: Region = .useast1,
-        logger: Logger? = nil,
+        logger: Logging.Logger? = nil,
         bedrockClient: BedrockClientProtocol? = nil,
         bedrockRuntimeClient: BedrockRuntimeClientProtocol? = nil,
         useSSO: Bool = false,
-        ssoProfileName: String? = nil
+        profileName: String? = nil
     ) async throws {
         self.logger = logger ?? BedrockService.createLogger("bedrock.service")
         self.logger.trace(
@@ -60,7 +63,7 @@ public struct BedrockService: Sendable {
             self.bedrockClient = try await BedrockService.createBedrockClient(
                 region: region,
                 useSSO: useSSO,
-                ssoProfileName: ssoProfileName
+                profileName: profileName
             )
             self.logger.trace(
                 "Created bedrockClient",
@@ -75,7 +78,7 @@ public struct BedrockService: Sendable {
             self.bedrockRuntimeClient = try await BedrockService.createBedrockRuntimeClient(
                 region: region,
                 useSSO: useSSO,
-                ssoProfileName: ssoProfileName
+                profileName: profileName
             )
             self.logger.trace(
                 "Created bedrockRuntimeClient",
@@ -90,15 +93,15 @@ public struct BedrockService: Sendable {
 
     // MARK: - Private Helpers
 
-    /// Creates Logger using either the loglevel saved as environment variable `SWIFT_BEDROCK_LOG_LEVEL` or with default `.trace`
+    /// Creates Logger using either the loglevel saved as environment variable `BEDROCK_SERVICE_LOG_LEVEL` or with default `.info`
     /// - Parameter name: The name/label for the logger
     /// - Returns: Configured Logger instance
-    static private func createLogger(_ name: String) -> Logger {
-        var logger: Logger = Logger(label: name)
+    static private func createLogger(_ name: String) -> Logging.Logger {
+        var logger: Logging.Logger = Logger(label: name)
         logger.logLevel =
-            ProcessInfo.processInfo.environment["SWIFT_BEDROCK_LOG_LEVEL"].flatMap {
+            ProcessInfo.processInfo.environment["BEDROCK_SERVICE_LOG_LEVEL"].flatMap {
                 Logger.Level(rawValue: $0.lowercased())
-            } ?? .trace  // FIXME: trace for me, later .info
+            } ?? .info
         return logger
     }
 
@@ -106,20 +109,24 @@ public struct BedrockService: Sendable {
     /// - Parameters:
     ///   - region: The AWS region to configure the client for
     ///   - useSSO: Whether to use SSO authentication
+    ///   - profileName: Optional profile name to use for AWS credentials
     /// - Returns: Configured BedrockClientProtocol instance
     /// - Throws: Error if client creation fails
     static private func createBedrockClient(
         region: Region,
         useSSO: Bool = false,
-        ssoProfileName: String? = nil
+        profileName: String? = nil
     ) async throws
         -> BedrockClientProtocol
     {
         let config = try await BedrockClient.BedrockClientConfiguration(
             region: region.rawValue
         )
-        if useSSO {
-            config.awsCredentialIdentityResolver = try SSOAWSCredentialIdentityResolver(profileName: ssoProfileName)
+        if let awsCredentialIdentityResolver = try? getAWSCredentialIdentityResolver(
+            useSSO: useSSO,
+            profileName: profileName
+        ) {
+            config.awsCredentialIdentityResolver = awsCredentialIdentityResolver
         }
         return BedrockClient(config: config)
     }
@@ -128,12 +135,13 @@ public struct BedrockService: Sendable {
     /// - Parameters:
     ///   - region: The AWS region to configure the client for
     ///   - useSSO: Whether to use SSO authentication
+    ///   - profileName: Optional profile name to use for AWS credentials
     /// - Returns: Configured BedrockRuntimeClientProtocol instance
     /// - Throws: Error if client creation fails
     static private func createBedrockRuntimeClient(
         region: Region,
         useSSO: Bool = false,
-        ssoProfileName: String? = nil
+        profileName: String? = nil
     )
         async throws
         -> BedrockRuntimeClientProtocol
@@ -142,10 +150,35 @@ public struct BedrockService: Sendable {
             try await BedrockRuntimeClient.BedrockRuntimeClientConfiguration(
                 region: region.rawValue
             )
-        if useSSO {
-            config.awsCredentialIdentityResolver = try SSOAWSCredentialIdentityResolver(profileName: ssoProfileName)
+        if let awsCredentialIdentityResolver = try? getAWSCredentialIdentityResolver(
+            useSSO: useSSO,
+            profileName: profileName
+        ) {
+            config.awsCredentialIdentityResolver = awsCredentialIdentityResolver
         }
         return BedrockRuntimeClient(config: config)
+    }
+
+    /// Creates an AWS credential identity resolver depending on the provided parameters.
+    /// If `useSSO` is false and no `profileName` is provided, nil is returned, causing the client to use the defaultchain.
+    /// If `useSSO` is false and a `profileName` is provided, `ProfileAWSCredentialIdentityResolver` is returned.
+    /// If `useSSO` is true, `SSOAWSCredentialIdentityResolver` is configured (with the `profileName`) and returned.
+    /// - Parameters:
+    ///   - useSSO: Whether to use SSO authentication
+    ///   - profileName: Optional profile name to use for AWS credentials
+    /// - Returns: Configured AWSCredentialIdentityResolver instance or nil
+    /// - Throws: Error if AWSCredentialIdentityResolver creation fails
+    static private func getAWSCredentialIdentityResolver(
+        useSSO: Bool,
+        profileName: String? = nil
+    ) throws -> (any SmithyIdentity.AWSCredentialIdentityResolver)? {
+        if useSSO {
+            return try SSOAWSCredentialIdentityResolver(profileName: profileName)
+        } else if let profileName {
+            return try ProfileAWSCredentialIdentityResolver(profileName: profileName)
+        } else {
+            return nil
+        }
     }
 
     // MARK: Public Methods
@@ -177,6 +210,25 @@ public struct BedrockService: Sendable {
                 ]
             )
             return modelsInfo
+
+        } catch let commonError as CommonRunTimeError {
+            switch commonError {
+            case .crtError(let crtError):
+                switch crtError.code {
+                case 6153:
+                    throw BedrockServiceError.authenticationFailed(
+                        "No valid credentials found: \(crtError.message)"
+                    )
+                case 6170:
+                    throw BedrockServiceError.authenticationFailed(
+                        "AWS SSO token expired: \(crtError.message)"
+                    )
+                default:
+                    throw BedrockServiceError.authenticationFailed(
+                        "Authentication failed: \(crtError.message)"
+                    )
+                }
+            }
         } catch {
             logger.trace("Error while listing foundation models", metadata: ["error": "\(error)"])
             throw error
