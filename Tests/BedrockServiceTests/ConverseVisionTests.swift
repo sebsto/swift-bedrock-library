@@ -21,6 +21,5 @@ import Testing
 // Converse vision
 
 extension BedrockServiceTests {
-    
-}
 
+}
