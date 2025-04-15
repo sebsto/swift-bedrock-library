@@ -33,4 +33,5 @@ public enum BedrockServiceError: Error {
     case notSupported(String)
     case notFound(String)
     case authenticationFailed(String)
+    case unknownError(String)
 }

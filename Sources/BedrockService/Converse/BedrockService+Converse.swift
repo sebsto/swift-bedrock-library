@@ -108,27 +108,9 @@ extension BedrockService {
             }
             let converseResponse = try ConverseResponse(converseOutput)
             return converseResponse.message
-        } catch let commonError as CommonRunTimeError {
-            switch commonError {
-            case .crtError(let crtError):
-                switch crtError.code {
-                case 6153:
-                    throw BedrockServiceError.authenticationFailed(
-                        "No valid credentials found: \(crtError.message)"
-                    )
-                case 6170:
-                    throw BedrockServiceError.authenticationFailed(
-                        "AWS SSO token expired: \(crtError.message)"
-                    )
-                default:
-                    throw BedrockServiceError.authenticationFailed(
-                        "Authentication failed: \(crtError.message)"
-                    )
-                }
-            }
         } catch {
-            logger.trace("Error while conversing", metadata: ["error": "\(error)"])
-            throw error
+            try handleCommonError(error, context: "listing foundation models")
+            throw BedrockServiceError.unknownError("\(error)") // FIXME: handleCommonError will always throw
         }
     }
 
