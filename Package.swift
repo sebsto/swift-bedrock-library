@@ -51,5 +51,12 @@ let package = Package(
             ],
             path: "Tests/BedrockServiceTests"
         ),
+        .testTarget(
+            name: "BedrockTypesTests",
+            dependencies: [
+                .target(name: "BedrockTypes"),
+            ],
+            path: "Tests/BedrockTypesTests"
+        ),
     ]
 )

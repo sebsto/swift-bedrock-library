@@ -21,6 +21,7 @@ import AwsCommonRuntimeKit
 import BedrockTypes
 import Foundation
 import Logging
+import SmithyIdentity
 
 public struct BedrockService: Sendable {
     package let region: Region
@@ -37,6 +38,7 @@ public struct BedrockService: Sendable {
     ///   - bedrockClient: Optional custom Bedrock client
     ///   - bedrockRuntimeClient: Optional custom Bedrock Runtime client
     ///   - useSSO: Whether to use SSO authentication (defaults to false)
+    ///   - profileName: Optional profile name to use for AWS credentials
     /// - Throws: Error if client initialization fails
     public init(
         region: Region = .useast1,
@@ -91,7 +93,7 @@ public struct BedrockService: Sendable {
 
     // MARK: - Private Helpers
 
-    /// Creates Logger using either the loglevel saved as environment variable `BEDROCK_SERVICE_LOG_LEVEL` or with default `.trace`
+    /// Creates Logger using either the loglevel saved as environment variable `BEDROCK_SERVICE_LOG_LEVEL` or with default `.info`
     /// - Parameter name: The name/label for the logger
     /// - Returns: Configured Logger instance
     static private func createLogger(_ name: String) -> Logging.Logger {
@@ -107,6 +109,7 @@ public struct BedrockService: Sendable {
     /// - Parameters:
     ///   - region: The AWS region to configure the client for
     ///   - useSSO: Whether to use SSO authentication
+    ///   - profileName: Optional profile name to use for AWS credentials
     /// - Returns: Configured BedrockClientProtocol instance
     /// - Throws: Error if client creation fails
     static private func createBedrockClient(
@@ -119,8 +122,11 @@ public struct BedrockService: Sendable {
         let config = try await BedrockClient.BedrockClientConfiguration(
             region: region.rawValue
         )
-        if useSSO {
-            config.awsCredentialIdentityResolver = try SSOAWSCredentialIdentityResolver(profileName: profileName)
+        if let awsCredentialIdentityResolver = try? getAWSCredentialIdentityResolver(
+            useSSO: useSSO,
+            profileName: profileName
+        ) {
+            config.awsCredentialIdentityResolver = awsCredentialIdentityResolver
         }
         return BedrockClient(config: config)
     }
@@ -129,6 +135,7 @@ public struct BedrockService: Sendable {
     /// - Parameters:
     ///   - region: The AWS region to configure the client for
     ///   - useSSO: Whether to use SSO authentication
+    ///   - profileName: Optional profile name to use for AWS credentials
     /// - Returns: Configured BedrockRuntimeClientProtocol instance
     /// - Throws: Error if client creation fails
     static private func createBedrockRuntimeClient(
@@ -143,10 +150,34 @@ public struct BedrockService: Sendable {
             try await BedrockRuntimeClient.BedrockRuntimeClientConfiguration(
                 region: region.rawValue
             )
-        if useSSO {
-            config.awsCredentialIdentityResolver = try SSOAWSCredentialIdentityResolver(profileName: profileName)
+        if let awsCredentialIdentityResolver = try? getAWSCredentialIdentityResolver(
+            useSSO: useSSO,
+            profileName: profileName
+        ) {
+            config.awsCredentialIdentityResolver = awsCredentialIdentityResolver
         }
         return BedrockRuntimeClient(config: config)
+    }
+
+    /// Creates an AWS credential identity resolver depending on the provided parameters.
+    /// If `useSSO` is false and no `profileName` is provided, nil is returned, causing the client to use the defaultchain.
+    /// If `useSSO` is false and a `profileName` is provided, `ProfileAWSCredentialIdentityResolver` is returned.
+    /// If `useSSO` is true, `SSOAWSCredentialIdentityResolver` is configured (with the `profileName`) and returned.
+    /// - Parameters:
+    ///   - useSSO: Whether to use SSO authentication
+    ///   - profileName: Optional profile name to use for AWS credentials
+    /// - Returns: Configured AWSCredentialIdentityResolver instance or nil
+    /// - Throws: Error if AWSCredentialIdentityResolver creation fails
+    static private func getAWSCredentialIdentityResolver(
+        useSSO: Bool,
+        profileName: String? = nil
+    ) throws -> (any SmithyIdentity.AWSCredentialIdentityResolver)? {
+        if useSSO {
+            return try SSOAWSCredentialIdentityResolver(profileName: profileName)
+        } else if let profileName {
+            return try ProfileAWSCredentialIdentityResolver(profileName: profileName)
+        }
+        return nil
     }
 
     // MARK: Public Methods

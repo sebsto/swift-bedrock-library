@@ -18,12 +18,9 @@ import Foundation
 public struct JSON: Codable {
     public var value: Any?
 
-    subscript(key: String) -> JSON {
+    subscript<T>(key: String) -> T? {
         get {
-            if let dictionary = value as? [String: JSON] {
-                return dictionary[key] ?? JSON(nil)
-            }
-            return JSON(nil)
+            getValue(key)
         }
     }
 

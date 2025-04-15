@@ -20,7 +20,7 @@ import Testing
 
 // MARK: ToolResultBlockTests
 
-extension BedrockServiceTests {
+extension BedrockTypesTests {
 
     @Test("ToolResultBlock Initializer with ID and String Content")
     func toolResultBlockInitializerWithString() async throws {

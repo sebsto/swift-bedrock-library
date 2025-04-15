@@ -18,7 +18,7 @@ import Testing
 @testable import BedrockTypes
 
 // MARK: JSON
-extension BedrockServiceTests {
+extension BedrockTypesTests {
 
     @Test("JSON getValue")
     func jsonGetValue() async throws {
@@ -40,10 +40,10 @@ extension BedrockServiceTests {
             "age": JSON(30),
             "isMember": JSON(true),
         ])
-        #expect(json["name"].value as? String == "Jane Doe")
-        #expect(json["age"].value as? Int == 30)
-        #expect(json["isMember"].value as? Bool == true)
-        #expect(json["nonExistentKey"].value == nil)
+        #expect(json["name"] == "Jane Doe")
+        #expect(json["age"] == 30)
+        #expect(json["isMember"] == true)
+        #expect(json["nonExistentKey"] == nil)
     }
 
     @Test("JSON String Initializer with Valid String")

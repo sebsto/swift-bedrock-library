@@ -15,11 +15,10 @@
 
 import Testing
 
-@testable import BedrockService
 @testable import BedrockTypes
 
-// Converse tools
+@Suite("BedrockTypes Tests")
+struct BedrockTypesTests {
 
-extension BedrockServiceTests {
     
 }
