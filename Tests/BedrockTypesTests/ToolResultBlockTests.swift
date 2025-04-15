@@ -53,11 +53,11 @@ extension BedrockTypesTests {
 
     @Test("ToolResultBlock Initializer with ID and Image Content")
     func toolResultBlockInitializerWithImage() async throws {
-        let image = ImageBlock(format: .jpeg, source: "mockmockmockmockmockmockmockmockmock")
+        let image = try ImageBlock(format: .jpeg, source: "mockmockmockmockmockmockmockmockmock")
         let block = ToolResultBlock(image, id: "block3")
         #expect(block.id == "block3")
         #expect(block.content.count == 1)
-        var imageContent: ImageBlock = ImageBlock(format: .png, source: "")
+        var imageContent: ImageBlock = try ImageBlock(format: .png, source: "xx")
         if case .image(let img) = block.content.first {
             imageContent = img
         }

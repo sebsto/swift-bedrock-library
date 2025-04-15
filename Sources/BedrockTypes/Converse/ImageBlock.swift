@@ -20,7 +20,11 @@ public struct ImageBlock: Codable {
     public let format: Format
     public let source: String  // 64 encoded
 
-    public init(format: Format, source: String) {
+    public init(format: Format, source: String) throws {
+        // https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_ImageSource.html
+        guard !source.isEmpty else {
+            throw BedrockServiceError.invalidName("Image source is not allowed to be empty")
+        }
         self.format = format
         self.source = source
     }
@@ -39,7 +43,7 @@ public struct ImageBlock: Codable {
         let format = try ImageBlock.Format(from: sdkFormat)
         switch sdkImageSource {
         case .bytes(let data):
-            self = ImageBlock(format: format, source: data.base64EncodedString())
+            self = try ImageBlock(format: format, source: data.base64EncodedString())
         case .sdkUnknown(let unknownImageSource):
             throw BedrockServiceError.notImplemented(
                 "ImageSource \(unknownImageSource) is not implemented by BedrockRuntimeClientTypes"

@@ -39,7 +39,7 @@ extension BedrockServiceTests {
     @Test("Converse with vision")
     func converseVisionUsingImageBlock() async throws {
         let source = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
-        let imageBlock = ImageBlock(format: .jpeg, source: source)
+        let imageBlock = try ImageBlock(format: .jpeg, source: source)
         let reply = try await bedrock.converse(
             with: BedrockModel.nova_lite,
             prompt: "What is this?",
@@ -51,7 +51,7 @@ extension BedrockServiceTests {
     @Test("Converse with vision with invalid model")
     func converseVisionInvalidModel() async throws {
         let source = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
-        let imageBlock = ImageBlock(format: .jpeg, source: source)
+        let imageBlock = try ImageBlock(format: .jpeg, source: source)
         await #expect(throws: BedrockServiceError.self) {
             let _ = try await bedrock.converse(
                 with: BedrockModel.nova_micro,
