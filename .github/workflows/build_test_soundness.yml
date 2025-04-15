@@ -8,9 +8,7 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-  
 
-  jobs:
   setup-dependencies:
     name: Install dependencies
     runs-on: ubuntu-latest
