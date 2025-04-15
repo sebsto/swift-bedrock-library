@@ -176,8 +176,7 @@ public struct BedrockService: Sendable {
             return try SSOAWSCredentialIdentityResolver(profileName: profileName)
         } else if let profileName {
             return try ProfileAWSCredentialIdentityResolver(profileName: profileName)
-        }
-        return nil
+        } else { return nil }
     }
 
     // MARK: Public Methods
