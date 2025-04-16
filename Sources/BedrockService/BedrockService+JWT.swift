@@ -43,7 +43,10 @@ extension BedrockService {
     ) async throws -> STSWebIdentityAWSCredentialIdentityResolver {
         // Write the token to a temporary file so it can be used by the resolver
         let tokenFilename = "apple-identity-token.jwt"
-        let tokenFileURL = createTokenFileURL(name: tokenFilename)
+        let tokenFileURL = FileManager.default.temporaryDirectory.appendingPathComponent(
+            tokenFilename,
+            isDirectory: false
+        )
         let tokenFilePath = tokenFileURL.path
         defer {
             // silently ignore an error if the file does not exist
@@ -84,11 +87,5 @@ extension BedrockService {
                 "Failed to assume role using web identity token: \(error.localizedDescription)"
             )
         }
-    }
-
-    /// Creates a URL for a temporary file to store the identity token
-    private static func createTokenFileURL(name: String) -> URL {
-        let tempDirectoryURL = URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
-        return tempDirectoryURL.appendingPathComponent(name, isDirectory: false)
     }
 }
