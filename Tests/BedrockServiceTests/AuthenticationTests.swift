@@ -25,22 +25,31 @@ extension BedrockServiceTests {
     @Test(
         "Authentication: AuthenticationType struct does not leak credentials",
         arguments: [
-            BedrockAuthenticationType.static(accessKey: "MY_ACCESS_KEY", secretKey: "MY_SECRET_KEY", sessionToken: "MY_SECRET_SESSION_TOKEN"),
-            BedrockAuthenticationType.webIdentity(token: "MY_SECRET_JWT_TOKEN", roleARN: "MY_ROLE_ARN", region: .useast1, notification: {})
+            BedrockAuthenticationType.static(
+                accessKey: "MY_ACCESS_KEY",
+                secretKey: "MY_SECRET_KEY",
+                sessionToken: "MY_SECRET_SESSION_TOKEN"
+            ),
+            BedrockAuthenticationType.webIdentity(
+                token: "MY_SECRET_JWT_TOKEN",
+                roleARN: "MY_ROLE_ARN",
+                region: .useast1,
+                notification: {}
+            ),
         ]
     )
     func authNoLeaks(auth: BedrockAuthenticationType) {
         //given the auth in paramaters
-        
+
         //when
         let str = String(describing: auth)
-        
+
         // then
         #expect(!str.contains("SECRET"))
-        
+
         //when
-        let str2 = "\(auth)" // is it different than String(decsribing:) ?
-        
+        let str2 = "\(auth)"  // is it different than String(decsribing:) ?
+
         // then
         #expect(!str2.contains("SECRET"))
     }
