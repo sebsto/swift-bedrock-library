@@ -41,23 +41,11 @@ public struct JSON: Codable {
         guard let data = string.data(using: .utf8) else {
             throw BedrockServiceError.encodingError("Could not encode String to Data")
         }
-        guard let decodedValue = try? JSONSerialization.jsonObject(with: data, options: []) else {
-            throw BedrockServiceError.decodingError("Could not decode value from Data")
-        }
-        guard let dictionary = decodedValue as? [String: Any] else {
-            throw BedrockServiceError.decodingError("Could not decode JSON from Data")
-        }
-        self.value = dictionary.mapValues { JSON($0) }
+        try self.init(from: data)
     }
 
     public init(from data: Data) throws {
-        guard let decodedValue = try? JSONSerialization.jsonObject(with: data, options: []) else {
-            throw BedrockServiceError.decodingError("Could not decode value from Data")
-        }
-        guard let dictionary = decodedValue as? [String: Any] else {
-            throw BedrockServiceError.decodingError("Could not decode JSON from Data")
-        }
-        self.value = dictionary.mapValues { JSON($0) }
+        self = try JSONDecoder().decode(JSON.self, from: data)
     }
 
     public init(from decoder: Decoder) throws {
