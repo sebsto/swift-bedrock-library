@@ -31,7 +31,7 @@ public enum BedrockAuthenticationType: Sendable, CustomStringConvertible {
     case sso(profileName: String)
     case webIdentity(token: String, roleARN: String, region: Region, notification: @Sendable () -> Void = {})
     case `static`(accessKey: String, secretKey: String, sessionToken: String)
-    
+
     public var description: String {
         switch self {
         case .default:
@@ -47,9 +47,9 @@ public enum BedrockAuthenticationType: Sendable, CustomStringConvertible {
         }
     }
     private func redactingSecret(secret: String) -> String {
-        return "\(secret.prefix(min(3, secret.count)))... *** shuuut, it's a secret ***"
+        "\(secret.prefix(min(3, secret.count)))... *** shuuut, it's a secret ***"
     }
-        
+
 }
 
 extension BedrockService {
