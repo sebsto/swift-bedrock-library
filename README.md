@@ -223,7 +223,7 @@ print("Assistant: \(reply)")
 reply = try await bedrock.converse(
     with: model,
     prompt: "Do you think birds can see them too?",
-    history: history
+    history: &history
 )
 
 print("Assistant: \(reply)")
@@ -235,7 +235,7 @@ Optionally add inference parameters.
 var reply = try await bedrock.converse(
     with: model,
     prompt: "Tell me about rainbows",
-    history: history,
+    history: &history,
     maxTokens: 1024,
     temperature: 0.2,
     topP: 0.8,
@@ -251,19 +251,21 @@ var reply = try await bedrock.converse(
 let model: BedrockModel = .nova_lite
 
 guard model.hasConverseModality(.vision) else {
-    throw MyError.incorrectModality("\(model.name) does not support converse")
+    throw MyError.incorrectModality("\(model.name) does not support converse vision")
 }
+
+let image = try ImageBlock(format: .jpeg, source: base64EncodedImage)
+var history: [Message] = []
 
 let reply = try await bedrock.converse(
     with: model,
     prompt: "Can you tell me about this plant?",
-    imageFormat: .jpeg,
-    imageBytes: base64EncodedImage
+    image: image,
+    history: &history
 )
 
 print("Assistant: \(reply)")
 ```
-
 
 Optionally add inference parameters. 
 
@@ -271,10 +273,43 @@ Optionally add inference parameters.
 var reply = try await bedrock.converse(
     with model: model,
     prompt: "Can you tell me about this plant?",
-    imageFormat: .jpeg,
-    imageBytes: base64EncodedImage,
-    history: history,
+    image: image,
+    history: &history,
     temperature: 1
+    )
+```
+
+### Document
+
+```swift
+let model: BedrockModel = .nova_lite
+
+guard model.hasConverseModality(.document) else {
+    throw MyError.incorrectModality("\(model.name) does not support converse document")
+}
+
+let document = try DocumentBlock(name: "name", format: .pdf, source: base64EncodedDocument)
+var history: [Message] = []
+
+let reply = try await bedrock.converse(
+    with: model,
+    prompt: "Can you tell me about this plant?",
+    document: document,
+    history: &history
+)
+
+print("Assistant: \(reply)")
+```
+
+Optionally add inference parameters. 
+
+```swift
+var reply = try await bedrock.converse(
+    with model: model,
+    prompt: "Can you tell me about this plant?",
+    document: document,
+    history: &history,
+    maxTokens: 512
     )
 ```
 

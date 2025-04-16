@@ -21,7 +21,23 @@ public struct DocumentBlock: Codable {
     public let format: Format
     public let source: String  // 64 encoded
 
-    public init(name: String, format: Format, source: String) {
+    public init(name: String, format: Format, source: String) throws {
+        // https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_DocumentBlock.html
+        guard !name.isEmpty else {
+            throw BedrockServiceError.invalidName("Document name is not allowed to be empty")
+        }
+        guard name.contains(/^[a-zA-Z()\[\]\-](?:[a-zA-Z()\[\]\-]|\s(?!\s))*$/) else {
+            throw BedrockServiceError.invalidName(
+                "Document name must consist of only lowercase letter, uppercase letters, parentheses, square brackets, whitespace characters (no more than one in a row) and hyphens"
+            )
+        }
+        guard name.count <= 200 else {
+            throw BedrockServiceError.invalidName("Document name must be no longer than 200 characters")
+        }
+        guard !source.isEmpty else {
+            throw BedrockServiceError.invalidName("Document source is not allowed to be empty")
+        }
+
         self.name = name
         self.format = format
         self.source = source
@@ -46,7 +62,7 @@ public struct DocumentBlock: Codable {
         let format = try DocumentBlock.Format(from: sdkFormat)
         switch sdkDocumentSource {
         case .bytes(let data):
-            self = DocumentBlock(name: name, format: format, source: data.base64EncodedString())
+            self = try DocumentBlock(name: name, format: format, source: data.base64EncodedString())
         case .sdkUnknown(let unknownImageSource):
             throw BedrockServiceError.notImplemented(
                 "ImageSource \(unknownImageSource) is not implemented by BedrockRuntimeClientTypes"
