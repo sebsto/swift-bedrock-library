@@ -26,6 +26,7 @@ public struct JSON: Codable {
 
     public func getValue<T>(_ key: String) -> T? {
         if let dictionary = value as? [String: JSON] {
+            print(dictionary)
             return dictionary[key]?.value as? T
         }
         return nil
@@ -45,7 +46,11 @@ public struct JSON: Codable {
     }
 
     public init(from data: Data) throws {
-        self = try JSONDecoder().decode(JSON.self, from: data)
+        do {
+            self = try JSONDecoder().decode(JSON.self, from: data)
+        } catch {
+            throw BedrockServiceError.decodingError("Failed to decode JSON: \(error)")
+        }
     }
 
     public init(from decoder: Decoder) throws {
@@ -61,9 +66,9 @@ public struct JSON: Codable {
         } else if let boolValue = try? container.decode(Bool.self) {
             self.value = boolValue
         } else if let arrayValue = try? container.decode([JSON].self) {
-            self.value = arrayValue.map { $0.value }
+            self.value = arrayValue.map { JSON($0.value) }
         } else if let dictionaryValue = try? container.decode([String: JSON].self) {
-            self.value = dictionaryValue.mapValues { $0.value }
+            self.value = dictionaryValue.mapValues { JSON($0.value) }
         } else {
             throw DecodingError.dataCorruptedError(in: container, debugDescription: "Unsupported type")
         }
