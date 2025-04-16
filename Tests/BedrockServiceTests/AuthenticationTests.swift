@@ -48,7 +48,7 @@ extension BedrockServiceTests {
         #expect(!str.contains("SECRET"))
 
         //when
-        let str2 = "\(auth)"  // is it different than String(decsribing:) ?
+        let str2 = "\(auth)"  // is it different than String(describing:) ?
 
         // then
         #expect(!str2.contains("SECRET"))
