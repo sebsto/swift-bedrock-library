@@ -79,7 +79,6 @@ extension BedrockService {
             return identityResolver
 
         } catch {
-            //FIXME: use a library provided error
             logger.error("Failed to assume role using web identity token: \(error)")
             throw BedrockServiceError.authenticationFailed(
                 "Failed to assume role using web identity token: \(error.localizedDescription)"
