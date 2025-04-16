@@ -26,7 +26,6 @@ public struct JSON: Codable {
 
     public func getValue<T>(_ key: String) -> T? {
         if let dictionary = value as? [String: JSON] {
-            print(dictionary)
             return dictionary[key]?.value as? T
         }
         return nil
