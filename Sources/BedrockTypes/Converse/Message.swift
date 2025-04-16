@@ -46,8 +46,8 @@ public struct Message: Codable {
     }
 
     /// convenience initializer for message with an ImageBlock.Format and imageBytes
-    public init(imageFormat: ImageBlock.Format, imageBytes: String) {
-        self.init(from: .user, content: [.image(ImageBlock(format: imageFormat, source: imageBytes))])
+    public init(imageFormat: ImageBlock.Format, imageBytes: String) throws {
+        self.init(from: .user, content: [.image(try ImageBlock(format: imageFormat, source: imageBytes))])
     }
 
     /// convenience initializer for message with an ImageBlock and a user prompt
@@ -56,8 +56,11 @@ public struct Message: Codable {
     }
 
     /// convenience initializer for message with a user prompt, an ImageBlock.Format and imageBytes
-    public init(_ prompt: String, imageFormat: ImageBlock.Format, imageBytes: String) {
-        self.init(from: .user, content: [.text(prompt), .image(ImageBlock(format: imageFormat, source: imageBytes))])
+    public init(_ prompt: String, imageFormat: ImageBlock.Format, imageBytes: String) throws {
+        self.init(
+            from: .user,
+            content: [.text(prompt), .image(try ImageBlock(format: imageFormat, source: imageBytes))]
+        )
     }
 
     public init(from sdkMessage: BedrockRuntimeClientTypes.Message) throws {

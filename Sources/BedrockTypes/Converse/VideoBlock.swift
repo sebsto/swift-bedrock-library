@@ -20,9 +20,21 @@ public struct VideoBlock: Codable {
     public let format: Format
     public let source: Source
 
-    public init(format: Format, source: Source) {
+    public init(format: Format, source: Source) throws {
+        // https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_VideoSource.html
+        guard case .bytes(let bytes) = source, !bytes.isEmpty else {
+            throw BedrockServiceError.invalidName("Video source is not allowed to be empty")
+        }
         self.format = format
         self.source = source
+    }
+
+    public init(format: Format, source: String) throws {
+        try self.init(format: format, source: .bytes(source))
+    }
+
+    public init(format: Format, source: S3Location) throws {
+        try self.init(format: format, source: .s3(source))
     }
 
     public init(from sdkVideoBlock: BedrockRuntimeClientTypes.VideoBlock) throws {
@@ -36,7 +48,7 @@ public struct VideoBlock: Codable {
                 "Could not extract source from BedrockRuntimeClientTypes.VideoBlock"
             )
         }
-        self = VideoBlock(
+        self = try VideoBlock(
             format: try VideoBlock.Format(from: sdkFormat),
             source: try VideoBlock.Source(from: sdkSource)
         )

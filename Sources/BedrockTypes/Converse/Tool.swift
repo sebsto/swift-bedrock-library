@@ -24,10 +24,10 @@ public struct Tool: Codable {
 
     public init(name: String, inputSchema: JSON, description: String? = nil) throws {
         guard !name.isEmpty else {
-            throw BedrockServiceError.invalidToolName("Tool name is not allowed to be empty")
+            throw BedrockServiceError.invalidName("Tool name is not allowed to be empty")
         }
         guard name.contains(/[a-zA-Z0-9_-]+/) else {
-            throw BedrockServiceError.invalidToolName(
+            throw BedrockServiceError.invalidName(
                 "Tool name must consist of only lowercase letter, uppercase letters, digits, underscores and hyphens"
             )
         }
