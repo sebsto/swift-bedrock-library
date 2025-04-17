@@ -141,7 +141,7 @@ extension BedrockService {
     /// - Returns: A ConverseReply object
     public func converse(with builder: inout ConverseBuilder) async throws -> ConverseReply {
         let reply = try await converse(with: builder)
-        builder = try builder.resetBuilder(reply.getHistory())
+        try builder.resetBuilder(reply.getHistory())
         return reply
     }
 }

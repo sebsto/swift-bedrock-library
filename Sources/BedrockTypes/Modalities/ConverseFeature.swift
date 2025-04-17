@@ -15,23 +15,11 @@
 
 import Foundation
 
-// Text
-public protocol ConverseModality: Modality {
-    var converseParameters: ConverseParameters { get }
-    var converseFeatures: [ConverseFeature] { get }
-
-    func getConverseParameters() -> ConverseParameters
-    func getConverseFeatures() -> [ConverseFeature]
-}
-
-// default implementation
-extension ConverseModality {
-
-    func getConverseParameters() -> ConverseParameters {
-        converseParameters
-    }
-
-    func getConverseFeatures() -> [ConverseFeature] {
-        converseFeatures
-    }
+// https://docs.aws.amazon.com/bedrock/latest/userguide/conversation-inference-supported-models-features.html
+public enum ConverseFeature: String, Codable, Sendable {
+    case textGeneration = "text-generation"
+    case vision = "vision"
+    case document = "document"
+    case toolUse = "tool-use"
+    case systemPrompts = "system-prompts"
 }

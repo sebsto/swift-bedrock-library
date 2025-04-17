@@ -28,11 +28,23 @@ extension BedrockServiceTests {
         arguments: NovaTestConstants.TextGeneration.validPrompts
     )
     func converseWithValidPrompt(prompt: String) async throws {
-        let output = try await bedrock.converse(
-            with: BedrockModel.nova_micro,
-            prompt: prompt
-        )
+        let builder = try ConverseBuilder(model: BedrockModel.nova_micro)
+            .withPrompt(prompt)
+        let output = try await bedrock.converse(with: builder)
         #expect(output.textReply == "Your prompt was: \(prompt)")
+    }
+
+    @Test(
+        "Continue conversation using a valid prompt and inout builder",
+        arguments: NovaTestConstants.TextGeneration.validPrompts
+    )
+    func converseWithValidPromptAndInOutBuilder(prompt: String) async throws {
+        var builder = try ConverseBuilder(model: BedrockModel.nova_micro)
+            .withPrompt(prompt)
+        #expect(builder.prompt == prompt)
+        let output = try await bedrock.converse(with: &builder)
+        #expect(output.textReply == "Your prompt was: \(prompt)")
+        #expect(builder.prompt == nil)
     }
 
     @Test(
@@ -41,10 +53,9 @@ extension BedrockServiceTests {
     )
     func converseWithInvalidPrompt(prompt: String) async throws {
         await #expect(throws: BedrockServiceError.self) {
-            let _ = try await bedrock.converse(
-                with: BedrockModel.nova_micro,
-                prompt: prompt
-            )
+            let builder = try ConverseBuilder(model: BedrockModel.nova_micro)
+                .withPrompt(prompt)
+            let _ = try await bedrock.converse(with: builder)
         }
     }
 
@@ -55,11 +66,10 @@ extension BedrockServiceTests {
     )
     func converseWithValidTemperature(temperature: Double) async throws {
         let prompt = "This is a test"
-        let output = try await bedrock.converse(
-            with: BedrockModel.nova_micro,
-            prompt: prompt,
-            temperature: temperature
-        )
+        let builder = try ConverseBuilder(model: BedrockModel.nova_micro)
+            .withPrompt(prompt)
+            .withTemperature(temperature)
+        let output = try await bedrock.converse(with: builder)
         #expect(output.textReply == "Your prompt was: \(prompt)")
     }
 
@@ -70,11 +80,10 @@ extension BedrockServiceTests {
     func converseWithInvalidTemperature(temperature: Double) async throws {
         await #expect(throws: BedrockServiceError.self) {
             let prompt = "This is a test"
-            let _ = try await bedrock.converse(
-                with: BedrockModel.nova_micro,
-                prompt: prompt,
-                temperature: temperature
-            )
+            let builder = try ConverseBuilder(model: BedrockModel.nova_micro)
+                .withPrompt(prompt)
+                .withTemperature(temperature)
+            let _ = try await bedrock.converse(with: builder)
         }
     }
 
@@ -85,11 +94,10 @@ extension BedrockServiceTests {
     )
     func converseWithValidMaxTokens(maxTokens: Int) async throws {
         let prompt = "This is a test"
-        let output = try await bedrock.converse(
-            with: BedrockModel.nova_micro,
-            prompt: prompt,
-            maxTokens: maxTokens
-        )
+        let builder = try ConverseBuilder(model: BedrockModel.nova_micro)
+            .withPrompt(prompt)
+            .withMaxTokens(maxTokens)
+        let output = try await bedrock.converse(with: builder)
         #expect(output.textReply == "Your prompt was: \(prompt)")
     }
 
@@ -100,11 +108,10 @@ extension BedrockServiceTests {
     func converseWithInvalidMaxTokens(maxTokens: Int) async throws {
         await #expect(throws: BedrockServiceError.self) {
             let prompt = "This is a test"
-            let _ = try await bedrock.converse(
-                with: BedrockModel.nova_micro,
-                prompt: prompt,
-                maxTokens: maxTokens
-            )
+            let builder = try ConverseBuilder(model: BedrockModel.nova_micro)
+                .withPrompt(prompt)
+                .withMaxTokens(maxTokens)
+            let _ = try await bedrock.converse(with: builder)
         }
     }
 
@@ -115,11 +122,10 @@ extension BedrockServiceTests {
     )
     func converseWithValidTopP(topP: Double) async throws {
         let prompt = "This is a test"
-        let output = try await bedrock.converse(
-            with: BedrockModel.nova_micro,
-            prompt: prompt,
-            topP: topP
-        )
+        let builder = try ConverseBuilder(model: BedrockModel.nova_micro)
+            .withPrompt(prompt)
+            .withTopP(topP)
+        let output = try await bedrock.converse(with: builder)
         #expect(output.textReply == "Your prompt was: \(prompt)")
     }
 
@@ -130,11 +136,10 @@ extension BedrockServiceTests {
     func converseWithInvalidTopP(topP: Double) async throws {
         await #expect(throws: BedrockServiceError.self) {
             let prompt = "This is a test"
-            let _ = try await bedrock.converse(
-                with: BedrockModel.nova_micro,
-                prompt: prompt,
-                topP: topP
-            )
+            let builder = try ConverseBuilder(model: BedrockModel.nova_micro)
+                .withPrompt(prompt)
+                .withTopP(topP)
+            let _ = try await bedrock.converse(with: builder)
         }
     }
 
@@ -145,11 +150,10 @@ extension BedrockServiceTests {
     )
     func converseWithValidTopK(stopSequences: [String]) async throws {
         let prompt = "This is a test"
-        let output = try await bedrock.converse(
-            with: BedrockModel.nova_micro,
-            prompt: prompt,
-            stopSequences: stopSequences
-        )
+        let builder = try ConverseBuilder(model: BedrockModel.nova_micro)
+            .withPrompt(prompt)
+            .withStopSequences(stopSequences)
+        let output = try await bedrock.converse(with: builder)
         #expect(output.textReply == "Your prompt was: \(prompt)")
     }
 }
