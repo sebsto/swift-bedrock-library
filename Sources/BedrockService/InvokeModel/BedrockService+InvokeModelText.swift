@@ -60,8 +60,8 @@ extension BedrockService {
         )
         do {
             let modality = try model.getTextModality()
-            try validateTextCompletionParams(
-                modality: modality,
+            let parameters = modality.getParameters()
+            try parameters.validate(
                 prompt: prompt,
                 maxTokens: maxTokens,
                 temperature: temperature,

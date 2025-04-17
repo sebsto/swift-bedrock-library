@@ -43,8 +43,8 @@ public struct ConverseRequest {
             stopSequences: stopSequences
         )
         self.systemPrompts = systemPrompts
-        if tools != nil {
-            self.toolConfig = ToolConfig(tools: tools!)
+        if let tools {
+            self.toolConfig = ToolConfig(tools: tools)
         } else {
             self.toolConfig = nil
         }
