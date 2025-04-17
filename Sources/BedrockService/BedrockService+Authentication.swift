@@ -27,8 +27,8 @@ import SmithyIdentity
 /// - `static`: Use static AWS credentials. We strongly recommend to not use this option in production. This might be useful in some rare cases when testing and debugging.
 public enum BedrockAuthenticationType: Sendable, CustomStringConvertible {
     case `default`
-    case profile(profileName: String)
-    case sso(profileName: String)
+    case profile(profileName: String = "default")
+    case sso(profileName: String = "default")
     case webIdentity(token: String, roleARN: String, region: Region, notification: @Sendable () -> Void = {})
     case `static`(accessKey: String, secretKey: String, sessionToken: String)
 
