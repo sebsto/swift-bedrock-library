@@ -20,6 +20,9 @@ public struct Message: Codable {
     public let role: Role
     public let content: [Content]
 
+
+    // MARK - initializers
+
     public init(from role: Role, content: [Content]) {
         self.role = role
         self.content = content
@@ -73,6 +76,20 @@ public struct Message: Codable {
         let content: [Content] = try sdkContent.map { try Content(from: $0) }
         self = Message(from: try Role(from: sdkRole), content: content)
     }
+
+    public init(_ response: ConverseOutput) throws {
+        guard let output = response.output else {
+            throw BedrockServiceError.invalidSDKResponse(
+                "Something went wrong while extracting ConverseOutput from response."
+            )
+        }
+        guard case .message(let sdkMessage) = output else {
+            throw BedrockServiceError.invalidSDKResponse("Could not extract message from ConverseOutput")
+        }
+        self = try Message(from: sdkMessage)
+    }
+
+    // MARK - public functions
 
     public func getSDKMessage() throws -> BedrockRuntimeClientTypes.Message {
         let contentBlocks: [BedrockRuntimeClientTypes.ContentBlock] = try content.map {

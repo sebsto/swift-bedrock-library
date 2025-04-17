@@ -13,37 +13,22 @@
 //
 //===----------------------------------------------------------------------===//
 
-@preconcurrency import AWSBedrockRuntime
-import BedrockTypes
-import Foundation
+// @preconcurrency import AWSBedrockRuntime
+// import BedrockTypes
+// import Foundation
 
-public struct ConverseResponse {
-    let message: Message
+// public struct ConverseResponse {
+//     let message: Message
 
-    // public init(_ message: Message) {
-    //     self.message = message
-    // }
-
-    public init(_ output: BedrockRuntimeClientTypes.ConverseOutput) throws {
-        guard case .message(let sdkMessage) = output else {
-            throw BedrockServiceError.invalidSDKResponse("Could not extract message from ConverseOutput")
-        }
-        self.message = try Message(from: sdkMessage)
-    }
-
-    // func getReply() -> String {
-    //     switch message.content.first {
-    //     case .text(let text):
-    //         return text
-    //     default:
-    //         return "Not found"  // FIXME
-    //     }
-    // }
-
-    // func getToolUse() -> ToolUseBlock? {
-    //     if case .toolUse(let toolUse) = message.content.last {
-    //         return toolUse
-    //     }
-    //     return nil
-    // }
-}
+//     public init(_ response: ConverseOutput) throws {
+//         guard let output = response.output else {
+//             throw BedrockServiceError.invalidSDKResponse(
+//                 "Something went wrong while extracting ConverseOutput from response."
+//             )
+//         }
+//         guard case .message(let sdkMessage) = output else {
+//             throw BedrockServiceError.invalidSDKResponse("Could not extract message from ConverseOutput")
+//         }
+//         self.message = try Message(from: sdkMessage)
+//     }
+// }
