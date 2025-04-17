@@ -33,6 +33,17 @@ extension BedrockService {
         resolution: ImageResolution? = nil,
         seed: Int? = nil
     ) throws {
+        logger.trace(
+            "Validating general image generation parameters",
+            metadata: [
+                "model": "\(model.id)",
+                "nrOfImages": .stringConvertible(nrOfImages ?? "Not defined"),
+                "cfgScale": .stringConvertible(cfgScale ?? "Not defined"),
+                "resolution.height": .stringConvertible(resolution?.height ?? "Not defined"),
+                "resolution.width": .stringConvertible(resolution?.width ?? "Not defined"),
+                "seed": .stringConvertible(seed ?? "Not defined"),
+            ]
+        )
         let modality = try model.getImageModality()
         let parameters = modality.getParameters()
         if let nrOfImages {
@@ -71,6 +82,14 @@ extension BedrockService {
             resolution: resolution,
             seed: seed
         )
+        logger.trace(
+            "Validating text to image parameters",
+            metadata: [
+                "model": "\(model.id)",
+                "prompt": "\(prompt)",
+                "negativePrompt": .stringConvertible(negativePrompt ?? "Not defined"),
+            ]
+        )
         let modality = try model.getTextToImageModality()
         let parameters = modality.getTextToImageParameters()
         try parameters.prompt.validateValue(prompt)
@@ -104,6 +123,16 @@ extension BedrockService {
             cfgScale: cfgScale,
             resolution: resolution,
             seed: seed
+        )
+        logger.trace(
+            "Validating general image generation parameters",
+            metadata: [
+                "model": "\(model.id)",
+                "prompt": .stringConvertible(prompt ?? "Not defined"),
+                "negativePrompt": .stringConvertible(negativePrompt ?? "Not defined"),
+                "similarity": .stringConvertible(similarity ?? "Not defined"),
+                "images": "\(images.count)",
+            ]
         )
         let modality = try model.getImageVariationModality()
         let parameters = modality.getImageVariationParameters()
