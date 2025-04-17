@@ -81,6 +81,10 @@ public struct ConverseBuilder {
         try self.withTools([tool])
     }
 
+    public func withTool(name: String, inputSchema: JSON, description: String?) throws -> ConverseBuilder {
+        try self.withTools([try Tool(name: name, inputSchema: inputSchema, description: description)])
+    }
+
     public func addTool(_ tool: Tool) throws -> ConverseBuilder {
         var copy = self
         try copy.setAdditionalTool(tool)
@@ -247,9 +251,21 @@ public struct ConverseBuilder {
         return copy
     }
 
+    public func withStopSequence(_ stopSequence: String) throws -> ConverseBuilder {
+        var copy = self
+        try copy.setStopSequences([stopSequence])
+        return copy
+    }
+
     public func withSystemPrompts(_ systemPrompts: [String]) throws -> ConverseBuilder {
         var copy = self
         try copy.setSystemPrompts(systemPrompts)
+        return copy
+    }
+
+    public func withSystemPrompt(_ systemPrompt: String) throws -> ConverseBuilder {
+        var copy = self
+        try copy.setSystemPrompts([systemPrompt])
         return copy
     }
 
@@ -273,7 +289,7 @@ public struct ConverseBuilder {
 
     // Mutating methods
 
-    private mutating func setModel(_ model: BedrockModel) throws {
+    public mutating func setModel(_ model: BedrockModel) throws {
         let modality = try model.getConverseModality()
         let parameters = modality.getConverseParameters()
         if tools != nil || toolResult != nil {
@@ -296,7 +312,7 @@ public struct ConverseBuilder {
         self.parameters = parameters
     }
 
-    private mutating func setHistory(_ history: [Message]) throws {
+    public mutating func setHistory(_ history: [Message]) throws {
         if let lastMessage = history.last {
             guard lastMessage.role == .assistant else {
                 throw BedrockServiceError.converseBuilder("Last message in history must be from assistant.")
@@ -310,7 +326,7 @@ public struct ConverseBuilder {
         self.history = history
     }
 
-    private mutating func setTools(_ tools: [Tool]) throws {
+    public mutating func setTools(_ tools: [Tool]) throws {
         try validateFeature(.toolUse)
         if case .toolUse(let toolUse) = history.last?.content.last {
             guard tools.contains(where: { $0.name == toolUse.name }) else {
@@ -326,7 +342,7 @@ public struct ConverseBuilder {
         self.tools = tools
     }
 
-    private mutating func setAdditionalTool(_ tool: Tool) throws {
+    public mutating func setAdditionalTool(_ tool: Tool) throws {
         try validateFeature(.toolUse)
         if var tools {
             if tools.contains(where: { $0.name == tool.name }) {
@@ -339,7 +355,7 @@ public struct ConverseBuilder {
         }
     }
 
-    private mutating func deleteTool(_ name: String) throws {
+    public mutating func deleteTool(_ name: String) throws {
         try validateFeature(.toolUse)
         guard var tools else {
             throw BedrockServiceError.converseBuilder("Cannot remove tool if tools is not set.")
@@ -361,7 +377,7 @@ public struct ConverseBuilder {
         self.tools = tools
     }
 
-    private mutating func setPrompt(_ prompt: String) throws {
+    public mutating func setPrompt(_ prompt: String) throws {
         guard toolResult == nil else {
             throw BedrockServiceError.converseBuilder("Cannot set prompt when tool result is set")
         }
@@ -369,7 +385,7 @@ public struct ConverseBuilder {
         self.prompt = prompt
     }
 
-    private mutating func setImage(_ image: ImageBlock) throws {
+    public mutating func setImage(_ image: ImageBlock) throws {
         try validateFeature(.vision)
         guard toolResult == nil else {
             throw BedrockServiceError.converseBuilder("Cannot set image when tool result is set")
@@ -377,7 +393,7 @@ public struct ConverseBuilder {
         self.image = image
     }
 
-    private mutating func setDocument(_ document: DocumentBlock) throws {
+    public mutating func setDocument(_ document: DocumentBlock) throws {
         try validateFeature(.document)
         guard toolResult == nil else {
             throw BedrockServiceError.converseBuilder("Cannot set document when tool result is set")
@@ -385,7 +401,7 @@ public struct ConverseBuilder {
         self.document = document
     }
 
-    private mutating func setToolResult(_ toolResult: ToolResultBlock) throws {
+    public mutating func setToolResult(_ toolResult: ToolResultBlock) throws {
         guard prompt == nil && image == nil && document == nil else {
             throw BedrockServiceError.converseBuilder("Cannot set tool result when prompt, image, or document is set")
         }
@@ -405,26 +421,26 @@ public struct ConverseBuilder {
         self.toolResult = toolResult
     }
 
-    private mutating func setMaxTokens(_ maxTokens: Int) throws {
+    public mutating func setMaxTokens(_ maxTokens: Int) throws {
         try parameters.maxTokens.validateValue(maxTokens)
         self.maxTokens = maxTokens
     }
 
-    private mutating func setTemperature(_ temperature: Double) throws {
+    public mutating func setTemperature(_ temperature: Double) throws {
         try parameters.temperature.validateValue(temperature)
         self.temperature = temperature
     }
 
-    private mutating func setSystemPrompts(_ systemPrompts: [String]) throws {
+    public mutating func setSystemPrompts(_ systemPrompts: [String]) throws {
         self.systemPrompts = systemPrompts
     }
 
-    private mutating func setStopSequences(_ stopSequences: [String]) throws {
+    public mutating func setStopSequences(_ stopSequences: [String]) throws {
         try parameters.stopSequences.validateValue(stopSequences)
         self.stopSequences = stopSequences
     }
 
-    private mutating func setTopP(_ topP: Double) throws {
+    public mutating func setTopP(_ topP: Double) throws {
         try parameters.topP.validateValue(topP)
         self.topP = topP
     }

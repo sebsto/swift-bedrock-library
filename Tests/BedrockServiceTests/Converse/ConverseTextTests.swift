@@ -42,9 +42,71 @@ extension BedrockServiceTests {
         var builder = try ConverseBuilder(model: BedrockModel.nova_micro)
             .withPrompt(prompt)
         #expect(builder.prompt == prompt)
-        let output = try await bedrock.converse(with: &builder)
+        var output = try await bedrock.converse(with: &builder)
         #expect(output.textReply == "Your prompt was: \(prompt)")
         #expect(builder.prompt == nil)
+
+        try builder.setPrompt("New prompt")
+        #expect(builder.prompt == "New prompt")
+
+        output = try await bedrock.converse(with: &builder)
+        #expect(output.textReply == "Your prompt was: New prompt")
+    }
+
+    @Test("Continue conversation using inout builder")
+    func converseWithInOutBuilder() async throws {
+        var builder = try ConverseBuilder(model: BedrockModel.nova_micro)
+            .withPrompt("First prompt")
+            .withMaxTokens(100)
+            .withTemperature(0.5)
+            .withTopP(0.5)
+            .withStopSequence("\n\nHuman:")
+            .withSystemPrompt("You are a helpful assistant.")
+
+        #expect(builder.prompt == "First prompt")
+        #expect(builder.maxTokens == 100)
+        #expect(builder.temperature == 0.5)
+        #expect(builder.topP == 0.5)
+        #expect(builder.stopSequences == ["\n\nHuman:"])
+        #expect(builder.systemPrompts == ["You are a helpful assistant."])
+
+        var output = try await bedrock.converse(with: &builder)
+        #expect(output.textReply == "Your prompt was: First prompt")
+        #expect(builder.prompt == nil)
+        #expect(builder.maxTokens == 100)
+        #expect(builder.temperature == 0.5)
+        #expect(builder.topP == 0.5)
+        #expect(builder.stopSequences == ["\n\nHuman:"])
+        #expect(builder.systemPrompts == ["You are a helpful assistant."])
+        #expect(builder.history.count == 2)
+
+        try builder.setPrompt("Second prompt")
+        #expect(builder.prompt == "Second prompt")
+
+        output = try await bedrock.converse(with: &builder)
+        #expect(output.textReply == "Your prompt was: Second prompt")
+        #expect(builder.prompt == nil)
+        #expect(builder.maxTokens == 100)
+        #expect(builder.temperature == 0.5)
+        #expect(builder.topP == 0.5)
+        #expect(builder.stopSequences == ["\n\nHuman:"])
+        #expect(builder.systemPrompts == ["You are a helpful assistant."])
+        #expect(builder.history.count == 4)
+
+        try builder.setPrompt("Second prompt")
+        try builder.setTemperature(1)
+        #expect(builder.prompt == "Second prompt")
+        #expect(builder.temperature == 1)
+
+        output = try await bedrock.converse(with: &builder)
+        #expect(output.textReply == "Your prompt was: Second prompt")
+        #expect(builder.prompt == nil)
+        #expect(builder.maxTokens == 100)
+        #expect(builder.temperature == 1)
+        #expect(builder.topP == 0.5)
+        #expect(builder.stopSequences == ["\n\nHuman:"])
+        #expect(builder.systemPrompts == ["You are a helpful assistant."])
+        #expect(builder.history.count == 6)
     }
 
     @Test(

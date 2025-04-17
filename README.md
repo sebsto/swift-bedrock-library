@@ -213,35 +213,37 @@ guard model.hasConverseModality() else {
     throw MyError.incorrectModality("\(model.name) does not support converse")
 }
 
-var reply = try await bedrock.converse(
-    with: model,
-    prompt: "Tell me about rainbows"
-)
+let builder = try ConverseBuilder(model: model)
+    .withPrompt("Tell me about rainbows")
+
+var reply = try await bedrock.converse(with: builder)
 
 print("Assistant: \(reply)")
 
-reply = try await bedrock.converse(
-    with: model,
-    prompt: "Do you think birds can see them too?",
-    history: &history
-)
+let nextBuilder = try ConverseBuilder(model: model)
+    .withPrompt("Do you think birds can see them too?")
+    .withHistory(reply.getHistory())
+
+reply = try await bedrock.converse(with: builder)
 
 print("Assistant: \(reply)")
 ```
 
-Optionally add inference parameters. 
+Optionally add inference parameters. By using the builder as an inout parameter, you can then reuse your parameters for several calls.
 
 ```swift
-var reply = try await bedrock.converse(
-    with: model,
-    prompt: "Tell me about rainbows",
-    history: &history,
-    maxTokens: 1024,
-    temperature: 0.2,
-    topP: 0.8,
-    stopSequences: ["END", "STOP", "<assistant>"],
-    systemPrompts: ["Do not pretend to be human", "Never talk about goats", "You like puppies"]
-    )
+let builder = try ConverseBuilder(model: model)
+    .withPrompt("Tell me about rainbows")
+    .withMaxTokens(512)
+    .withTemperature(0.2)
+    .withStopSequences(["END", "STOP", "<assistant>"])
+    .withSystemPrompts(["Do not pretend to be human", "Never talk about goats", "You like puppies"])
+
+var reply = try await bedrock.converse(with: &builder)
+
+try builder.setPrompt("Do you think birds can see them too?")
+
+reply = try await bedrock.converse(with: &builder)
 ```
 
 
@@ -254,15 +256,11 @@ guard model.hasConverseModality(.vision) else {
     throw MyError.incorrectModality("\(model.name) does not support converse vision")
 }
 
-let image = try ImageBlock(format: .jpeg, source: base64EncodedImage)
-var history: [Message] = []
+let builder = try ConverseBuilder(model: model)
+    .withPrompt("Can you tell me about this plant?")
+    .withImage(format: .jpeg, source: base64EncodedImage)
 
-let reply = try await bedrock.converse(
-    with: model,
-    prompt: "Can you tell me about this plant?",
-    image: image,
-    history: &history
-)
+let reply = try await bedrock.converse(with: builder)
 
 print("Assistant: \(reply)")
 ```
@@ -270,15 +268,28 @@ print("Assistant: \(reply)")
 Optionally add inference parameters. 
 
 ```swift
-var reply = try await bedrock.converse(
-    with model: model,
-    prompt: "Can you tell me about this plant?",
-    image: image,
-    history: &history,
-    temperature: 1
-    )
+let builder = try ConverseBuilder(model: model)
+    .withPrompt("Can you tell me about this plant?")
+    .withImage(format: .jpeg, source: base64EncodedImage)
+    .withTemperature(0.8)
+
+let reply = try await bedrock.converse(with: builder)
 ```
 
+Note that by using the builder as an inout parameter, you can reuse your parameters for several calls.
+
+```swift
+var builder = try ConverseBuilder(model: model)
+    .withPrompt("Can you tell me about this plant?")
+    .withImage(format: .jpeg, source: base64EncodedImage)
+    .withTemperature(0.8)
+
+var reply = try await bedrock.converse(with: &builder)
+
+builder.setPrompt("Where can I find those plants?")
+
+reply = try await bedrock.converse(with: &builder)
+```
 ### Document
 
 ```swift
@@ -288,15 +299,11 @@ guard model.hasConverseModality(.document) else {
     throw MyError.incorrectModality("\(model.name) does not support converse document")
 }
 
-let document = try DocumentBlock(name: "name", format: .pdf, source: base64EncodedDocument)
-var history: [Message] = []
+let builder = try ConverseBuilder(model: model)
+    .withPrompt("Can you give me a summary of this chapter?")
+    .withDocument(name: "Chapter 1", format: .pdf, source: base64EncodedDocument)
 
-let reply = try await bedrock.converse(
-    with: model,
-    prompt: "Can you tell me about this plant?",
-    document: document,
-    history: &history
-)
+let reply = try await bedrock.converse(with: builder)
 
 print("Assistant: \(reply)")
 ```
@@ -304,13 +311,29 @@ print("Assistant: \(reply)")
 Optionally add inference parameters. 
 
 ```swift
-var reply = try await bedrock.converse(
-    with model: model,
-    prompt: "Can you tell me about this plant?",
-    document: document,
-    history: &history,
-    maxTokens: 512
-    )
+let builder = try ConverseBuilder(model: model)
+    .withPrompt("Can you give me a summary of this chapter?")
+    .withDocument(name: "Chapter 1", format: .pdf, source: base64EncodedDocument)
+    .withMaxTokens(512)
+    .withTemperature(0.4)
+
+var reply = try await bedrock.converse(with: builder)
+```
+
+Note that by using the builder as an inout parameter, you can reuse your parameters for several calls.
+
+```swift
+var builder = try ConverseBuilder(model: model)
+    .withPrompt("Can you give me a summary of this chapter?")
+    .withDocument(name: "Chapter 1", format: .pdf, source: base64EncodedDocument)
+    .withMaxTokens(512)
+    .withTemperature(0.4)
+
+var reply = try await bedrock.converse(with: &builder)
+
+try builder.setPrompt("Thanks, can you make a Dutch version as well?")
+
+reply = try await bedrock.converse(with: &builder)
 ```
 
 ### Tools
@@ -340,29 +363,24 @@ let inputSchema = JSON([
 // create a Tool object
 let tool = try Tool(name: "top_song", inputSchema: inputSchema, description: "Get the most popular song played on a radio station.")
 
-// pass a prompt and the tool to converse
-var reply = try await bedrock.converse(
-    with: model,
-    prompt: "What is the most popular song on WZPZ?",
-    tools: [tool]
-)
+// create a ConverseBuilder with a prompt and the Tool object
+var builder = try ConverseBuilder(model: model)
+    .withPrompt("What is the most popular song on WZPZ?")
+    .tool(tool)
+
+// pass the ConverseBuilder object to the converse function
+var reply = try await bedrock.converse(with: &builder)
 
 if let toolUse = try? reply.getToolUse() {
     let id = toolUse.id
     let name = toolUse.name
     let input = toolUse.input
 
-    // Logic to use the tool here
-    
-    let toolResult = ToolResultBlock("The Best Song Ever", id: id)
+    // ... Logic to use the tool here ... 
 
     // Send the toolResult back to the model
-    reply = try await bedrock.converse(
-    with: model,
-    history: reply.getHistory(),
-    tools: [tool],
-    toolResult: toolResult
-    )
+    try builder.setToolResult("The Best Song Ever")
+    reply = try await bedrock.converse(with: &builder)
 }
 
 print("Assistant: \(reply)")
