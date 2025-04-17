@@ -39,7 +39,14 @@ public struct TextGenerationParameters: Parameters {
         self.stopSequences = stopSequences
     }
 
-    public func validate(prompt: String? = nil, maxTokens: Int? = nil, temperature: Double? = nil, topP: Double? = nil, topK: Int? = nil, stopSequences: [String]? = nil) throws {
+    public func validate(
+        prompt: String? = nil,
+        maxTokens: Int? = nil,
+        temperature: Double? = nil,
+        topP: Double? = nil,
+        topK: Int? = nil,
+        stopSequences: [String]? = nil
+    ) throws {
         if let prompt = prompt {
             try self.prompt.validateValue(prompt)
         }

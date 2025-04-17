@@ -20,7 +20,6 @@ public struct Message: Codable {
     public let role: Role
     public let content: [Content]
 
-
     // MARK - initializers
 
     public init(from role: Role, content: [Content]) {

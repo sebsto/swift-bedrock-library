@@ -56,7 +56,7 @@ extension BedrockService {
     ///   - negativePrompt: Optional text describing what to avoid in the generated image
     /// - Throws: BedrockServiceError if the parameters are invalid or exceed model constraints
     public func validateTextToImageParams(
-        model: BedrockModel, 
+        model: BedrockModel,
         nrOfImages: Int? = nil,
         cfgScale: Double? = nil,
         resolution: ImageResolution? = nil,

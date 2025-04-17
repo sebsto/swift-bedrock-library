@@ -145,7 +145,11 @@ public struct ConverseBuilder {
         return try self.withToolResult(toolResult)
     }
 
-    public func withToolResult(_ text: String, id: String? = nil, status: ToolResultBlock.Status? = nil) throws -> ConverseBuilder {
+    public func withToolResult(
+        _ text: String,
+        id: String? = nil,
+        status: ToolResultBlock.Status? = nil
+    ) throws -> ConverseBuilder {
         let id = try id ?? getToolResultId()
         let toolResult = ToolResultBlock(text, id: id, status: status)
         return try self.withToolResult(toolResult)

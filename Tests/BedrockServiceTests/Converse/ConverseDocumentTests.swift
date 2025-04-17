@@ -63,8 +63,8 @@ extension BedrockServiceTests {
         let documentBlock = try DocumentBlock(name: "doc", format: .pdf, source: source)
         #expect(throws: BedrockServiceError.self) {
             let _ = try ConverseBuilder(model: BedrockModel.nova_micro)
-            .withPrompt("What is this?")
-            .withDocument(documentBlock)
+                .withPrompt("What is this?")
+                .withDocument(documentBlock)
         }
     }
 }
