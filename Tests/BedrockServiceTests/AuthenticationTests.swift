@@ -35,7 +35,7 @@ extension BedrockServiceTests {
                 roleARN: "MY_ROLE_ARN",
                 region: .useast1,
                 notification: {}
-            )
+            ),
         ]
     )
     func authNoLeaks(auth: BedrockAuthentication) {
