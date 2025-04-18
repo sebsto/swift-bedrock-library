@@ -41,23 +41,15 @@ public struct JSON: Codable {
         guard let data = string.data(using: .utf8) else {
             throw BedrockServiceError.encodingError("Could not encode String to Data")
         }
-        guard let decodedValue = try? JSONSerialization.jsonObject(with: data, options: []) else {
-            throw BedrockServiceError.decodingError("Could not decode value from Data")
-        }
-        guard let dictionary = decodedValue as? [String: Any] else {
-            throw BedrockServiceError.decodingError("Could not decode JSON from Data")
-        }
-        self.value = dictionary.mapValues { JSON($0) }
+        try self.init(from: data)
     }
 
     public init(from data: Data) throws {
-        guard let decodedValue = try? JSONSerialization.jsonObject(with: data, options: []) else {
-            throw BedrockServiceError.decodingError("Could not decode value from Data")
+        do {
+            self = try JSONDecoder().decode(JSON.self, from: data)
+        } catch {
+            throw BedrockServiceError.decodingError("Failed to decode JSON: \(error)")
         }
-        guard let dictionary = decodedValue as? [String: Any] else {
-            throw BedrockServiceError.decodingError("Could not decode JSON from Data")
-        }
-        self.value = dictionary.mapValues { JSON($0) }
     }
 
     public init(from decoder: Decoder) throws {
@@ -73,9 +65,9 @@ public struct JSON: Codable {
         } else if let boolValue = try? container.decode(Bool.self) {
             self.value = boolValue
         } else if let arrayValue = try? container.decode([JSON].self) {
-            self.value = arrayValue.map { $0.value }
+            self.value = arrayValue.map { JSON($0.value) }
         } else if let dictionaryValue = try? container.decode([String: JSON].self) {
-            self.value = dictionaryValue.mapValues { $0.value }
+            self.value = dictionaryValue.mapValues { JSON($0.value) }
         } else {
             throw DecodingError.dataCorruptedError(in: container, debugDescription: "Unsupported type")
         }
