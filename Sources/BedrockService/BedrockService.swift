@@ -42,7 +42,7 @@ public struct BedrockService: Sendable {
         logger: Logging.Logger? = nil,
         bedrockClient: BedrockClientProtocol? = nil,
         bedrockRuntimeClient: BedrockRuntimeClientProtocol? = nil,
-        authentication: BedrockAuthenticationType = .default,
+        authentication: BedrockAuthentication = .default,
     ) async throws {
         self.logger = logger ?? BedrockService.createLogger("bedrock.service")
         self.logger.trace(
@@ -109,7 +109,7 @@ public struct BedrockService: Sendable {
     /// - Throws: Error if client creation fails
     static private func createBedrockClient(
         region: Region,
-        authentication: BedrockAuthenticationType,
+        authentication: BedrockAuthentication,
         logger: Logging.Logger
     ) async throws
         -> BedrockClientProtocol
@@ -117,8 +117,7 @@ public struct BedrockService: Sendable {
         let config = try await BedrockClient.BedrockClientConfiguration(
             region: region.rawValue
         )
-        if let awsCredentialIdentityResolver = try? await getAWSCredentialIdentityResolver(
-            authentication: authentication,
+        if let awsCredentialIdentityResolver = try? await authentication.getAWSCredentialIdentityResolver(
             logger: logger
         ) {
             config.awsCredentialIdentityResolver = awsCredentialIdentityResolver
@@ -134,7 +133,7 @@ public struct BedrockService: Sendable {
     /// - Throws: Error if client creation fails
     static private func createBedrockRuntimeClient(
         region: Region,
-        authentication: BedrockAuthenticationType,
+        authentication: BedrockAuthentication,
         logger: Logging.Logger
     )
         async throws
@@ -144,8 +143,7 @@ public struct BedrockService: Sendable {
             try await BedrockRuntimeClient.BedrockRuntimeClientConfiguration(
                 region: region.rawValue
             )
-        if let awsCredentialIdentityResolver = try? await getAWSCredentialIdentityResolver(
-            authentication: authentication,
+        if let awsCredentialIdentityResolver = try? await authentication.getAWSCredentialIdentityResolver(
             logger: logger
         ) {
             config.awsCredentialIdentityResolver = awsCredentialIdentityResolver

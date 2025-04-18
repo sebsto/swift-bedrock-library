@@ -23,7 +23,7 @@ import FoundationEssentials
 import Foundation
 #endif
 
-extension BedrockService {
+extension BedrockAuthentication {
     /// Convert the given JWT identity token string into temporary AWS credentials
     /// using the STSWebIdentityAWSCredentialIdentityResolver
     ///
@@ -34,7 +34,7 @@ extension BedrockService {
     ///   - region: An optional string specifying the AWS Region to
     ///     access. If not specified, "us-east-1" is assumed.
     ///   - notify: A closure to be called on the main thread when the credentials are retrieved.
-    static func webIdentityCredentialResolver(
+    func webIdentityCredentialResolver(
         withWebIdentity tokenString: String,
         logger: Logger,
         roleARN: String,
