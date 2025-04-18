@@ -57,26 +57,14 @@ public struct ConverseBuilder {
         guard builder.history.count == history.count - 2 else {
             throw BedrockServiceError.converseBuilder("History count mismatch")
         }
-        var copy = try Self(builder.model)
-        if let maxTokens = builder.maxTokens {
-            copy.maxTokens = maxTokens
-        }
-        if let temperature = builder.temperature {
-            copy.temperature = temperature
-        }
-        if let topP = builder.topP {
-            copy.topP = topP
-        }
-        if let stopSequences = builder.stopSequences {
-            copy.stopSequences = stopSequences
-        }
-        if let systemPrompts = builder.systemPrompts {
-            copy.systemPrompts = systemPrompts
-        }
-        if let tools = builder.tools {
-            copy.tools = tools
-        }
-        self = try copy.withHistory(history)
+        self = try ConverseBuilder(builder.model)
+            .withHistory(history)
+            .withTemperature(builder.temperature)
+            .withTopP(builder.topP)
+            .withMaxTokens(builder.maxTokens)
+            .withStopSequences(builder.stopSequences)
+            .withSystemPrompts(builder.systemPrompts)
+            .withTools(builder.tools)
     }
 
     /// Creates a ConverseBuilder object based of a ConverseBuilder object
@@ -109,6 +97,9 @@ public struct ConverseBuilder {
 
     public func withTools(_ tools: [Tool]) throws -> ConverseBuilder {
         try validateFeature(.toolUse)
+        guard tools.count > 0 else {
+            throw BedrockServiceError.converseBuilder("Cannot set tools to empty array.")
+        }
         if case .toolUse(let toolUse) = history.last?.content.last {
             guard tools.contains(where: { $0.name == toolUse.name }) else {
                 throw BedrockServiceError.converseBuilder(
@@ -122,6 +113,14 @@ public struct ConverseBuilder {
         }
         var copy = self
         copy.tools = tools
+        return copy
+    }
+
+    private func withTools(_ tools: [Tool]?) throws -> ConverseBuilder {
+        let copy = self
+        if let tools {
+            return try copy.withTools(tools)
+        }
         return copy
     }
 
@@ -287,63 +286,94 @@ public struct ConverseBuilder {
 
     // MARK - builder methods - inference parameters
 
-    public func withMaxTokens(_ maxTokens: Int) throws -> ConverseBuilder {
+    public func withMaxTokens(_ maxTokens: Int?) throws -> ConverseBuilder {
         var copy = self
-        try copy.parameters.maxTokens.validateValue(maxTokens)
-        copy.maxTokens = maxTokens
+        if let maxTokens {
+            try copy.parameters.maxTokens.validateValue(maxTokens)
+            copy.maxTokens = maxTokens
+        }
         return copy
     }
 
-    public func withTemperature(_ temperature: Double) throws -> ConverseBuilder {
+    public func withTemperature(_ temperature: Double?) throws -> ConverseBuilder {
         var copy = self
-        try copy.parameters.temperature.validateValue(temperature)
-        copy.temperature = temperature
+        if let temperature {
+            try copy.parameters.temperature.validateValue(temperature)
+            copy.temperature = temperature
+        }
         return copy
     }
 
-    public func withTopP(_ topP: Double) throws -> ConverseBuilder {
+    public func withTopP(_ topP: Double?) throws -> ConverseBuilder {
         var copy = self
-        try copy.parameters.topP.validateValue(topP)
-        copy.topP = topP
+        if let topP {
+            try copy.parameters.topP.validateValue(topP)
+            copy.topP = topP
+        }
         return copy
     }
 
-    public func withStopSequences(_ stopSequences: [String]) throws -> ConverseBuilder {
+    public func withStopSequences(_ stopSequences: [String]?) throws -> ConverseBuilder {
         var copy = self
-        try copy.parameters.stopSequences.validateValue(stopSequences)
-        copy.stopSequences = stopSequences
+        if let stopSequences {
+            guard stopSequences != [] else {
+                throw BedrockServiceError.converseBuilder("Cannot set stop sequences to empty array.")
+            }
+            try copy.parameters.stopSequences.validateValue(stopSequences)
+            copy.stopSequences = stopSequences
+        }
         return copy
     }
 
-    public func withStopSequence(_ stopSequence: String) throws -> ConverseBuilder {
-        try self.withStopSequences([stopSequence])
+    public func withStopSequence(_ stopSequence: String?) throws -> ConverseBuilder {
+        var stopSequences: [String]? = nil
+        if let stopSequence {
+            stopSequences = [stopSequence]
+        }
+        return try self.withStopSequences(stopSequences)
     }
 
-    public func withSystemPrompts(_ systemPrompts: [String]) throws -> ConverseBuilder {
+    public func withSystemPrompts(_ systemPrompts: [String]?) throws -> ConverseBuilder {
         var copy = self
-        copy.systemPrompts = systemPrompts
+        if let systemPrompts {
+            guard systemPrompts != [] else {
+                throw BedrockServiceError.converseBuilder("Cannot set system prompts to empty array.")
+            }
+            copy.systemPrompts = systemPrompts
+        }
         return copy
     }
 
-    public func withSystemPrompt(_ systemPrompt: String) throws -> ConverseBuilder {
-        try self.withSystemPrompts([systemPrompt])
+    public func withSystemPrompt(_ systemPrompt: String?) throws -> ConverseBuilder {
+        var systemPrompts: [String]? = nil
+        if let systemPrompt {
+            systemPrompts = [systemPrompt]
+        }
+        return try self.withSystemPrompts(systemPrompts)
     }
 
     // MARK - public methods
 
     /// Returns the user Message made up of the user input in the builder
-    public func getUserMessage() throws -> Message {
-        try parameters.validate(
-            prompt: prompt,
-            maxTokens: maxTokens,
-            temperature: temperature,
-            topP: topP,
-            stopSequences: stopSequences
-        )
-        return Message(from: .user, content: try getContent())
+    package func getUserMessage() throws -> Message {
+        var content: [Content] = []
+        if let prompt {
+            content.append(.text(prompt))
+        }
+        if let image {
+            content.append(.image(image))
+        }
+        if let document {
+            content.append(.document(document))
+        }
+        if let toolResult {
+            content.append(.toolResult(toolResult))
+        }
+        guard !content.isEmpty else {
+            throw BedrockServiceError.converseBuilder("No content defined.")
+        }
+        return Message(from: .user, content: content)
     }
-
-    // MARK - private methods
 
     private func getToolResultId() throws -> String {
         guard let lastMessage = history.last else {
@@ -363,25 +393,5 @@ public struct ConverseBuilder {
                 "This model does not support converse feature \(feature)."
             )
         }
-    }
-
-    private func getContent() throws -> [Content] {
-        var content: [Content] = []
-        if let prompt {
-            content.append(.text(prompt))
-        }
-        if let image {
-            content.append(.image(image))
-        }
-        if let document {
-            content.append(.document(document))
-        }
-        if let toolResult {
-            content.append(.toolResult(toolResult))
-        }
-        guard !content.isEmpty else {
-            throw BedrockServiceError.converseBuilder("No content defined.")
-        }
-        return content
     }
 }
