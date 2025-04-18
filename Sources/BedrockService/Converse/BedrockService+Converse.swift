@@ -133,15 +133,4 @@ extension BedrockService {
             throw error
         }
     }
-
-    /// Use Converse API with the ConverseBuilder
-    /// - Parameters:
-    ///   - builder: ConverseBuilder object that will be updated to include the users message and the assistants reply.
-    /// - Throws: BedrockServiceError.invalidSDKResponse if the response body is missing
-    /// - Returns: A ConverseReply object
-    public func converse(with builder: inout ConverseBuilder) async throws -> ConverseReply {
-        let reply = try await converse(with: builder)
-        try builder.resetBuilder(reply.getHistory())
-        return reply
-    }
 }

@@ -37,43 +37,57 @@ public struct ConverseBuilder {
 
     // MARK - Initializers
 
-    public init(model: BedrockModel) throws {
+    public init(_ model: BedrockModel) throws {
         self.model = model
         let modality = try model.getConverseModality()
         self.parameters = modality.getConverseParameters()
         self.history = []
     }
 
-    // MARK - builder methods
-
-    // MARK - builder methods - model
-
-    public func withModel(_ model: BedrockModel) throws -> ConverseBuilder {
-        var copy = self
-        try copy.setModel(model)
-        return copy
-    }
-
-    public func withModel(_ modelId: String) throws -> ConverseBuilder {
+    public init(_ modelId: String) throws {
         guard let model = BedrockModel(rawValue: modelId) else {
             throw BedrockServiceError.notFound("No model with model id \(modelId) found.")
         }
-        return try self.withModel(model)
+        self = try .init(model)
     }
+
+    // MARK - builder methods
 
     // MARK - builder methods - history
 
     public func withHistory(_ history: [Message]) throws -> ConverseBuilder {
+        if let lastMessage = history.last {
+            guard lastMessage.role == .assistant else {
+                throw BedrockServiceError.converseBuilder("Last message in history must be from assistant.")
+            }
+        }
+        if toolResult != nil {
+            guard case .toolUse(_) = history.last?.content.last else {
+                throw BedrockServiceError.invalidPrompt("Tool result is defined but last message is not tool use.")
+            }
+        }
         var copy = self
-        try copy.setHistory(history)
+        copy.history = history
         return copy
     }
 
     // MARK - builder methods - tools
 
     public func withTools(_ tools: [Tool]) throws -> ConverseBuilder {
+        try validateFeature(.toolUse)
+        if case .toolUse(let toolUse) = history.last?.content.last {
+            guard tools.contains(where: { $0.name == toolUse.name }) else {
+                throw BedrockServiceError.converseBuilder(
+                    "Cannot set tools if last message in history contains toolUse and no matching tool is found."
+                )
+            }
+        }
+        let toolNames = tools.map { $0.name }
+        guard Set(toolNames).count == tools.count else {
+            throw BedrockServiceError.converseBuilder("Cannot set tools with duplicate names.")
+        }
         var copy = self
-        try copy.setTools(tools)
+        copy.tools = tools
         return copy
     }
 
@@ -85,33 +99,25 @@ public struct ConverseBuilder {
         try self.withTools([try Tool(name: name, inputSchema: inputSchema, description: description)])
     }
 
-    public func addTool(_ tool: Tool) throws -> ConverseBuilder {
-        var copy = self
-        try copy.setAdditionalTool(tool)
-        return copy
-    }
-
-    public func removeTool(_ name: String) throws -> ConverseBuilder {
-        var copy = self
-        try copy.deleteTool(name)
-        return copy
-    }
-
-    public func removeTool(_ tool: Tool) throws -> ConverseBuilder {
-        try removeTool(tool.name)
-    }
-
     // MARK - builder methods - user prompt
 
     public func withPrompt(_ prompt: String) throws -> ConverseBuilder {
+        guard toolResult == nil else {
+            throw BedrockServiceError.converseBuilder("Cannot set prompt when tool result is set")
+        }
+        try parameters.prompt.validateValue(prompt)
         var copy = self
-        try copy.setPrompt(prompt)
+        copy.prompt = prompt
         return copy
     }
 
     public func withImage(_ image: ImageBlock) throws -> ConverseBuilder {
+        try validateFeature(.vision)
+        guard toolResult == nil else {
+            throw BedrockServiceError.converseBuilder("Cannot set image when tool result is set")
+        }
         var copy = self
-        try copy.setImage(image)
+        copy.image = image
         return copy
     }
 
@@ -120,8 +126,12 @@ public struct ConverseBuilder {
     }
 
     public func withDocument(_ document: DocumentBlock) throws -> ConverseBuilder {
+        try validateFeature(.document)
+        guard toolResult == nil else {
+            throw BedrockServiceError.converseBuilder("Cannot set document when tool result is set")
+        }
         var copy = self
-        try copy.setDocument(document)
+        copy.document = document
         return copy
     }
 
@@ -134,8 +144,24 @@ public struct ConverseBuilder {
     }
 
     public func withToolResult(_ toolResult: ToolResultBlock) throws -> ConverseBuilder {
+        guard prompt == nil && image == nil && document == nil else {
+            throw BedrockServiceError.converseBuilder("Cannot set tool result when prompt, image, or document is set")
+        }
+        guard let _ = tools else {
+            throw BedrockServiceError.converseBuilder("Cannot set tool result when tools are not set")
+        }
+        guard let lastMessage = history.last else {
+            throw BedrockServiceError.converseBuilder("Cannot set tool result when history is empty")
+        }
+        guard case .toolUse(let toolUse) = lastMessage.content.last else {
+            throw BedrockServiceError.invalidPrompt("Cannot set tool result when last message is not tool use.")
+        }
+        guard toolUse.id == toolResult.id else {
+            throw BedrockServiceError.invalidPrompt("Tool result name does not match tool use name.")
+        }
+        try validateFeature(.toolUse)
         var copy = self
-        try copy.setToolResult(toolResult)
+        copy.toolResult = toolResult
         return copy
     }
 
@@ -229,76 +255,50 @@ public struct ConverseBuilder {
 
     public func withMaxTokens(_ maxTokens: Int) throws -> ConverseBuilder {
         var copy = self
-        try copy.setMaxTokens(maxTokens)
+        try copy.parameters.maxTokens.validateValue(maxTokens)
+        copy.maxTokens = maxTokens
         return copy
     }
 
     public func withTemperature(_ temperature: Double) throws -> ConverseBuilder {
         var copy = self
-        try copy.setTemperature(temperature)
+        try copy.parameters.temperature.validateValue(temperature)
+        copy.temperature = temperature
         return copy
     }
 
     public func withTopP(_ topP: Double) throws -> ConverseBuilder {
         var copy = self
-        try copy.setTopP(topP)
+        try copy.parameters.topP.validateValue(topP)
+        copy.topP = topP
         return copy
     }
 
     public func withStopSequences(_ stopSequences: [String]) throws -> ConverseBuilder {
         var copy = self
-        try copy.setStopSequences(stopSequences)
+        try copy.parameters.stopSequences.validateValue(stopSequences)
+        copy.stopSequences = stopSequences
         return copy
     }
 
     public func withStopSequence(_ stopSequence: String) throws -> ConverseBuilder {
-        var copy = self
-        try copy.setStopSequences([stopSequence])
-        return copy
+        try self.withStopSequences([stopSequence])
     }
 
     public func withSystemPrompts(_ systemPrompts: [String]) throws -> ConverseBuilder {
         var copy = self
-        try copy.setSystemPrompts(systemPrompts)
+        copy.stopSequences = stopSequences
         return copy
     }
 
     public func withSystemPrompt(_ systemPrompt: String) throws -> ConverseBuilder {
-        var copy = self
-        try copy.setSystemPrompts([systemPrompt])
-        return copy
+        try self.withSystemPrompts([systemPrompt])
     }
 
     // MARK - public methods
 
     /// Returns the user Message made up of the user input in the builder
     public func getUserMessage() throws -> Message {
-        Message(from: .user, content: try getContent())
-    }
-
-    /// Returns a ConverseBuilder object with an updated history and all the user input emptied out.
-    public mutating func resetBuilder(_ history: [Message]) throws {
-        prompt = nil
-        image = nil
-        document = nil
-        toolResult = nil
-        try setHistory(history)
-    }
-
-    // Mutating methods
-
-    public mutating func setModel(_ model: BedrockModel) throws {
-        let modality = try model.getConverseModality()
-        let parameters = modality.getConverseParameters()
-        if tools != nil || toolResult != nil {
-            try validateFeature(.toolUse)
-        }
-        if image != nil {
-            try validateFeature(.vision)
-        }
-        if document != nil {
-            try validateFeature(.document)
-        }
         try parameters.validate(
             prompt: prompt,
             maxTokens: maxTokens,
@@ -306,141 +306,7 @@ public struct ConverseBuilder {
             topP: topP,
             stopSequences: stopSequences
         )
-        self.model = model
-        self.parameters = parameters
-    }
-
-    public mutating func setHistory(_ history: [Message]) throws {
-        if let lastMessage = history.last {
-            guard lastMessage.role == .assistant else {
-                throw BedrockServiceError.converseBuilder("Last message in history must be from assistant.")
-            }
-        }
-        if toolResult != nil {
-            guard case .toolUse(_) = history.last?.content.last else {
-                throw BedrockServiceError.invalidPrompt("Tool result is defined but last message is not tool use.")
-            }
-        }
-        self.history = history
-    }
-
-    public mutating func setTools(_ tools: [Tool]) throws {
-        try validateFeature(.toolUse)
-        if case .toolUse(let toolUse) = history.last?.content.last {
-            guard tools.contains(where: { $0.name == toolUse.name }) else {
-                throw BedrockServiceError.converseBuilder(
-                    "Cannot set tools if last message in history contains toolUse and no matching tool is found."
-                )
-            }
-        }
-        let toolNames = tools.map { $0.name }
-        guard Set(toolNames).count == tools.count else {
-            throw BedrockServiceError.converseBuilder("Cannot set tools with duplicate names.")
-        }
-        self.tools = tools
-    }
-
-    public mutating func setAdditionalTool(_ tool: Tool) throws {
-        try validateFeature(.toolUse)
-        if var tools {
-            if tools.contains(where: { $0.name == tool.name }) {
-                throw BedrockServiceError.converseBuilder("Cannot add tool with duplicate name.")
-            }
-            tools.append(tool)
-            self.tools = tools
-        } else {
-            self.tools = [tool]
-        }
-    }
-
-    public mutating func deleteTool(_ name: String) throws {
-        try validateFeature(.toolUse)
-        guard var tools else {
-            throw BedrockServiceError.converseBuilder("Cannot remove tool if tools is not set.")
-        }
-        guard tools.last != nil else {
-            throw BedrockServiceError.converseBuilder("Cannot remove tool if tools is empty.")
-        }
-        guard tools.contains(where: { $0.name == name }) == true else {
-            throw BedrockServiceError.notFound("No tool with name \(name) found.")
-        }
-        if case .toolUse(let toolUse) = history.last?.content.last {
-            guard name != toolUse.name else {
-                throw BedrockServiceError.converseBuilder(
-                    "Cannot remove tool if last message in history contains toolUse with a matching name."
-                )
-            }
-        }
-        tools.removeAll(where: { $0.name == name })
-        self.tools = tools
-    }
-
-    public mutating func setPrompt(_ prompt: String) throws {
-        guard toolResult == nil else {
-            throw BedrockServiceError.converseBuilder("Cannot set prompt when tool result is set")
-        }
-        try parameters.prompt.validateValue(prompt)
-        self.prompt = prompt
-    }
-
-    public mutating func setImage(_ image: ImageBlock) throws {
-        try validateFeature(.vision)
-        guard toolResult == nil else {
-            throw BedrockServiceError.converseBuilder("Cannot set image when tool result is set")
-        }
-        self.image = image
-    }
-
-    public mutating func setDocument(_ document: DocumentBlock) throws {
-        try validateFeature(.document)
-        guard toolResult == nil else {
-            throw BedrockServiceError.converseBuilder("Cannot set document when tool result is set")
-        }
-        self.document = document
-    }
-
-    public mutating func setToolResult(_ toolResult: ToolResultBlock) throws {
-        guard prompt == nil && image == nil && document == nil else {
-            throw BedrockServiceError.converseBuilder("Cannot set tool result when prompt, image, or document is set")
-        }
-        guard let _ = tools else {
-            throw BedrockServiceError.converseBuilder("Cannot set tool result when tools are not set")
-        }
-        guard let lastMessage = history.last else {
-            throw BedrockServiceError.converseBuilder("Cannot set tool result when history is empty")
-        }
-        guard case .toolUse(let toolUse) = lastMessage.content.last else {
-            throw BedrockServiceError.invalidPrompt("Cannot set tool result when last message is not tool use.")
-        }
-        guard toolUse.id == toolResult.id else {
-            throw BedrockServiceError.invalidPrompt("Tool result name does not match tool use name.")
-        }
-        try validateFeature(.toolUse)
-        self.toolResult = toolResult
-    }
-
-    public mutating func setMaxTokens(_ maxTokens: Int) throws {
-        try parameters.maxTokens.validateValue(maxTokens)
-        self.maxTokens = maxTokens
-    }
-
-    public mutating func setTemperature(_ temperature: Double) throws {
-        try parameters.temperature.validateValue(temperature)
-        self.temperature = temperature
-    }
-
-    public mutating func setSystemPrompts(_ systemPrompts: [String]) throws {
-        self.systemPrompts = systemPrompts
-    }
-
-    public mutating func setStopSequences(_ stopSequences: [String]) throws {
-        try parameters.stopSequences.validateValue(stopSequences)
-        self.stopSequences = stopSequences
-    }
-
-    public mutating func setTopP(_ topP: Double) throws {
-        try parameters.topP.validateValue(topP)
-        self.topP = topP
+        return Message(from: .user, content: try getContent())
     }
 
     // MARK - private methods

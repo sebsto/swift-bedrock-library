@@ -42,7 +42,7 @@ public struct BedrockService: Sendable {
         logger: Logging.Logger? = nil,
         bedrockClient: BedrockClientProtocol? = nil,
         bedrockRuntimeClient: BedrockRuntimeClientProtocol? = nil,
-        authentication: BedrockAuthentication = .default,
+        authentication: BedrockAuthentication = .default
     ) async throws {
         self.logger = logger ?? BedrockService.createLogger("bedrock.service")
         self.logger.trace(

@@ -25,39 +25,11 @@ extension BedrockServiceTests {
     @Test("Request tool usage")
     func converseRequestTool() async throws {
         let tool = try Tool(name: "toolName", inputSchema: JSON(["code": "string"]), description: "toolDescription")
-        let builder = try ConverseBuilder(model: BedrockModel.nova_lite)
+        let builder = try ConverseBuilder(BedrockModel.nova_lite)
             .withPrompt("Use tool")
             .withTool(tool)
         let reply = try await bedrock.converse(with: builder)
         #expect(reply.textReply == nil)
-        let id: String
-        let name: String
-        let input: JSON
-        if let toolUse = reply.toolUse {
-            id = toolUse.id
-            name = toolUse.name
-            input = toolUse.input
-        } else {
-            id = ""
-            name = ""
-            input = JSON(["code": "wrong"])
-        }
-        #expect(id == "toolId")
-        #expect(name == "toolName")
-        #expect(input.getValue("code") == "abc")
-    }
-
-    @Test("Request tool usage with inout builder")
-    func converseToolWithInOutBuilder() async throws {
-        let tool = try Tool(name: "toolName", inputSchema: JSON(["code": "string"]), description: "toolDescription")
-        var builder = try ConverseBuilder(model: BedrockModel.nova_lite)
-            .withPrompt("Use tool")
-            .withTool(tool)
-        #expect(builder.prompt != nil)
-        #expect(builder.prompt! == "Use tool")
-        let reply = try await bedrock.converse(with: &builder)
-        #expect(reply.textReply == nil)
-        #expect(builder.prompt == nil)
         let id: String
         let name: String
         let input: JSON
@@ -79,14 +51,14 @@ extension BedrockServiceTests {
     func converseToolWrongModel() async throws {
         #expect(throws: BedrockServiceError.self) {
             let tool = try Tool(name: "toolName", inputSchema: JSON(["code": "string"]), description: "toolDescription")
-            let _ = try ConverseBuilder(model: BedrockModel.titan_text_g1_express)
+            let _ = try ConverseBuilder(BedrockModel.titan_text_g1_express)
                 .withTool(tool)
         }
     }
 
     @Test("No tool request without tools")
     func converseToolWithoutTools() async throws {
-        let builder = try ConverseBuilder(model: BedrockModel.nova_lite)
+        let builder = try ConverseBuilder(BedrockModel.nova_lite)
             .withPrompt("Use tool")
         let reply = try await bedrock.converse(with: builder)
         #expect(reply.textReply != nil)
@@ -100,7 +72,7 @@ extension BedrockServiceTests {
         let toolUse = ToolUseBlock(id: id, name: "toolName", input: JSON(["code": "abc"]))
         let history = [Message("Use tool"), Message(toolUse)]
 
-        let builder = try ConverseBuilder(model: BedrockModel.nova_lite)
+        let builder = try ConverseBuilder(BedrockModel.nova_lite)
             .withHistory(history)
             .withTool(tool)
             .withToolResult("Information from tool")
@@ -110,31 +82,13 @@ extension BedrockServiceTests {
         #expect(reply.textReply == "Tool result received")
     }
 
-    @Test("Tool result with inout builder")
-    func converseToolResultWithInOutBuilder() async throws {
-        let tool = try Tool(name: "toolName", inputSchema: JSON(["code": "string"]), description: "toolDescription")
-        let id = "toolId"
-        let toolUse = ToolUseBlock(id: id, name: "toolName", input: JSON(["code": "abc"]))
-        let history = [Message("Use tool"), Message(toolUse)]
-
-        var builder = try ConverseBuilder(model: BedrockModel.nova_lite)
-            .withHistory(history)
-            .withTool(tool)
-            .withToolResult("Information from tool")
-        #expect(builder.toolResult != nil)
-        let reply = try await bedrock.converse(with: &builder)
-        #expect(reply.toolUse == nil)
-        #expect(reply.textReply == "Tool result received")
-        #expect(builder.toolResult == nil)
-    }
-
     @Test("Tool result without toolUse")
     func converseToolResultWithoutToolUse() async throws {
         let tool = try Tool(name: "toolName", inputSchema: JSON(["code": "string"]), description: "toolDescription")
         let id = "toolId"
         let history = [Message("Use tool"), Message(from: .assistant, content: [.text("No need for a tool")])]
         #expect(throws: BedrockServiceError.self) {
-            let _ = try ConverseBuilder(model: BedrockModel.nova_lite)
+            let _ = try ConverseBuilder(BedrockModel.nova_lite)
                 .withHistory(history)
                 .withTool(tool)
                 .withToolResult("Information from tool", id: id)
@@ -147,7 +101,7 @@ extension BedrockServiceTests {
         let toolUse = ToolUseBlock(id: id, name: "toolName", input: JSON(["code": "abc"]))
         let history = [Message("Use tool"), Message(toolUse)]
         #expect(throws: BedrockServiceError.self) {
-            let _ = try ConverseBuilder(model: BedrockModel.nova_lite)
+            let _ = try ConverseBuilder(BedrockModel.nova_lite)
                 .withHistory(history)
                 .withToolResult("Information from tool")
         }
@@ -160,7 +114,7 @@ extension BedrockServiceTests {
         let toolUse = ToolUseBlock(id: id, name: "toolName", input: JSON(["code": "abc"]))
         let history = [Message("Use tool"), Message(toolUse)]
         #expect(throws: BedrockServiceError.self) {
-            let _ = try ConverseBuilder(model: BedrockModel.titan_text_g1_express)
+            let _ = try ConverseBuilder(BedrockModel.titan_text_g1_express)
                 .withHistory(history)
                 .withTool(tool)
                 .withToolResult("Information from tool")
@@ -174,7 +128,7 @@ extension BedrockServiceTests {
         let history = [Message("Use tool"), Message(toolUse)]
 
         #expect(throws: BedrockServiceError.self) {
-            let _ = try ConverseBuilder(model: BedrockModel.titan_text_g1_express)
+            let _ = try ConverseBuilder(BedrockModel.titan_text_g1_express)
                 .withHistory(history)
                 .withToolResult("Information from tool")
         }
@@ -186,7 +140,7 @@ extension BedrockServiceTests {
         let history = [Message("Use tool"), Message(from: .assistant, content: [.text("No need for a tool")])]
 
         #expect(throws: BedrockServiceError.self) {
-            let _ = try ConverseBuilder(model: BedrockModel.titan_text_g1_express)
+            let _ = try ConverseBuilder(BedrockModel.titan_text_g1_express)
                 .withHistory(history)
                 .withTool(tool)
                 .withToolResult("Information from tool")
@@ -197,7 +151,7 @@ extension BedrockServiceTests {
     func converseToolResultInvalidModelWithoutToolUseAndTools() async throws {
         let history = [Message("Use tool"), Message(from: .assistant, content: [.text("No need for a tool")])]
         #expect(throws: BedrockServiceError.self) {
-            let _ = try ConverseBuilder(model: BedrockModel.titan_text_g1_express)
+            let _ = try ConverseBuilder(BedrockModel.titan_text_g1_express)
                 .withHistory(history)
                 .withToolResult("Information from tool")
         }

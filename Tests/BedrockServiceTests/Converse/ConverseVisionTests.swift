@@ -25,30 +25,18 @@ extension BedrockServiceTests {
     @Test("Converse with vision")
     func converseVision() async throws {
         let bytes = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
-        let builder = try ConverseBuilder(model: BedrockModel.nova_lite)
+        let builder = try ConverseBuilder(BedrockModel.nova_lite)
             .withPrompt("What is this?")
             .withImage(format: .jpeg, source: bytes)
         let reply = try await bedrock.converse(with: builder)
         #expect(reply.textReply == "Image received")
     }
 
-    @Test("Converse with vision and inout builder")
-    func converseVisionAndInOutBuilder() async throws {
-        let bytes = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
-        var builder = try ConverseBuilder(model: BedrockModel.nova_lite)
-            .withPrompt("What is this?")
-            .withImage(format: .jpeg, source: bytes)
-        #expect(builder.image != nil)
-        let reply = try await bedrock.converse(with: &builder)
-        #expect(reply.textReply == "Image received")
-        #expect(builder.image == nil)
-    }
-
     @Test("Converse with vision")
     func converseVisionUsingImageBlock() async throws {
         let source = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
         let image = try ImageBlock(format: .jpeg, source: source)
-        let builder = try ConverseBuilder(model: BedrockModel.nova_lite)
+        let builder = try ConverseBuilder(BedrockModel.nova_lite)
             .withPrompt("What is this?")
             .withImage(image)
         let reply = try await bedrock.converse(with: builder)
@@ -59,7 +47,7 @@ extension BedrockServiceTests {
     func converseVisionInvalidModel() async throws {
         let source = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
         #expect(throws: BedrockServiceError.self) {
-            let _ = try ConverseBuilder(model: BedrockModel.nova_micro)
+            let _ = try ConverseBuilder(BedrockModel.nova_micro)
                 .withPrompt("What is this?")
                 .withImage(format: .jpeg, source: source)
         }

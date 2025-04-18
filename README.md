@@ -276,7 +276,7 @@ let builder = try ConverseBuilder(model: model)
 let reply = try await bedrock.converse(with: builder)
 ```
 
-Note that by using the builder as an inout parameter, you can reuse your parameters for several calls.
+<!-- Note that by using the builder as an inout parameter, you can reuse your parameters for several calls.
 
 ```swift
 var builder = try ConverseBuilder(model: model)
@@ -289,7 +289,7 @@ var reply = try await bedrock.converse(with: &builder)
 builder.setPrompt("Where can I find those plants?")
 
 reply = try await bedrock.converse(with: &builder)
-```
+``` -->
 ### Document
 
 ```swift
@@ -320,7 +320,7 @@ let builder = try ConverseBuilder(model: model)
 var reply = try await bedrock.converse(with: builder)
 ```
 
-Note that by using the builder as an inout parameter, you can reuse your parameters for several calls.
+<!-- Note that by using the builder as an inout parameter, you can reuse your parameters for several calls.
 
 ```swift
 var builder = try ConverseBuilder(model: model)
@@ -334,7 +334,7 @@ var reply = try await bedrock.converse(with: &builder)
 try builder.setPrompt("Thanks, can you make a Dutch version as well?")
 
 reply = try await bedrock.converse(with: &builder)
-```
+``` -->
 
 ### Tools
 
