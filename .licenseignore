@@ -38,3 +38,4 @@ backend/.vscode/hummingbird.code-snippets
 backend/img/image.png
 LICENSE
 .licenseignore
+Makefile
