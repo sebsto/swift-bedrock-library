@@ -111,7 +111,7 @@ public struct ImageVariationParameters: Parameters {
         self.images = images
     }
 
-    public func validate(
+    package func validate(
         images: Int? = nil,
         prompt: String? = nil,
         negativePrompt: String? = nil,

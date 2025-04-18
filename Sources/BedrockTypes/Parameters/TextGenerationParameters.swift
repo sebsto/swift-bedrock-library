@@ -39,7 +39,7 @@ public struct TextGenerationParameters: Parameters {
         self.stopSequences = stopSequences
     }
 
-    public func validate(
+    package func validate(
         prompt: String? = nil,
         maxTokens: Int? = nil,
         temperature: Double? = nil,

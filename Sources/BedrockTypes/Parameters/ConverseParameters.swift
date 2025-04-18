@@ -44,7 +44,7 @@ public struct ConverseParameters: Parameters {
         self.stopSequences = textGenerationParameters.stopSequences
     }
 
-    public func validate(
+    package func validate(
         prompt: String? = nil,
         maxTokens: Int? = nil,
         temperature: Double? = nil,
