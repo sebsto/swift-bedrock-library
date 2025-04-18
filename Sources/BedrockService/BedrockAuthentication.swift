@@ -25,7 +25,7 @@ import SmithyIdentity
 /// - `webIdentity`: Use a web identity token (JWT) to assume an IAM role. This is useful for applications running on iOS, tvOS or macOS where you cannot use the AWS CLI. Typically, the application authenticates the user with an external Identity provider (such as Sign In with Apple or Login With Google) and receives a JWT token. The application then uses this token to assume an IAM role and receive temporary AWS credentials. Some additional configuration is required on your AWS account to allow this. See https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_providers_oidc.html for more information. If you use Sign In With Apple, read https://docs.aws.amazon.com/sdk-for-swift/latest/developer-guide/apple-integration.html for more information.
 ///      Because `webidentity` is often used by application presenting a user interface. This method of authentication allows you to pass an optional closure that will be called when the credentials are retrieved. This is useful for updating the UI or notifying the user. The closure is called on the main (UI) thread.
 /// - `static`: Use static AWS credentials. We strongly recommend to not use this option in production. This might be useful in some rare cases when testing and debugging.
-public enum BedrockAuthenticationType: Sendable, CustomStringConvertible {
+public enum BedrockAuthentication: Sendable, CustomStringConvertible {
     case `default`
     case profile(profileName: String = "default")
     case sso(profileName: String = "default")
@@ -50,20 +50,16 @@ public enum BedrockAuthenticationType: Sendable, CustomStringConvertible {
         "\(secret.prefix(min(3, secret.count)))... *** shuuut, it's a secret ***"
     }
 
-}
-
-extension BedrockService {
     /// Creates an AWS credential identity resolver depending on the authentication parameter.
     /// - Parameters:
     ///     - authentication: The authentication type to use
     /// - Returns: An optional AWS credential identity resolver. A nil return value means that the default AWS credential provider chain will be used.
     ///
-    static func getAWSCredentialIdentityResolver(
-        authentication: BedrockAuthenticationType,
+    func getAWSCredentialIdentityResolver(
         logger: Logger
     ) async throws -> (any SmithyIdentity.AWSCredentialIdentityResolver)? {
 
-        switch authentication {
+        switch self {
         case .default:
             return nil
         case .profile(let profileName):

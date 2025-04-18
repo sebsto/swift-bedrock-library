@@ -25,12 +25,12 @@ extension BedrockServiceTests {
     @Test(
         "Authentication: AuthenticationType struct does not leak credentials",
         arguments: [
-            BedrockAuthenticationType.static(
+            BedrockAuthentication.static(
                 accessKey: "MY_ACCESS_KEY",
                 secretKey: "MY_SECRET_KEY",
                 sessionToken: "MY_SECRET_SESSION_TOKEN"
             ),
-            BedrockAuthenticationType.webIdentity(
+            BedrockAuthentication.webIdentity(
                 token: "MY_SECRET_JWT_TOKEN",
                 roleARN: "MY_ROLE_ARN",
                 region: .useast1,
@@ -38,7 +38,7 @@ extension BedrockServiceTests {
             ),
         ]
     )
-    func authNoLeaks(auth: BedrockAuthenticationType) {
+    func authNoLeaks(auth: BedrockAuthentication) {
         //given the auth in paramaters
 
         //when
