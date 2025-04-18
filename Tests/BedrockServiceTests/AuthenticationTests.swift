@@ -22,37 +22,37 @@ import Testing
 // MARK: authentication
 extension BedrockServiceTests {
 
-    // @Test(
-    //     "Authentication: AuthenticationType struct does not leak credentials",
-    //     arguments: [
-    //         BedrockAuthentication.static(
-    //             accessKey: "MY_ACCESS_KEY",
-    //             secretKey: "MY_SECRET_KEY",
-    //             sessionToken: "MY_SECRET_SESSION_TOKEN"
-    //         ),
-    //         BedrockAuthentication.webIdentity(
-    //             token: "MY_SECRET_JWT_TOKEN",
-    //             roleARN: "MY_ROLE_ARN",
-    //             region: .useast1,
-    //             notification: {}
-    //         )
-    //     ]
-    // )
-    // func authNoLeaks(auth: BedrockAuthentication) {
-    //     //given the auth in paramaters
+    @Test(
+        "Authentication: AuthenticationType struct does not leak credentials",
+        arguments: [
+            BedrockAuthentication.static(
+                accessKey: "MY_ACCESS_KEY",
+                secretKey: "MY_SECRET_KEY",
+                sessionToken: "MY_SECRET_SESSION_TOKEN"
+            ),
+            BedrockAuthentication.webIdentity(
+                token: "MY_SECRET_JWT_TOKEN",
+                roleARN: "MY_ROLE_ARN",
+                region: .useast1,
+                notification: {}
+            )
+        ]
+    )
+    func authNoLeaks(auth: BedrockAuthentication) {
+        //given the auth in paramaters
 
-    //     //when
-    //     let str = String(describing: auth)
+        //when
+        let str = String(describing: auth)
 
-    //     // then
-    //     #expect(!str.contains("SECRET"))
+        // then
+        #expect(!str.contains("SECRET"))
 
-    //     //when
-    //     let str2 = "\(auth)"  // is it different than String(describing:) ?
+        //when
+        let str2 = "\(auth)"  // is it different than String(describing:) ?
 
-    //     // then
-    //     #expect(!str2.contains("SECRET"))
-    // }
+        // then
+        #expect(!str2.contains("SECRET"))
+    }
 
     // Only works when SSO is actually expired
     @Test("Authentication Error: SSO expired")
