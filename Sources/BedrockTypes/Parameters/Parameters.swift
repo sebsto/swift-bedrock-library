@@ -17,7 +17,7 @@ import Foundation
 
 public protocol Parameters: Sendable, Hashable, Equatable {}
 
-public struct Parameter<T: Sendable & Hashable & Equatable & Numeric>: Sendable, Hashable, Equatable {
+public struct Parameter<T: Sendable & Hashable & Equatable & Numeric & Comparable>: Sendable, Hashable, Equatable {
     public let minValue: T?
     public let maxValue: T?
     public let defaultValue: T?
@@ -40,6 +40,28 @@ public struct Parameter<T: Sendable & Hashable & Equatable & Numeric>: Sendable,
         self.isSupported = isSupported
         self.name = name
     }
+
+    public func validateValue(_ value: T) throws {
+        guard isSupported else {
+            throw BedrockServiceError.notSupported("Parameter \(name) is not supported.")
+        }
+        if let minValue = minValue {
+            guard value >= minValue else {
+                throw BedrockServiceError.invalidParameter(
+                    name,
+                    "Parameter \(name) should be at least \(minValue). Value: \(value)"
+                )
+            }
+        }
+        if let maxValue = maxValue {
+            guard value <= maxValue else {
+                throw BedrockServiceError.invalidParameter(
+                    name,
+                    "Parameter \(name) should be at most \(maxValue). Value: \(value)"
+                )
+            }
+        }
+    }
 }
 
 public enum ParameterName: Sendable {
@@ -57,6 +79,20 @@ public enum ParameterName: Sendable {
 
 public struct PromptParams: Parameters {
     public let maxSize: Int?
+
+    public func validateValue(_ value: String) throws {
+        guard !value.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines).isEmpty else {
+            throw BedrockServiceError.invalidPrompt("Prompt is not allowed to be empty.")
+        }
+        if let maxSize {
+            let length = value.utf8.count
+            guard length <= maxSize else {
+                throw BedrockServiceError.invalidPrompt(
+                    "Prompt is not allowed to be longer than \(maxSize) tokens. Prompt lengt \(length)"
+                )
+            }
+        }
+    }
 }
 
 public struct StopSequenceParams: Parameters {
@@ -76,5 +112,16 @@ public struct StopSequenceParams: Parameters {
         self.maxSequences = maxSequences
         self.defaultValue = defaultValue
         self.isSupported = isSupported
+    }
+
+    public func validateValue(_ value: [String]) throws {
+        if let maxSequences {
+            guard value.count <= maxSequences else {
+                throw BedrockServiceError.invalidStopSequences(
+                    value,
+                    "You can only provide up to \(maxSequences) stop sequences. Number of stop sequences: \(value.count)"
+                )
+            }
+        }
     }
 }

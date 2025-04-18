@@ -50,6 +50,9 @@ public struct ConverseReply: Codable, CustomStringConvertible {
     /// Returns the conversation history
     public func getHistory() -> [Message] { history }
 
+    /// Returns the latest message
+    public func getLastMessage() -> Message { history.last! }
+
     /// Returns the latest text reply or throws if the latest message does not contain a text reply
     public func getTextReply() throws -> String {
         guard let textReply else {

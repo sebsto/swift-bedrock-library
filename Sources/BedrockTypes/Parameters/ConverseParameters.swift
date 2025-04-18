@@ -43,4 +43,28 @@ public struct ConverseParameters: Parameters {
         self.prompt = textGenerationParameters.prompt
         self.stopSequences = textGenerationParameters.stopSequences
     }
+
+    package func validate(
+        prompt: String? = nil,
+        maxTokens: Int? = nil,
+        temperature: Double? = nil,
+        topP: Double? = nil,
+        stopSequences: [String]? = nil
+    ) throws {
+        if let prompt {
+            try self.prompt.validateValue(prompt)
+        }
+        if let maxTokens {
+            try self.maxTokens.validateValue(maxTokens)
+        }
+        if let temperature {
+            try self.temperature.validateValue(temperature)
+        }
+        if let topP {
+            try self.topP.validateValue(topP)
+        }
+        if let stopSequences {
+            try self.stopSequences.validateValue(stopSequences)
+        }
+    }
 }

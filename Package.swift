@@ -1,4 +1,4 @@
-// swift-tools-version: 6.0
+// swift-tools-version: 6.1
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -12,7 +12,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.3.0"),
-        .package(url: "https://github.com/awslabs/aws-sdk-swift", from: "1.2.54"),
+        .package(url: "https://github.com/awslabs/aws-sdk-swift", from: "1.2.61"),
         .package(url: "https://github.com/smithy-lang/smithy-swift", from: "0.118.0"),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.5.0"),
         .package(url: "https://github.com/awslabs/aws-crt-swift", from: "0.5.0"),

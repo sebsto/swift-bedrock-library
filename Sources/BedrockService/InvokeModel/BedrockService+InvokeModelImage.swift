@@ -59,17 +59,15 @@ extension BedrockService {
             ]
         )
         do {
-            let modality = try model.getImageModality()
-            try validateImageGenerationParams(
-                modality: modality,
+            try validateTextToImageParams(
+                model: model,
                 nrOfImages: nrOfImages,
                 cfgScale: cfgScale,
                 resolution: resolution,
-                seed: seed
+                seed: seed,
+                prompt: prompt,
+                negativePrompt: negativePrompt
             )
-            let textToImageModality = try model.getTextToImageModality()
-            try validateTextToImageParams(modality: textToImageModality, prompt: prompt, negativePrompt: negativePrompt)
-
             let request: InvokeModelRequest = try InvokeModelRequest.createTextToImageRequest(
                 model: model,
                 prompt: prompt,
@@ -155,17 +153,12 @@ extension BedrockService {
             ]
         )
         do {
-            let modality = try model.getImageModality()
-            try validateImageGenerationParams(
-                modality: modality,
+            try validateImageVariationParams(
+                model: model,
                 nrOfImages: nrOfImages,
                 cfgScale: cfgScale,
                 resolution: resolution,
-                seed: seed
-            )
-            let imageVariationModality = try model.getImageVariationModality()
-            try validateImageVariationParams(
-                modality: imageVariationModality,
+                seed: seed,
                 images: images,
                 prompt: prompt,
                 similarity: similarity,

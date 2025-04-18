@@ -28,28 +28,28 @@ public struct ToolResultBlock: Codable {
     }
 
     /// convenience initializer for ToolResultBlock with only an id and a String
-    public init(_ prompt: String, id: String) {
-        self.init(id: id, content: [.text(prompt)], status: .success)
+    public init(_ prompt: String, id: String, status: Status? = .success) {
+        self.init(id: id, content: [.text(prompt)], status: status)
     }
 
     /// convenience initializer for ToolResultBlock with only an id and a JSON
-    public init(_ json: JSON, id: String) {
-        self.init(id: id, content: [.json(json)], status: .success)
+    public init(_ json: JSON, id: String, status: Status? = .success) {
+        self.init(id: id, content: [.json(json)], status: status)
     }
 
     /// convenience initializer for ToolResultBlock with only an id and a ImageBlock
-    public init(_ image: ImageBlock, id: String) {
-        self.init(id: id, content: [.image(image)], status: .success)
+    public init(_ image: ImageBlock, id: String, status: Status? = .success) {
+        self.init(id: id, content: [.image(image)], status: status)
     }
 
     /// convenience initializer for ToolResultBlock with only an id and a DocumentBlock
-    public init(_ document: DocumentBlock, id: String) {
-        self.init(id: id, content: [.document(document)], status: .success)
+    public init(_ document: DocumentBlock, id: String, status: Status? = .success) {
+        self.init(id: id, content: [.document(document)], status: status)
     }
 
     /// convenience initializer for ToolResultBlock with only an id and a VideoBlock
-    public init(_ video: VideoBlock, id: String) {
-        self.init(id: id, content: [.video(video)], status: .success)
+    public init(_ video: VideoBlock, id: String, status: Status? = .success) {
+        self.init(id: id, content: [.video(video)], status: status)
     }
 
     /// convenience initializer for ToolResultBlock with failed request
@@ -58,19 +58,19 @@ public struct ToolResultBlock: Codable {
     }
 
     /// convenience initializer for ToolResultBlock for Data
-    public init(_ data: Data, id: String) throws {
+    public init(_ data: Data, id: String, status: Status? = .success) throws {
         guard let json = try? JSON(from: data) else {
             throw BedrockServiceError.decodingError("Could not decode JSON from Data")
         }
-        self.init(json, id: id)
+        self.init(json, id: id, status: status)
     }
 
     /// convenience initializer for ToolResultBlock for any Codable
-    public init<T: Codable>(_ object: T, id: String) throws {
+    public init<T: Codable>(_ object: T, id: String, status: Status? = .success) throws {
         guard let data = try? JSONEncoder().encode(object) else {
             throw BedrockServiceError.encodingError("Could not encode object to JSON")
         }
-        try self.init(data, id: id)
+        try self.init(data, id: id, status: status)
     }
 
     public init(from sdkToolResultBlock: BedrockRuntimeClientTypes.ToolResultBlock) throws {

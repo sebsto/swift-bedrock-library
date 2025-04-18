@@ -38,4 +38,32 @@ public struct TextGenerationParameters: Parameters {
         self.prompt = PromptParams(maxSize: maxPromptSize)
         self.stopSequences = stopSequences
     }
+
+    package func validate(
+        prompt: String? = nil,
+        maxTokens: Int? = nil,
+        temperature: Double? = nil,
+        topP: Double? = nil,
+        topK: Int? = nil,
+        stopSequences: [String]? = nil
+    ) throws {
+        if let prompt = prompt {
+            try self.prompt.validateValue(prompt)
+        }
+        if let temperature = temperature {
+            try self.temperature.validateValue(temperature)
+        }
+        if let maxTokens = maxTokens {
+            try self.maxTokens.validateValue(maxTokens)
+        }
+        if let topP = topP {
+            try self.topP.validateValue(topP)
+        }
+        if let topK = topK {
+            try self.topK.validateValue(topK)
+        }
+        if let stopSequences = stopSequences {
+            try self.stopSequences.validateValue(stopSequences)
+        }
+    }
 }

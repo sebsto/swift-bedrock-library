@@ -31,7 +31,7 @@ public struct MockBedrockRuntimeClient: BedrockRuntimeClientProtocol {
             throw AWSBedrockRuntime.ValidationException(message: "Missing required message content")
         }
         var message: BedrockRuntimeClientTypes.Message
-        print("start switch")
+        // print("start switch")
         switch content {
         case .text(let prompt):
             if prompt == "Use tool", let _ = input.toolConfig?.tools {
