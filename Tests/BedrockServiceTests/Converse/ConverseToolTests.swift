@@ -47,6 +47,61 @@ extension BedrockServiceTests {
         #expect(input.getValue("code") == "abc")
     }
 
+    @Test("Request tool usage with reused builder")
+    func converseToolWithReusedBuilder() async throws {
+        var builder = try ConverseBuilder(BedrockModel.nova_lite)
+            .withPrompt("Use tool")
+            .withTool(name: "toolName", inputSchema: JSON(["code": "string"]), description: "toolDescription")
+
+        #expect(builder.prompt != nil)
+        #expect(builder.prompt! == "Use tool")
+        #expect(builder.history.count == 0)
+
+        var reply = try await bedrock.converse(with: builder)
+
+        #expect(reply.textReply == nil)
+
+        let id: String
+        let name: String
+        let input: JSON
+        if let toolUse = reply.toolUse {
+            id = toolUse.id
+            name = toolUse.name
+            input = toolUse.input
+        } else {
+            id = ""
+            name = ""
+            input = JSON(["code": "wrong"])
+        }
+
+        #expect(id == "toolId")
+        #expect(name == "toolName")
+        #expect(input.getValue("code") == "abc")
+
+        builder = try ConverseBuilder(from: builder, with: reply)
+            .withToolResult("Information from Tool")
+
+        #expect(builder.prompt == nil)
+        #expect(builder.toolResult != nil)
+        #expect(builder.history.count == 2)
+
+        reply = try await bedrock.converse(with: builder)
+        #expect(reply.textReply == "Tool result received")
+        #expect(reply.toolUse == nil)
+
+        builder = try ConverseBuilder(from: builder, with: reply)
+            .withPrompt("Some prompt")
+
+        #expect(builder.prompt != nil)
+        #expect(builder.prompt! == "Some prompt")
+        #expect(builder.toolResult == nil)
+        #expect(builder.history.count == 4)
+
+        reply = try await bedrock.converse(with: builder)
+        #expect(reply.textReply != nil)
+        #expect(reply.textReply! == "Your prompt was: Some prompt")
+    }
+
     @Test("Add tool with invalid model")
     func converseToolWrongModel() async throws {
         #expect(throws: BedrockServiceError.self) {

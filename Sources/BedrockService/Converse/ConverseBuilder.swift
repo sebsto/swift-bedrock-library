@@ -51,6 +51,40 @@ public struct ConverseBuilder {
         self = try .init(model)
     }
 
+    /// Creates a ConverseBuilder object based of a ConverseBuilder object
+    /// with an updated history and all the user input emptied out.
+    public init(from builder: ConverseBuilder, with history: [Message]) throws {
+        guard builder.history.count == history.count - 2 else {
+            throw BedrockServiceError.converseBuilder("History count mismatch")
+        }
+        var copy = try Self(builder.model)
+        if let maxTokens = builder.maxTokens {
+            copy.maxTokens = maxTokens
+        }
+        if let temperature = builder.temperature {
+            copy.temperature = temperature
+        }
+        if let topP = builder.topP {
+            copy.topP = topP
+        }
+        if let stopSequences = builder.stopSequences {
+            copy.stopSequences = stopSequences
+        }
+        if let systemPrompts = builder.systemPrompts {
+            copy.systemPrompts = systemPrompts
+        }
+        if let tools = builder.tools {
+            copy.tools = tools
+        }
+        self = try copy.withHistory(history)
+    }
+
+    /// Creates a ConverseBuilder object based of a ConverseBuilder object
+    /// with an updated history and all the user input emptied out.
+    public init(from builder: ConverseBuilder, with reply: ConverseReply) throws {
+        self = try .init(from: builder, with: reply.getHistory())
+    }
+
     // MARK - builder methods
 
     // MARK - builder methods - history
@@ -287,7 +321,7 @@ public struct ConverseBuilder {
 
     public func withSystemPrompts(_ systemPrompts: [String]) throws -> ConverseBuilder {
         var copy = self
-        copy.stopSequences = stopSequences
+        copy.systemPrompts = systemPrompts
         return copy
     }
 

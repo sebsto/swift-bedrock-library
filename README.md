@@ -229,7 +229,7 @@ reply = try await bedrock.converse(with: builder)
 print("Assistant: \(reply)")
 ```
 
-Optionally add inference parameters. By using the builder as an inout parameter, you can then reuse your parameters for several calls.
+Optionally add inference parameters. Note that the builder can be used to create the next builder with the same parameters and the updated history.
 
 ```swift
 let builder = try ConverseBuilder(model: model)
@@ -239,11 +239,12 @@ let builder = try ConverseBuilder(model: model)
     .withStopSequences(["END", "STOP", "<assistant>"])
     .withSystemPrompts(["Do not pretend to be human", "Never talk about goats", "You like puppies"])
 
-var reply = try await bedrock.converse(with: &builder)
+var reply = try await bedrock.converse(with: builder)
 
-try builder.setPrompt("Do you think birds can see them too?")
+builder = try ConverseBuilder(from: builder, with: reply)
+    .setPrompt("Do you think birds can see them too?")
 
-reply = try await bedrock.converse(with: &builder)
+reply = try await bedrock.converse(with: builder)
 ```
 
 
@@ -276,7 +277,7 @@ let builder = try ConverseBuilder(model: model)
 let reply = try await bedrock.converse(with: builder)
 ```
 
-<!-- Note that by using the builder as an inout parameter, you can reuse your parameters for several calls.
+Note that the builder can be used to create the next builder with the same parameters and the updated history.
 
 ```swift
 var builder = try ConverseBuilder(model: model)
@@ -284,12 +285,13 @@ var builder = try ConverseBuilder(model: model)
     .withImage(format: .jpeg, source: base64EncodedImage)
     .withTemperature(0.8)
 
-var reply = try await bedrock.converse(with: &builder)
+var reply = try await bedrock.converse(with: builder)
 
-builder.setPrompt("Where can I find those plants?")
+builder = try ConverseBuilder(from: builder, with: reply)
+    .setPrompt("Where can I find those plants?")
 
-reply = try await bedrock.converse(with: &builder)
-``` -->
+reply = try await bedrock.converse(with: builder)
+```
 ### Document
 
 ```swift
@@ -320,7 +322,7 @@ let builder = try ConverseBuilder(model: model)
 var reply = try await bedrock.converse(with: builder)
 ```
 
-<!-- Note that by using the builder as an inout parameter, you can reuse your parameters for several calls.
+Note that the builder can be used to create the next builder with the same parameters and the updated history.
 
 ```swift
 var builder = try ConverseBuilder(model: model)
@@ -329,12 +331,13 @@ var builder = try ConverseBuilder(model: model)
     .withMaxTokens(512)
     .withTemperature(0.4)
 
-var reply = try await bedrock.converse(with: &builder)
+var reply = try await bedrock.converse(with: builder)
 
-try builder.setPrompt("Thanks, can you make a Dutch version as well?")
+builder = try ConverseBuilder(from: builder, with: reply)
+    .withPrompt("Thanks, can you make a Dutch version as well?")
 
-reply = try await bedrock.converse(with: &builder)
-``` -->
+reply = try await bedrock.converse(with: builder)
+```
 
 ### Tools
 
@@ -369,7 +372,7 @@ var builder = try ConverseBuilder(model: model)
     .tool(tool)
 
 // pass the ConverseBuilder object to the converse function
-var reply = try await bedrock.converse(with: &builder)
+var reply = try await bedrock.converse(with: builder)
 
 if let toolUse = try? reply.getToolUse() {
     let id = toolUse.id
@@ -379,8 +382,10 @@ if let toolUse = try? reply.getToolUse() {
     // ... Logic to use the tool here ... 
 
     // Send the toolResult back to the model
-    try builder.setToolResult("The Best Song Ever")
-    reply = try await bedrock.converse(with: &builder)
+    builder = try ConverseBuilder(from: builder, with: reply)
+        .withToolResult("The Best Song Ever")
+    
+    reply = try await bedrock.converse(with: builder)
 }
 
 print("Assistant: \(reply)")

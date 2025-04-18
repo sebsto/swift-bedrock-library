@@ -35,7 +35,7 @@ extension BedrockServiceTests {
     //             roleARN: "MY_ROLE_ARN",
     //             region: .useast1,
     //             notification: {}
-    //         ),
+    //         )
     //     ]
     // )
     // func authNoLeaks(auth: BedrockAuthentication) {
@@ -55,11 +55,12 @@ extension BedrockServiceTests {
     // }
 
     // Only works when SSO is actually expired
-    // @Test("Authentication Error: SSO expired")
-    // func authErrorSSOExpired() async throws {
-    //     await #expect(throws: BedrockServiceError.self) {
-    //         let bedrock = try await BedrockService(useSSO: true)
-    //         let _ = try await bedrock.listModels()
-    //     }
-    // }
+    @Test("Authentication Error: SSO expired")
+    func authErrorSSOExpired() async throws {
+        await #expect(throws: BedrockServiceError.self) {
+            let auth = BedrockAuthentication.sso()
+            let bedrock = try await BedrockService(authentication: auth)
+            let _ = try await bedrock.listModels()
+        }
+    }
 }

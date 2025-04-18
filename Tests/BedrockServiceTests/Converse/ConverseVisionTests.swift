@@ -43,6 +43,35 @@ extension BedrockServiceTests {
         #expect(reply.textReply == "Image received")
     }
 
+    @Test("Converse with vision and inout builder")
+    func converseVisionAndInOutBuilder() async throws {
+        let bytes = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
+        var builder = try ConverseBuilder(BedrockModel.nova_lite)
+            .withPrompt("What is this?")
+            .withImage(format: .jpeg, source: bytes)
+
+        #expect(builder.image != nil)
+        #expect(builder.image?.format == .jpeg)
+        #expect(builder.image?.source == bytes)
+        #expect(builder.prompt == "What is this?")
+
+        var reply = try await bedrock.converse(with: builder)
+        #expect(reply.textReply == "Image received")
+
+        builder = try ConverseBuilder(from: builder, with: reply)
+            .withPrompt("Some prompt")
+
+        #expect(builder.image == nil)
+        #expect(builder.prompt != nil)
+        #expect(builder.prompt! == "Some prompt")
+        #expect(builder.toolResult == nil)
+        #expect(builder.history.count == 2)
+
+        reply = try await bedrock.converse(with: builder)
+        #expect(reply.textReply != nil)
+        #expect(reply.textReply! == "Your prompt was: Some prompt")
+    }
+
     @Test("Converse with vision with invalid model")
     func converseVisionInvalidModel() async throws {
         let source = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
@@ -51,5 +80,41 @@ extension BedrockServiceTests {
                 .withPrompt("What is this?")
                 .withImage(format: .jpeg, source: source)
         }
+    }
+
+    @Test("Converse with vision and document and inout builder")
+    func converseVisionAndDocumentAndInOutBuilder() async throws {
+        let docSource = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
+        let imageBytes = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
+        var builder = try ConverseBuilder(BedrockModel.nova_lite)
+            .withPrompt("What is this?")
+            .withImage(format: .jpeg, source: imageBytes)
+            .withDocument(name: "doc", format: .pdf, source: docSource)
+
+        #expect(builder.image != nil)
+        #expect(builder.image?.format == .jpeg)
+        #expect(builder.image?.source == imageBytes)
+        #expect(builder.document != nil)
+        #expect(builder.document?.name == "doc")
+        #expect(builder.document?.format == .pdf)
+        #expect(builder.document?.source == docSource)
+        #expect(builder.prompt == "What is this?")
+
+        var reply = try await bedrock.converse(with: builder)
+        #expect(reply.textReply == "Document received")
+
+        builder = try ConverseBuilder(from: builder, with: reply)
+            .withPrompt("Some prompt")
+
+        #expect(builder.image == nil)
+        #expect(builder.document == nil)
+        #expect(builder.prompt != nil)
+        #expect(builder.prompt! == "Some prompt")
+        #expect(builder.toolResult == nil)
+        #expect(builder.history.count == 2)
+
+        reply = try await bedrock.converse(with: builder)
+        #expect(reply.textReply != nil)
+        #expect(reply.textReply! == "Your prompt was: Some prompt")
     }
 }

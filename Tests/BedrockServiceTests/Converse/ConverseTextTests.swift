@@ -30,8 +30,8 @@ extension BedrockServiceTests {
     func converseWithValidPrompt(prompt: String) async throws {
         let builder = try ConverseBuilder(BedrockModel.nova_micro)
             .withPrompt(prompt)
-        let output = try await bedrock.converse(with: builder)
-        #expect(output.textReply == "Your prompt was: \(prompt)")
+        let reply = try await bedrock.converse(with: builder)
+        #expect(reply.textReply == "Your prompt was: \(prompt)")
     }
 
     @Test(
@@ -46,6 +46,75 @@ extension BedrockServiceTests {
         }
     }
 
+    // Continue
+    @Test(
+        "Continue conversation using a valid prompt and reusing builder",
+        arguments: NovaTestConstants.TextGeneration.validPrompts
+    )
+    func converseWithValidPromptAndReusedBuilder(prompt: String) async throws {
+        var builder = try ConverseBuilder(BedrockModel.nova_micro)
+            .withPrompt(prompt)
+        #expect(builder.prompt == prompt)
+        var reply = try await bedrock.converse(with: builder)
+        #expect(reply.textReply == "Your prompt was: \(prompt)")
+
+        builder = try ConverseBuilder(from: builder, with: reply)
+            .withPrompt("New prompt")
+
+        #expect(builder.prompt == "New prompt")
+
+        reply = try await bedrock.converse(with: builder)
+        #expect(reply.textReply == "Your prompt was: New prompt")
+    }
+
+    @Test("Continue conversation reusing builder")
+    func converseWithReusedBuilder() async throws {
+        var builder = try ConverseBuilder(BedrockModel.nova_micro)
+            .withPrompt("First prompt")
+            .withMaxTokens(100)
+            .withTemperature(0.5)
+            .withTopP(0.5)
+            .withStopSequence("\n\nHuman:")
+            .withSystemPrompt("You are a helpful assistant.")
+
+        #expect(builder.prompt == "First prompt")
+        #expect(builder.maxTokens == 100)
+        #expect(builder.temperature == 0.5)
+        #expect(builder.topP == 0.5)
+        #expect(builder.stopSequences == ["\n\nHuman:"])
+        #expect(builder.systemPrompts == ["You are a helpful assistant."])
+
+        var reply = try await bedrock.converse(with: builder)
+        #expect(reply.textReply == "Your prompt was: First prompt")
+
+        builder = try ConverseBuilder(from: builder, with: reply)
+            .withPrompt("Second prompt")
+        #expect(builder.prompt == "Second prompt")
+        #expect(builder.maxTokens == 100)
+        #expect(builder.temperature == 0.5)
+        #expect(builder.topP == 0.5)
+        #expect(builder.stopSequences == ["\n\nHuman:"])
+        #expect(builder.systemPrompts == ["You are a helpful assistant."])
+        #expect(builder.history.count == 2)
+
+        reply = try await bedrock.converse(with: builder)
+        #expect(reply.textReply == "Your prompt was: Second prompt")
+
+        builder = try ConverseBuilder(from: builder, with: reply)
+            .withPrompt("Third prompt")
+            .withTemperature(1)
+        #expect(builder.prompt == "Third prompt")
+        #expect(builder.temperature == 1)
+        #expect(builder.maxTokens == 100)
+        #expect(builder.topP == 0.5)
+        #expect(builder.stopSequences == ["\n\nHuman:"])
+        #expect(builder.systemPrompts == ["You are a helpful assistant."])
+        #expect(builder.history.count == 4)
+
+        reply = try await bedrock.converse(with: builder)
+        #expect(reply.textReply == "Your prompt was: Third prompt")
+    }
+
     // Temperature
     @Test(
         "Continue conversation using a valid temperature",
@@ -56,8 +125,8 @@ extension BedrockServiceTests {
         let builder = try ConverseBuilder(BedrockModel.nova_micro)
             .withPrompt(prompt)
             .withTemperature(temperature)
-        let output = try await bedrock.converse(with: builder)
-        #expect(output.textReply == "Your prompt was: \(prompt)")
+        let reply = try await bedrock.converse(with: builder)
+        #expect(reply.textReply == "Your prompt was: \(prompt)")
     }
 
     @Test(
@@ -84,8 +153,8 @@ extension BedrockServiceTests {
         let builder = try ConverseBuilder(BedrockModel.nova_micro)
             .withPrompt(prompt)
             .withMaxTokens(maxTokens)
-        let output = try await bedrock.converse(with: builder)
-        #expect(output.textReply == "Your prompt was: \(prompt)")
+        let reply = try await bedrock.converse(with: builder)
+        #expect(reply.textReply == "Your prompt was: \(prompt)")
     }
 
     @Test(
@@ -112,8 +181,8 @@ extension BedrockServiceTests {
         let builder = try ConverseBuilder(BedrockModel.nova_micro)
             .withPrompt(prompt)
             .withTopP(topP)
-        let output = try await bedrock.converse(with: builder)
-        #expect(output.textReply == "Your prompt was: \(prompt)")
+        let reply = try await bedrock.converse(with: builder)
+        #expect(reply.textReply == "Your prompt was: \(prompt)")
     }
 
     @Test(
@@ -140,7 +209,7 @@ extension BedrockServiceTests {
         let builder = try ConverseBuilder(BedrockModel.nova_micro)
             .withPrompt(prompt)
             .withStopSequences(stopSequences)
-        let output = try await bedrock.converse(with: builder)
-        #expect(output.textReply == "Your prompt was: \(prompt)")
+        let reply = try await bedrock.converse(with: builder)
+        #expect(reply.textReply == "Your prompt was: \(prompt)")
     }
 }

@@ -43,6 +43,33 @@ extension BedrockServiceTests {
         #expect(reply.textReply == "Document received")
     }
 
+    @Test("Converse with document and reused builder")
+    func converseDocumentAndReusedBuilder() async throws {
+        let source = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
+        var builder = try ConverseBuilder(BedrockModel.nova_lite)
+            .withPrompt("Can you summarize this document?")
+            .withDocument(name: "doc", format: .pdf, source: source)
+            .withTemperature(0.4)
+
+        #expect(builder.document != nil)
+        #expect(builder.document!.name == "doc")
+        #expect(builder.document!.format == .pdf)
+        #expect(builder.document!.source == source)
+        #expect(builder.temperature == 0.4)
+
+        var reply = try await bedrock.converse(with: builder)
+        #expect(reply.textReply == "Document received")
+
+        builder = try ConverseBuilder(from: builder, with: reply)
+            .withPrompt("Could you also give me a Dutch version?")
+        #expect(builder.document == nil)
+        #expect(builder.prompt == "Could you also give me a Dutch version?")
+        #expect(builder.temperature == 0.4)
+
+        reply = try await bedrock.converse(with: builder)
+        #expect(reply.textReply == "Your prompt was: Could you also give me a Dutch version?")
+    }
+
     @Test("Converse document with invalid model")
     func converseDocumentInvalidModel() async throws {
         let source = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
