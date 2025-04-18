@@ -285,8 +285,6 @@ public struct ConverseBuilder {
         try setHistory(history)
     }
 
-    // MARK - private methods
-
     // Mutating methods
 
     public mutating func setModel(_ model: BedrockModel) throws {
@@ -445,7 +443,7 @@ public struct ConverseBuilder {
         self.topP = topP
     }
 
-    // Varia
+    // MARK - private methods
 
     private func getToolResultId() throws -> String {
         guard let lastMessage = history.last else {
