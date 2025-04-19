@@ -16,7 +16,7 @@
 import BedrockTypes
 import Foundation
 
-public struct ConverseBuilder {
+public struct ConverseRequestBuilder {
 
     public private(set) var model: BedrockModel
     private var parameters: ConverseParameters
@@ -37,28 +37,24 @@ public struct ConverseBuilder {
 
     // MARK - Initializers
 
-    public init(_ model: BedrockModel) throws {
+    public init(with model: BedrockModel) throws {
         self.model = model
         let modality = try model.getConverseModality()
         self.parameters = modality.getConverseParameters()
         self.history = []
     }
 
-    public init(_ modelId: String) throws {
+    public init(with modelId: String) throws {
         guard let model = BedrockModel(rawValue: modelId) else {
             throw BedrockServiceError.notFound("No model with model id \(modelId) found.")
         }
-        self = try .init(model)
+        self = try .init(with: model)
     }
 
-    /// Creates a ConverseBuilder object based of a ConverseBuilder object
-    /// with an updated history and all the user input emptied out.
-    public init(from builder: ConverseBuilder, with history: [Message]) throws {
-        guard builder.history.count == history.count - 2 else {
-            throw BedrockServiceError.converseBuilder("History count mismatch")
-        }
-        self = try ConverseBuilder(builder.model)
-            .withHistory(history)
+    /// Creates a ConverseRequestBuilder object based of a ConverseRequestBuilder object
+    public init(from builder: ConverseRequestBuilder) throws {
+        self = try ConverseRequestBuilder(with: builder.model)
+            .withHistory(builder.history)
             .withTemperature(builder.temperature)
             .withTopP(builder.topP)
             .withMaxTokens(builder.maxTokens)
@@ -67,20 +63,21 @@ public struct ConverseBuilder {
             .withTools(builder.tools)
     }
 
-    /// Creates a ConverseBuilder object based of a ConverseBuilder object
+    /// Creates a ConverseRequestBuilder object based of a ConverseRequestBuilder object
     /// with an updated history and all the user input emptied out.
-    public init(from builder: ConverseBuilder, with reply: ConverseReply) throws {
-        self = try .init(from: builder, with: reply.getHistory())
+    public init(from builder: ConverseRequestBuilder, with reply: ConverseReply) throws {
+        self = try .init(from: builder)
+                    .withHistory(reply.getHistory())
     }
 
     // MARK - builder methods
 
     // MARK - builder methods - history
 
-    public func withHistory(_ history: [Message]) throws -> ConverseBuilder {
+    public func withHistory(_ history: [Message]) throws -> ConverseRequestBuilder {
         if let lastMessage = history.last {
             guard lastMessage.role == .assistant else {
-                throw BedrockServiceError.converseBuilder("Last message in history must be from assistant.")
+                throw BedrockServiceError.ConverseRequestBuilder("Last message in history must be from assistant.")
             }
         }
         if toolResult != nil {
@@ -95,28 +92,28 @@ public struct ConverseBuilder {
 
     // MARK - builder methods - tools
 
-    public func withTools(_ tools: [Tool]) throws -> ConverseBuilder {
+    public func withTools(_ tools: [Tool]) throws -> ConverseRequestBuilder {
         try validateFeature(.toolUse)
         guard tools.count > 0 else {
-            throw BedrockServiceError.converseBuilder("Cannot set tools to empty array.")
+            throw BedrockServiceError.ConverseRequestBuilder("Cannot set tools to empty array.")
         }
         if case .toolUse(let toolUse) = history.last?.content.last {
             guard tools.contains(where: { $0.name == toolUse.name }) else {
-                throw BedrockServiceError.converseBuilder(
+                throw BedrockServiceError.ConverseRequestBuilder(
                     "Cannot set tools if last message in history contains toolUse and no matching tool is found."
                 )
             }
         }
         let toolNames = tools.map { $0.name }
         guard Set(toolNames).count == tools.count else {
-            throw BedrockServiceError.converseBuilder("Cannot set tools with duplicate names.")
+            throw BedrockServiceError.ConverseRequestBuilder("Cannot set tools with duplicate names.")
         }
         var copy = self
         copy.tools = tools
         return copy
     }
 
-    private func withTools(_ tools: [Tool]?) throws -> ConverseBuilder {
+    private func withTools(_ tools: [Tool]?) throws -> ConverseRequestBuilder {
         let copy = self
         if let tools {
             return try copy.withTools(tools)
@@ -124,19 +121,19 @@ public struct ConverseBuilder {
         return copy
     }
 
-    public func withTool(_ tool: Tool) throws -> ConverseBuilder {
+    public func withTool(_ tool: Tool) throws -> ConverseRequestBuilder {
         try self.withTools([tool])
     }
 
-    public func withTool(name: String, inputSchema: JSON, description: String?) throws -> ConverseBuilder {
+    public func withTool(name: String, inputSchema: JSON, description: String?) throws -> ConverseRequestBuilder {
         try self.withTools([try Tool(name: name, inputSchema: inputSchema, description: description)])
     }
 
     // MARK - builder methods - user prompt
 
-    public func withPrompt(_ prompt: String) throws -> ConverseBuilder {
+    public func withPrompt(_ prompt: String) throws -> ConverseRequestBuilder {
         guard toolResult == nil else {
-            throw BedrockServiceError.converseBuilder("Cannot set prompt when tool result is set")
+            throw BedrockServiceError.ConverseRequestBuilder("Cannot set prompt when tool result is set")
         }
         try parameters.prompt.validateValue(prompt)
         var copy = self
@@ -144,24 +141,24 @@ public struct ConverseBuilder {
         return copy
     }
 
-    public func withImage(_ image: ImageBlock) throws -> ConverseBuilder {
+    public func withImage(_ image: ImageBlock) throws -> ConverseRequestBuilder {
         try validateFeature(.vision)
         guard toolResult == nil else {
-            throw BedrockServiceError.converseBuilder("Cannot set image when tool result is set")
+            throw BedrockServiceError.ConverseRequestBuilder("Cannot set image when tool result is set")
         }
         var copy = self
         copy.image = image
         return copy
     }
 
-    public func withImage(format: ImageBlock.Format, source: String) throws -> ConverseBuilder {
+    public func withImage(format: ImageBlock.Format, source: String) throws -> ConverseRequestBuilder {
         try self.withImage(try ImageBlock(format: format, source: source))
     }
 
-    public func withDocument(_ document: DocumentBlock) throws -> ConverseBuilder {
+    public func withDocument(_ document: DocumentBlock) throws -> ConverseRequestBuilder {
         try validateFeature(.document)
         guard toolResult == nil else {
-            throw BedrockServiceError.converseBuilder("Cannot set document when tool result is set")
+            throw BedrockServiceError.ConverseRequestBuilder("Cannot set document when tool result is set")
         }
         var copy = self
         copy.document = document
@@ -172,19 +169,19 @@ public struct ConverseBuilder {
         name: String,
         format: DocumentBlock.Format,
         source: String
-    ) throws -> ConverseBuilder {
+    ) throws -> ConverseRequestBuilder {
         try self.withDocument(try DocumentBlock(name: name, format: format, source: source))
     }
 
-    public func withToolResult(_ toolResult: ToolResultBlock) throws -> ConverseBuilder {
+    public func withToolResult(_ toolResult: ToolResultBlock) throws -> ConverseRequestBuilder {
         guard prompt == nil && image == nil && document == nil else {
-            throw BedrockServiceError.converseBuilder("Cannot set tool result when prompt, image, or document is set")
+            throw BedrockServiceError.ConverseRequestBuilder("Cannot set tool result when prompt, image, or document is set")
         }
         guard let _ = tools else {
-            throw BedrockServiceError.converseBuilder("Cannot set tool result when tools are not set")
+            throw BedrockServiceError.ConverseRequestBuilder("Cannot set tool result when tools are not set")
         }
         guard let lastMessage = history.last else {
-            throw BedrockServiceError.converseBuilder("Cannot set tool result when history is empty")
+            throw BedrockServiceError.ConverseRequestBuilder("Cannot set tool result when history is empty")
         }
         guard case .toolUse(let toolUse) = lastMessage.content.last else {
             throw BedrockServiceError.invalidPrompt("Cannot set tool result when last message is not tool use.")
@@ -202,7 +199,7 @@ public struct ConverseBuilder {
         id: String? = nil,
         content: [ToolResultBlock.Content],
         status: ToolResultBlock.Status? = nil
-    ) throws -> ConverseBuilder {
+    ) throws -> ConverseRequestBuilder {
         let id = try id ?? getToolResultId()
         let toolResult = ToolResultBlock(id: id, content: content, status: status)
         return try self.withToolResult(toolResult)
@@ -212,7 +209,7 @@ public struct ConverseBuilder {
         _ text: String,
         id: String? = nil,
         status: ToolResultBlock.Status? = nil
-    ) throws -> ConverseBuilder {
+    ) throws -> ConverseRequestBuilder {
         let id = try id ?? getToolResultId()
         let toolResult = ToolResultBlock(text, id: id, status: status)
         return try self.withToolResult(toolResult)
@@ -222,7 +219,7 @@ public struct ConverseBuilder {
         _ image: ImageBlock,
         id: String? = nil,
         status: ToolResultBlock.Status? = nil
-    ) throws -> ConverseBuilder {
+    ) throws -> ConverseRequestBuilder {
         let id = try id ?? getToolResultId()
         let toolResult = ToolResultBlock(image, id: id, status: status)
         return try self.withToolResult(toolResult)
@@ -232,7 +229,7 @@ public struct ConverseBuilder {
         _ document: DocumentBlock,
         id: String? = nil,
         status: ToolResultBlock.Status? = nil
-    ) throws -> ConverseBuilder {
+    ) throws -> ConverseRequestBuilder {
         let id = try id ?? getToolResultId()
         let toolResult = ToolResultBlock(document, id: id, status: status)
         return try self.withToolResult(toolResult)
@@ -242,7 +239,7 @@ public struct ConverseBuilder {
         _ json: JSON,
         id: String? = nil,
         status: ToolResultBlock.Status? = nil
-    ) throws -> ConverseBuilder {
+    ) throws -> ConverseRequestBuilder {
         let id = try id ?? getToolResultId()
         let toolResult = ToolResultBlock(json, id: id, status: status)
         return try self.withToolResult(toolResult)
@@ -252,7 +249,7 @@ public struct ConverseBuilder {
         _ video: VideoBlock,
         id: String? = nil,
         status: ToolResultBlock.Status? = nil
-    ) throws -> ConverseBuilder {
+    ) throws -> ConverseRequestBuilder {
         let id = try id ?? getToolResultId()
         let toolResult = ToolResultBlock(video, id: id, status: status)
         return try self.withToolResult(toolResult)
@@ -262,7 +259,7 @@ public struct ConverseBuilder {
         _ data: Data,
         id: String? = nil,
         status: ToolResultBlock.Status? = nil
-    ) throws -> ConverseBuilder {
+    ) throws -> ConverseRequestBuilder {
         let id = try id ?? getToolResultId()
         let toolResult = try ToolResultBlock(data, id: id, status: status)
         return try self.withToolResult(toolResult)
@@ -272,13 +269,13 @@ public struct ConverseBuilder {
         _ object: C,
         id: String? = nil,
         status: ToolResultBlock.Status? = nil
-    ) throws -> ConverseBuilder {
+    ) throws -> ConverseRequestBuilder {
         let id = try id ?? getToolResultId()
         let toolResult = try ToolResultBlock(object, id: id, status: status)
         return try self.withToolResult(toolResult)
     }
 
-    public func withFailedToolResult(id: String?) throws -> ConverseBuilder {
+    public func withFailedToolResult(id: String?) throws -> ConverseRequestBuilder {
         let id = try id ?? getToolResultId()
         let toolResult = ToolResultBlock(id: id, content: [], status: .error)
         return try self.withToolResult(toolResult)
@@ -286,7 +283,7 @@ public struct ConverseBuilder {
 
     // MARK - builder methods - inference parameters
 
-    public func withMaxTokens(_ maxTokens: Int?) throws -> ConverseBuilder {
+    public func withMaxTokens(_ maxTokens: Int?) throws -> ConverseRequestBuilder {
         var copy = self
         if let maxTokens {
             try copy.parameters.maxTokens.validateValue(maxTokens)
@@ -295,7 +292,7 @@ public struct ConverseBuilder {
         return copy
     }
 
-    public func withTemperature(_ temperature: Double?) throws -> ConverseBuilder {
+    public func withTemperature(_ temperature: Double?) throws -> ConverseRequestBuilder {
         var copy = self
         if let temperature {
             try copy.parameters.temperature.validateValue(temperature)
@@ -304,7 +301,7 @@ public struct ConverseBuilder {
         return copy
     }
 
-    public func withTopP(_ topP: Double?) throws -> ConverseBuilder {
+    public func withTopP(_ topP: Double?) throws -> ConverseRequestBuilder {
         var copy = self
         if let topP {
             try copy.parameters.topP.validateValue(topP)
@@ -313,11 +310,11 @@ public struct ConverseBuilder {
         return copy
     }
 
-    public func withStopSequences(_ stopSequences: [String]?) throws -> ConverseBuilder {
+    public func withStopSequences(_ stopSequences: [String]?) throws -> ConverseRequestBuilder {
         var copy = self
         if let stopSequences {
             guard stopSequences != [] else {
-                throw BedrockServiceError.converseBuilder("Cannot set stop sequences to empty array.")
+                throw BedrockServiceError.ConverseRequestBuilder("Cannot set stop sequences to empty array.")
             }
             try copy.parameters.stopSequences.validateValue(stopSequences)
             copy.stopSequences = stopSequences
@@ -325,7 +322,7 @@ public struct ConverseBuilder {
         return copy
     }
 
-    public func withStopSequence(_ stopSequence: String?) throws -> ConverseBuilder {
+    public func withStopSequence(_ stopSequence: String?) throws -> ConverseRequestBuilder {
         var stopSequences: [String]? = nil
         if let stopSequence {
             stopSequences = [stopSequence]
@@ -333,18 +330,18 @@ public struct ConverseBuilder {
         return try self.withStopSequences(stopSequences)
     }
 
-    public func withSystemPrompts(_ systemPrompts: [String]?) throws -> ConverseBuilder {
+    public func withSystemPrompts(_ systemPrompts: [String]?) throws -> ConverseRequestBuilder {
         var copy = self
         if let systemPrompts {
             guard systemPrompts != [] else {
-                throw BedrockServiceError.converseBuilder("Cannot set system prompts to empty array.")
+                throw BedrockServiceError.ConverseRequestBuilder("Cannot set system prompts to empty array.")
             }
             copy.systemPrompts = systemPrompts
         }
         return copy
     }
 
-    public func withSystemPrompt(_ systemPrompt: String?) throws -> ConverseBuilder {
+    public func withSystemPrompt(_ systemPrompt: String?) throws -> ConverseRequestBuilder {
         var systemPrompts: [String]? = nil
         if let systemPrompt {
             systemPrompts = [systemPrompt]
@@ -370,14 +367,14 @@ public struct ConverseBuilder {
             content.append(.toolResult(toolResult))
         }
         guard !content.isEmpty else {
-            throw BedrockServiceError.converseBuilder("No content defined.")
+            throw BedrockServiceError.ConverseRequestBuilder("No content defined.")
         }
         return Message(from: .user, content: content)
     }
 
     private func getToolResultId() throws -> String {
         guard let lastMessage = history.last else {
-            throw BedrockServiceError.converseBuilder("Cannot set tool result when history is empty")
+            throw BedrockServiceError.ConverseRequestBuilder("Cannot set tool result when history is empty")
         }
         guard case .toolUse(let toolUse) = lastMessage.content.last else {
             throw BedrockServiceError.invalidPrompt("Cannot set tool result when last message is not tool use.")
