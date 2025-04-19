@@ -16,7 +16,7 @@
 @preconcurrency import AWSBedrockRuntime
 import Foundation
 
-public enum Content: Codable {
+public enum Content: Codable, CustomStringConvertible {
     case text(String)
     case image(ImageBlock)
     case toolUse(ToolUseBlock)
@@ -67,6 +67,23 @@ public enum Content: Codable {
         // default:
         //     print("TODO")
         //     return BedrockRuntimeClientTypes.ContentBlock.text("TODO")
+        }
+    }
+
+    public var description: String {
+        switch self {
+        case .text(let text):
+            return "\(text)"
+        case .image(let imageBlock):
+            return "Image: \(imageBlock.format)"
+        case .toolUse(let toolUseBlock):
+            return "ToolUse: \(toolUseBlock.id) - \(toolUseBlock.name))"
+        case .toolResult(let toolResultBlock):
+            return "ToolResult: \(toolResultBlock.id)"
+        case .document(let documentBlock):
+            return "Document: \(documentBlock.name) - \(documentBlock.format)"
+        case .video(let videoBlock):
+            return "Video: \(videoBlock.format)"
         }
     }
 }
