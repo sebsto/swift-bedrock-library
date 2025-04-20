@@ -20,7 +20,7 @@ import Foundation
 
 extension BedrockService {
 
-    /// Converse with a model using the Bedrock Converse API
+    /// Converse with a model using the Bedrock Converse Streaming API
     /// - Parameters:
     ///   - model: The BedrockModel to converse with
     ///   - conversation: Array of previous messages in the conversation
@@ -35,7 +35,7 @@ extension BedrockService {
     ///           BedrockServiceError.invalidPrompt if the prompt is empty or too long
     ///           BedrockServiceError.invalidModality for invalid modality from the selected model
     ///           BedrockServiceError.invalidSDKResponse if the response body is missing
-    /// - Returns: A Message containing the model's response
+    /// - Returns: A stream of ConverseResponseStreaming objects
     public func converse(
         with model: BedrockModel,
         conversation: [Message],
@@ -45,8 +45,15 @@ extension BedrockService {
         stopSequences: [String]? = nil,
         systemPrompts: [String]? = nil,
         tools: [Tool]? = nil
-    ) async throws -> Message {
+    ) async throws -> AsyncThrowingStream<ConverseStreamingResponse, any Error> {
         do {
+            guard model.hasConverseStreamingModality() else {
+                throw BedrockServiceError.invalidModality(
+                    model,
+                    try model.getConverseModality(),
+                    "This model does not support converse streaming."
+                )
+            }
             let modality = try model.getConverseModality()
             let parameters = modality.getConverseParameters()
             try parameters.validate(
@@ -57,7 +64,7 @@ extension BedrockService {
             )
 
             logger.trace(
-                "Creating ConverseRequest",
+                "Creating ConverseStreamingRequest",
                 metadata: [
                     "model.name": "\(model.name)",
                     "model.id": "\(model.id)",
@@ -70,7 +77,7 @@ extension BedrockService {
                     "tools": "\(String(describing: tools))",
                 ]
             )
-            let converseRequest = ConverseRequest(
+            let converseRequest = ConverseStreamingRequest(
                 model: model,
                 messages: conversation,
                 maxTokens: maxTokens,
@@ -81,38 +88,56 @@ extension BedrockService {
                 tools: tools
             )
 
-            logger.trace("Creating ConverseInput")
-            let input = try converseRequest.getConverseInput()
+            logger.trace("Creating ConverseStreaminInput")
+            let input = try converseRequest.getConverseStreamingInput()
 
             logger.trace(
-                "Sending ConverseInput to BedrockRuntimeClient",
+                "Sending ConverseStreaminInput to BedrockRuntimeClient",
                 metadata: [
                     "input.messages.count": "\(String(describing:input.messages!.count))",
                     "input.modelId": "\(String(describing:input.modelId!))",
                 ]
             )
-            let response: ConverseOutput = try await self.bedrockRuntimeClient.converse(input: input)
+            let response: ConverseStreamOutput = try await self.bedrockRuntimeClient.converseStream(input: input)
 
             logger.trace("Received response", metadata: ["response": "\(response)"])
-            return try Message(response)
+
+            guard let stream = response.stream else {
+                throw BedrockServiceError.invalidSDKResponse(
+                    "The response stream is missing. This error should never happen."
+                )
+            }
+            // at this time, we have a stream. The stream is a message, with multiple content blocks
+            // - message start
+            // - message content start
+            // - message content delta
+            // - message content end
+            // - message stop
+            // - message metadata
+            // see https://github.com/awslabs/aws-sdk-swift/blob/2697fb44f607b9c43ad0ce5ca79867d8d6c545c2/Sources/Services/AWSBedrockRuntime/Sources/AWSBedrockRuntime/Models.swift#L3478
+            // it will be the responsibility of the user to handle the stream and re-assemble the messages and content
+            // TODO: should we expose the SDK ConverseStreamOutput from the SDK ? or wrap it (what's the added value) ?
+            return stream
         } catch {
-            try handleCommonError(error, context: "invoking converse")
+            try handleCommonError(error, context: "invoking converse stream")
             throw BedrockServiceError.unknownError("\(error)")  // FIXME: handleCommonError will always throw
         }
     }
 
-    /// Use Converse API with the ConverseBuilder
+    /// Use Converse Stream API with the ConverseBuilder
     /// - Parameters:
     ///   - builder: ConverseBuilder object
     /// - Throws: BedrockServiceError.invalidSDKResponse if the response body is missing
-    /// - Returns: A ConverseReply object
-    public func converse(with builder: ConverseBuilder) async throws -> ConverseReply {
-        logger.trace("Conversing")
+    /// - Returns: A stream of ConverseResponseStreaming objects
+    public func converse(
+        with builder: ConverseBuilder
+    ) async throws -> AsyncThrowingStream<ConverseStreamingResponse, any Error> {
+        logger.trace("Conversing and streaming")
         do {
             var history = builder.history
             let userMessage = try builder.getUserMessage()
             history.append(userMessage)
-            let assistantMessage: Message = try await converse(
+            let streamingResponse: AsyncThrowingStream<ConverseStreamingResponse, any Error> = try await converse(
                 with: builder.model,
                 conversation: history,
                 maxTokens: builder.maxTokens,
@@ -122,12 +147,7 @@ extension BedrockService {
                 systemPrompts: builder.systemPrompts,
                 tools: builder.tools
             )
-            history.append(assistantMessage)
-            logger.trace(
-                "Received message",
-                metadata: ["replyMessage": "\(assistantMessage)", "history.count": "\(history.count)"]
-            )
-            return try ConverseReply(history)
+            return streamingResponse
         } catch {
             logger.trace("Error while conversing", metadata: ["error": "\(error)"])
             throw error

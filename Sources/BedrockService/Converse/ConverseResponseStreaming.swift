@@ -14,16 +14,5 @@
 //===----------------------------------------------------------------------===//
 
 @preconcurrency import AWSBedrockRuntime
-import AWSClientRuntime
-import AWSSDKIdentity
-import BedrockTypes
-import Foundation
 
-// Protocol allows writing mocks for unit tests
-public protocol BedrockRuntimeClientProtocol: Sendable {
-    func invokeModel(input: InvokeModelInput) async throws -> InvokeModelOutput
-    func converse(input: ConverseInput) async throws -> ConverseOutput
-    func converseStream(input: ConverseStreamInput) async throws -> ConverseStreamOutput
-}
-
-extension BedrockRuntimeClient: @retroactive @unchecked Sendable, BedrockRuntimeClientProtocol {}
+public typealias ConverseStreamingResponse = BedrockRuntimeClientTypes.ConverseStreamOutput
