@@ -14,8 +14,8 @@
 //===----------------------------------------------------------------------===//
 
 public typealias History = [Message]
-public extension History {
-    var description: String {
+extension History {
+    public var description: String {
         var result = "\(self.count) turns:\n"
         for message in self {
             result += "\(message)\n"

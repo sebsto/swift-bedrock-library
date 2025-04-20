@@ -67,7 +67,7 @@ public struct ConverseRequestBuilder {
     /// with an updated history and all the user input emptied out.
     public init(from builder: ConverseRequestBuilder, with reply: ConverseReply) throws {
         self = try .init(from: builder)
-                    .withHistory(reply.getHistory())
+            .withHistory(reply.getHistory())
     }
 
     // MARK - builder methods
@@ -175,7 +175,9 @@ public struct ConverseRequestBuilder {
 
     public func withToolResult(_ toolResult: ToolResultBlock) throws -> ConverseRequestBuilder {
         guard prompt == nil && image == nil && document == nil else {
-            throw BedrockServiceError.ConverseRequestBuilder("Cannot set tool result when prompt, image, or document is set")
+            throw BedrockServiceError.ConverseRequestBuilder(
+                "Cannot set tool result when prompt, image, or document is set"
+            )
         }
         guard let _ = tools else {
             throw BedrockServiceError.ConverseRequestBuilder("Cannot set tool result when tools are not set")
