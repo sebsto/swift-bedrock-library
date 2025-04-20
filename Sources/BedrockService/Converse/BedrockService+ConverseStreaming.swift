@@ -88,7 +88,7 @@ extension BedrockService {
                 tools: tools
             )
 
-            logger.trace("Creating ConverseStreaminInput")
+            logger.trace("Creating ConverseStreamingInput")
             let input = try converseRequest.getConverseStreamingInput()
 
             logger.trace(
