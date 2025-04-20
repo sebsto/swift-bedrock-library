@@ -15,7 +15,7 @@
 
 import Foundation
 
-public struct StandardConverse: ConverseModality {
+public struct StandardConverse: ConverseModality, StreamingModality {
     public func getName() -> String { "Standard Converse Modality" }
 
     public let converseParameters: ConverseParameters

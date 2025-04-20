@@ -15,7 +15,7 @@
 
 import Foundation
 
-struct DeepSeekText: TextModality, ConverseModality {
+struct DeepSeekText: TextModality, ConverseModality, StreamingModality {
     let parameters: TextGenerationParameters
     let converseFeatures: [ConverseFeature]
     let converseParameters: ConverseParameters

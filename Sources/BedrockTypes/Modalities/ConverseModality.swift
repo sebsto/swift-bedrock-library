@@ -15,7 +15,7 @@
 
 import Foundation
 
-// Text
+// Converse
 public protocol ConverseModality: Modality {
     var converseParameters: ConverseParameters { get }
     var converseFeatures: [ConverseFeature] { get }
@@ -23,6 +23,7 @@ public protocol ConverseModality: Modality {
     func getConverseParameters() -> ConverseParameters
     func getConverseFeatures() -> [ConverseFeature]
 }
+public protocol ConverseStreamingModality: ConverseModality, StreamingModality {}
 
 // default implementation
 extension ConverseModality {
