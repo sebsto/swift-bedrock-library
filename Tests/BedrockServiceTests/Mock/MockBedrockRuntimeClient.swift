@@ -24,6 +24,9 @@ public struct MockBedrockRuntimeClient: BedrockRuntimeClientProtocol {
     public init() {}
 
     // MARK: converse
+    public func converseStream(input: ConverseStreamInput) async throws -> ConverseStreamOutput {
+        fatalError("not implemented yet")
+    }
     public func converse(input: ConverseInput) async throws -> ConverseOutput {
         guard let messages = input.messages,
             let content = messages.last?.content?.last
