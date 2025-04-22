@@ -213,16 +213,15 @@ guard model.hasConverseModality() else {
     throw MyError.incorrectModality("\(model.name) does not support converse")
 }
 
-let builder = try ConverseBuilder(model: model)
+var builder = try ConverseRequestBuilder(with: model)
     .withPrompt("Tell me about rainbows")
 
 var reply = try await bedrock.converse(with: builder)
 
 print("Assistant: \(reply)")
 
-let nextBuilder = try ConverseBuilder(model: model)
+builder = try ConverseRequestBuilder(from: builder, with: reply)
     .withPrompt("Do you think birds can see them too?")
-    .withHistory(reply.getHistory())
 
 reply = try await bedrock.converse(with: builder)
 
@@ -232,7 +231,7 @@ print("Assistant: \(reply)")
 Optionally add inference parameters. Note that the builder can be used to create the next builder with the same parameters and the updated history.
 
 ```swift
-let builder = try ConverseBuilder(model: model)
+let builder = try ConverseRequestBuilder(with: model)
     .withPrompt("Tell me about rainbows")
     .withMaxTokens(512)
     .withTemperature(0.2)
@@ -241,8 +240,8 @@ let builder = try ConverseBuilder(model: model)
 
 var reply = try await bedrock.converse(with: builder)
 
-builder = try ConverseBuilder(from: builder, with: reply)
-    .setPrompt("Do you think birds can see them too?")
+builder = try ConverseRequestBuilder(from: builder, with: reply)
+    .withPrompt("Do you think birds can see them too?")
 
 reply = try await bedrock.converse(with: builder)
 ```
@@ -257,7 +256,7 @@ guard model.hasConverseModality(.vision) else {
     throw MyError.incorrectModality("\(model.name) does not support converse vision")
 }
 
-let builder = try ConverseBuilder(model: model)
+let builder = try ConverseRequestBuilder(with: model)
     .withPrompt("Can you tell me about this plant?")
     .withImage(format: .jpeg, source: base64EncodedImage)
 
@@ -269,7 +268,7 @@ print("Assistant: \(reply)")
 Optionally add inference parameters. 
 
 ```swift
-let builder = try ConverseBuilder(model: model)
+let builder = try ConverseRequestBuilder(with: model)
     .withPrompt("Can you tell me about this plant?")
     .withImage(format: .jpeg, source: base64EncodedImage)
     .withTemperature(0.8)
@@ -280,15 +279,15 @@ let reply = try await bedrock.converse(with: builder)
 Note that the builder can be used to create the next builder with the same parameters and the updated history.
 
 ```swift
-var builder = try ConverseBuilder(model: model)
+var builder = try ConverseRequestBuilder(with: model)
     .withPrompt("Can you tell me about this plant?")
     .withImage(format: .jpeg, source: base64EncodedImage)
     .withTemperature(0.8)
 
 var reply = try await bedrock.converse(with: builder)
 
-builder = try ConverseBuilder(from: builder, with: reply)
-    .setPrompt("Where can I find those plants?")
+builder = try ConverseRequestBuilder(from: builder, with: reply)
+    .withPrompt("Where can I find those plants?")
 
 reply = try await bedrock.converse(with: builder)
 ```
@@ -301,7 +300,7 @@ guard model.hasConverseModality(.document) else {
     throw MyError.incorrectModality("\(model.name) does not support converse document")
 }
 
-let builder = try ConverseBuilder(model: model)
+let builder = try ConverseRequestBuilder(with: model)
     .withPrompt("Can you give me a summary of this chapter?")
     .withDocument(name: "Chapter 1", format: .pdf, source: base64EncodedDocument)
 
@@ -313,7 +312,7 @@ print("Assistant: \(reply)")
 Optionally add inference parameters. 
 
 ```swift
-let builder = try ConverseBuilder(model: model)
+let builder = try ConverseRequestBuilder(with: model)
     .withPrompt("Can you give me a summary of this chapter?")
     .withDocument(name: "Chapter 1", format: .pdf, source: base64EncodedDocument)
     .withMaxTokens(512)
@@ -325,7 +324,7 @@ var reply = try await bedrock.converse(with: builder)
 Note that the builder can be used to create the next builder with the same parameters and the updated history.
 
 ```swift
-var builder = try ConverseBuilder(model: model)
+var builder = try ConverseRequestBuilder(with: model)
     .withPrompt("Can you give me a summary of this chapter?")
     .withDocument(name: "Chapter 1", format: .pdf, source: base64EncodedDocument)
     .withMaxTokens(512)
@@ -333,7 +332,7 @@ var builder = try ConverseBuilder(model: model)
 
 var reply = try await bedrock.converse(with: builder)
 
-builder = try ConverseBuilder(from: builder, with: reply)
+builder = try ConverseRequestBuilder(from: builder, with: reply)
     .withPrompt("Thanks, can you make a Dutch version as well?")
 
 reply = try await bedrock.converse(with: builder)
@@ -366,12 +365,12 @@ let inputSchema = JSON([
 // create a Tool object
 let tool = try Tool(name: "top_song", inputSchema: inputSchema, description: "Get the most popular song played on a radio station.")
 
-// create a ConverseBuilder with a prompt and the Tool object
-var builder = try ConverseBuilder(model: model)
+// create a ConverseRequestBuilder with a prompt and the Tool object
+var builder = try ConverseRequestBuilder(with: model)
     .withPrompt("What is the most popular song on WZPZ?")
-    .tool(tool)
+    .withTools([tool])
 
-// pass the ConverseBuilder object to the converse function
+// pass the ConverseRequestBuilder object to the converse function
 var reply = try await bedrock.converse(with: builder)
 
 if let toolUse = try? reply.getToolUse() {
@@ -382,8 +381,8 @@ if let toolUse = try? reply.getToolUse() {
     // ... Logic to use the tool here ... 
 
     // Send the toolResult back to the model
-    builder = try ConverseBuilder(from: builder, with: reply)
-        .withToolResult("The Best Song Ever")
+    builder = try ConverseRequestBuilder(from: builder, with: reply)
+        .withToolResult("The Best Song Ever") // pass any Codable or Data
     
     reply = try await bedrock.converse(with: builder)
 }
