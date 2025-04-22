@@ -130,7 +130,7 @@ extension BedrockService {
     /// - Throws: BedrockServiceError.invalidSDKResponse if the response body is missing
     /// - Returns: A stream of ConverseResponseStreaming objects
     public func converse(
-        with builder: ConverseBuilder
+        with builder: ConverseRequestBuilder
     ) async throws -> AsyncThrowingStream<ConverseStreamingResponse, any Error> {
         logger.trace("Conversing and streaming")
         do {
