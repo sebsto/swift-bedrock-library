@@ -24,7 +24,7 @@ public enum BedrockServiceError: Error {
     case invalidURI(String)
     case invalidConverseReply(String)
     case invalidName(String)
-    case converseBuilder(String)
+    case ConverseRequestBuilder(String)
     case invalidSDKResponse(String)
     case invalidSDKResponseBody(Data?)
     case completionNotFound(String)

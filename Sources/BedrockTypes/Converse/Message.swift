@@ -16,7 +16,7 @@
 @preconcurrency import AWSBedrockRuntime
 import Foundation
 
-public struct Message: Codable {
+public struct Message: Codable, CustomStringConvertible {
     public let role: Role
     public let content: [Content]
 
@@ -86,6 +86,13 @@ public struct Message: Codable {
             throw BedrockServiceError.invalidSDKResponse("Could not extract message from ConverseOutput")
         }
         self = try Message(from: sdkMessage)
+    }
+
+    // MARK - CustomStringConvertible
+
+    public var description: String {
+        let contentDescription = content.map { $0.description }.joined(separator: " - ")
+        return "- \(role): [\(contentDescription)]"
     }
 
     // MARK - public functions

@@ -13,8 +13,18 @@
 //
 //===----------------------------------------------------------------------===//
 
+public typealias History = [Message]
+extension History {
+    public var description: String {
+        var result = "\(self.count) turns:\n"
+        for message in self {
+            result += "\(message)\n"
+        }
+        return result
+    }
+}
 public struct ConverseReply: Codable, CustomStringConvertible {
-    let history: [Message]
+    let history: History
     let textReply: String?
     let toolUse: ToolUseBlock?
     let imageBlock: ImageBlock?
@@ -31,7 +41,7 @@ public struct ConverseReply: Codable, CustomStringConvertible {
 
     // MARK: Initializers
 
-    public init(_ history: [Message]) throws {
+    public init(_ history: History) throws {
         guard let lastMessage = history.last else {
             throw BedrockServiceError.invalidConverseReply("The provided history is not allowed to be empty.")
         }
@@ -48,7 +58,7 @@ public struct ConverseReply: Codable, CustomStringConvertible {
     // MARK: Public functions
 
     /// Returns the conversation history
-    public func getHistory() -> [Message] { history }
+    public func getHistory() -> History { history }
 
     /// Returns the latest message
     public func getLastMessage() -> Message { history.last! }

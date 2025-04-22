@@ -25,7 +25,7 @@ extension BedrockServiceTests {
     @Test("Converse with vision")
     func converseVision() async throws {
         let bytes = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
-        let builder = try ConverseBuilder(BedrockModel.nova_lite)
+        let builder = try ConverseRequestBuilder(with: .nova_lite)
             .withPrompt("What is this?")
             .withImage(format: .jpeg, source: bytes)
         let reply = try await bedrock.converse(with: builder)
@@ -36,7 +36,7 @@ extension BedrockServiceTests {
     func converseVisionUsingImageBlock() async throws {
         let source = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
         let image = try ImageBlock(format: .jpeg, source: source)
-        let builder = try ConverseBuilder(BedrockModel.nova_lite)
+        let builder = try ConverseRequestBuilder(with: .nova_lite)
             .withPrompt("What is this?")
             .withImage(image)
         let reply = try await bedrock.converse(with: builder)
@@ -46,7 +46,7 @@ extension BedrockServiceTests {
     @Test("Converse with vision and inout builder")
     func converseVisionAndInOutBuilder() async throws {
         let bytes = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
-        var builder = try ConverseBuilder(BedrockModel.nova_lite)
+        var builder = try ConverseRequestBuilder(with: .nova_lite)
             .withPrompt("What is this?")
             .withImage(format: .jpeg, source: bytes)
 
@@ -58,7 +58,7 @@ extension BedrockServiceTests {
         var reply = try await bedrock.converse(with: builder)
         #expect(reply.textReply == "Image received")
 
-        builder = try ConverseBuilder(from: builder, with: reply)
+        builder = try ConverseRequestBuilder(from: builder, with: reply)
             .withPrompt("Some prompt")
 
         #expect(builder.image == nil)
@@ -76,7 +76,7 @@ extension BedrockServiceTests {
     func converseVisionInvalidModel() async throws {
         let source = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
         #expect(throws: BedrockServiceError.self) {
-            let _ = try ConverseBuilder(BedrockModel.nova_micro)
+            let _ = try ConverseRequestBuilder(with: .nova_micro)
                 .withPrompt("What is this?")
                 .withImage(format: .jpeg, source: source)
         }
@@ -86,7 +86,7 @@ extension BedrockServiceTests {
     func converseVisionAndDocumentAndInOutBuilder() async throws {
         let docSource = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
         let imageBytes = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
-        var builder = try ConverseBuilder(BedrockModel.nova_lite)
+        var builder = try ConverseRequestBuilder(with: .nova_lite)
             .withPrompt("What is this?")
             .withImage(format: .jpeg, source: imageBytes)
             .withDocument(name: "doc", format: .pdf, source: docSource)
@@ -103,7 +103,7 @@ extension BedrockServiceTests {
         var reply = try await bedrock.converse(with: builder)
         #expect(reply.textReply == "Document received")
 
-        builder = try ConverseBuilder(from: builder, with: reply)
+        builder = try ConverseRequestBuilder(from: builder, with: reply)
             .withPrompt("Some prompt")
 
         #expect(builder.image == nil)
