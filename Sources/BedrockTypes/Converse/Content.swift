@@ -16,7 +16,7 @@
 @preconcurrency import AWSBedrockRuntime
 import Foundation
 
-public enum Content: Codable, CustomStringConvertible {
+public enum Content: Codable, CustomStringConvertible, Sendable {
     case text(String)
     case image(ImageBlock)
     case toolUse(ToolUseBlock)

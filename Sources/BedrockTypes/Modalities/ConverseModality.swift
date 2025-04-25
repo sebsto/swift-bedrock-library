@@ -23,9 +23,11 @@ public protocol ConverseModality: Modality {
     func getConverseParameters() -> ConverseParameters
     func getConverseFeatures() -> [ConverseFeature]
 }
+
+// Converse Streaming
 public protocol ConverseStreamingModality: ConverseModality, StreamingModality {}
 
-// default implementation
+// Default implementation
 extension ConverseModality {
 
     func getConverseParameters() -> ConverseParameters {

@@ -16,7 +16,7 @@
 @preconcurrency import AWSBedrockRuntime
 import Foundation
 
-public struct VideoBlock: Codable {
+public struct VideoBlock: Codable, Sendable {
     public let format: Format
     public let source: Source
 
@@ -61,7 +61,7 @@ public struct VideoBlock: Codable {
         )
     }
 
-    public enum Source: Codable {
+    public enum Source: Codable, Sendable {
         case bytes(String)  // base64
         case s3(S3Location)
 
@@ -93,7 +93,7 @@ public struct VideoBlock: Codable {
         }
     }
 
-    public enum Format: Codable {
+    public enum Format: Codable, Sendable {
         case flv
         case mkv
         case mov

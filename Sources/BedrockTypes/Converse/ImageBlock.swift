@@ -16,7 +16,7 @@
 @preconcurrency import AWSBedrockRuntime
 import Foundation
 
-public struct ImageBlock: Codable {
+public struct ImageBlock: Codable, Sendable {
     public let format: Format
     public let source: String  // 64 encoded
 
@@ -63,7 +63,7 @@ public struct ImageBlock: Codable {
         )
     }
 
-    public enum Format: Codable {
+    public enum Format: Codable, Sendable {
         case gif
         case jpeg
         case png

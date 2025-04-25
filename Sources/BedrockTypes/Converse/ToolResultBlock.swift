@@ -16,7 +16,7 @@
 @preconcurrency import AWSBedrockRuntime
 import Foundation
 
-public struct ToolResultBlock: Codable {
+public struct ToolResultBlock: Codable, Sendable {
     public let id: String
     public let content: [Content]
     public let status: Status?  // currently only supported by Anthropic Claude 3 models
@@ -101,7 +101,7 @@ public struct ToolResultBlock: Codable {
         )
     }
 
-    public enum Status: Codable {
+    public enum Status: Codable, Sendable {
         case success
         case error
 
@@ -124,7 +124,7 @@ public struct ToolResultBlock: Codable {
         }
     }
 
-    public enum Content {
+    public enum Content: Sendable {
         case json(JSON)
         case text(String)
         case image(ImageBlock)  // currently only supported by Anthropic Claude 3 models

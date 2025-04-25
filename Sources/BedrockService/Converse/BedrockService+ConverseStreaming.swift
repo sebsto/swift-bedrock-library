@@ -45,7 +45,7 @@ extension BedrockService {
         stopSequences: [String]? = nil,
         systemPrompts: [String]? = nil,
         tools: [Tool]? = nil
-    ) async throws -> AsyncThrowingStream<ConverseStreamingResponse, any Error> {
+    ) async throws -> AsyncThrowingStream<ConverseStreamElement, any Error> {
         do {
             guard model.hasConverseStreamingModality() else {
                 throw BedrockServiceError.invalidModality(
@@ -102,11 +102,16 @@ extension BedrockService {
 
             logger.trace("Received response", metadata: ["response": "\(response)"])
 
-            guard let stream = response.stream else {
+            guard let sdkStream = response.stream else {
                 throw BedrockServiceError.invalidSDKResponse(
                     "The response stream is missing. This error should never happen."
                 )
             }
+
+            let reply = ConverseReplyStream(sdkStream)
+            return reply.stream
+
+
             // at this time, we have a stream. The stream is a message, with multiple content blocks
             // - message start
             // - message content start
@@ -117,7 +122,7 @@ extension BedrockService {
             // see https://github.com/awslabs/aws-sdk-swift/blob/2697fb44f607b9c43ad0ce5ca79867d8d6c545c2/Sources/Services/AWSBedrockRuntime/Sources/AWSBedrockRuntime/Models.swift#L3478
             // it will be the responsibility of the user to handle the stream and re-assemble the messages and content
             // TODO: should we expose the SDK ConverseStreamOutput from the SDK ? or wrap it (what's the added value) ?
-            return stream
+            // return stream
         } catch {
             try handleCommonError(error, context: "invoking converse stream")
             throw BedrockServiceError.unknownError("\(error)")  // FIXME: handleCommonError will always throw
@@ -131,13 +136,13 @@ extension BedrockService {
     /// - Returns: A stream of ConverseResponseStreaming objects
     public func converse(
         with builder: ConverseRequestBuilder
-    ) async throws -> AsyncThrowingStream<ConverseStreamingResponse, any Error> {
+    ) async throws -> AsyncThrowingStream<ConverseStreamElement, any Error> {
         logger.trace("Conversing and streaming")
         do {
             var history = builder.history
             let userMessage = try builder.getUserMessage()
             history.append(userMessage)
-            let streamingResponse: AsyncThrowingStream<ConverseStreamingResponse, any Error> = try await converse(
+            let streamingResponse: AsyncThrowingStream<ConverseStreamElement, any Error> = try await converse(
                 with: builder.model,
                 conversation: history,
                 maxTokens: builder.maxTokens,

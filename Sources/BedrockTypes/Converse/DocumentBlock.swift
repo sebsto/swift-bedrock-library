@@ -16,7 +16,7 @@
 @preconcurrency import AWSBedrockRuntime
 import Foundation
 
-public struct DocumentBlock: Codable {
+public struct DocumentBlock: Codable, Sendable {
     public let name: String
     public let format: Format
     public let source: String  // 64 encoded
@@ -83,7 +83,7 @@ public struct DocumentBlock: Codable {
         )
     }
 
-    public enum Format: Codable {
+    public enum Format: Codable, Sendable {
         case csv
         case doc
         case docx
