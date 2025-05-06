@@ -107,11 +107,6 @@ extension BedrockService {
                     "The response stream is missing. This error should never happen."
                 )
             }
-
-            let reply = ConverseReplyStream(sdkStream)
-            return reply.stream
-
-
             // at this time, we have a stream. The stream is a message, with multiple content blocks
             // - message start
             // - message content start
@@ -122,7 +117,18 @@ extension BedrockService {
             // see https://github.com/awslabs/aws-sdk-swift/blob/2697fb44f607b9c43ad0ce5ca79867d8d6c545c2/Sources/Services/AWSBedrockRuntime/Sources/AWSBedrockRuntime/Models.swift#L3478
             // it will be the responsibility of the user to handle the stream and re-assemble the messages and content
             // TODO: should we expose the SDK ConverseStreamOutput from the SDK ? or wrap it (what's the added value) ?
-            // return stream
+
+            let reply = ConverseReplyStream(sdkStream)
+
+            // this time, a different stream is created from the previous one, this one has the following elements
+            // - content segment: this contains a ContentSegment, an enum which can currently only be a .text(Int, String), 
+            //   the integer is the id for the content block that the content segment is a part of, 
+            //   the String is the part of text that is send from the model.
+            // - content block complete: this includes the id of the completed content block and the complete content block itself
+            // - message complete: this includes the complete Message, ready to be added to the history and used for future requests
+
+            return reply.stream
+
         } catch {
             try handleCommonError(error, context: "invoking converse stream")
             throw BedrockServiceError.unknownError("\(error)")  // FIXME: handleCommonError will always throw

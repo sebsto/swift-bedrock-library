@@ -19,9 +19,13 @@ import Foundation
 public struct DocumentBlock: Codable, Sendable {
     public let name: String
     public let format: Format
-    public let source: String  // 64 encoded
+    public let source: Source
 
     public init(name: String, format: Format, source: String) throws {
+        self = try Self(name: name, format: format, source: try Source(bytes: source))
+    }
+
+    public init(name: String, format: Format, source: Source) throws {
         // https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_DocumentBlock.html
         guard !name.isEmpty else {
             throw BedrockServiceError.invalidName("Document name is not allowed to be empty")
@@ -34,9 +38,6 @@ public struct DocumentBlock: Codable, Sendable {
         guard name.count <= 200 else {
             throw BedrockServiceError.invalidName("Document name must be no longer than 200 characters")
         }
-        guard !source.isEmpty else {
-            throw BedrockServiceError.invalidName("Document source is not allowed to be empty")
-        }
 
         self.name = name
         self.format = format
@@ -44,11 +45,6 @@ public struct DocumentBlock: Codable, Sendable {
     }
 
     public init(from sdkDocumentBlock: BedrockRuntimeClientTypes.DocumentBlock) throws {
-        guard let sdkDocumentSource = sdkDocumentBlock.source else {
-            throw BedrockServiceError.decodingError(
-                "Could not extract source from BedrockRuntimeClientTypes.DocumentBlock"
-            )
-        }
         guard let name = sdkDocumentBlock.name else {
             throw BedrockServiceError.decodingError(
                 "Could not extract name from BedrockRuntimeClientTypes.DocumentBlock"
@@ -59,27 +55,21 @@ public struct DocumentBlock: Codable, Sendable {
                 "Could not extract format from BedrockRuntimeClientTypes.DocumentBlock"
             )
         }
-        let format = try DocumentBlock.Format(from: sdkFormat)
-        switch sdkDocumentSource {
-        case .bytes(let data):
-            self = try DocumentBlock(name: name, format: format, source: data.base64EncodedString())
-        case .sdkUnknown(let unknownImageSource):
-            throw BedrockServiceError.notImplemented(
-                "ImageSource \(unknownImageSource) is not implemented by BedrockRuntimeClientTypes"
+        guard let sdkSource = sdkDocumentBlock.source else {
+            throw BedrockServiceError.decodingError(
+                "Could not extract source from BedrockRuntimeClientTypes.DocumentSource"
             )
         }
+        let format = try Format(from: sdkFormat)
+        let source = try Source(from: sdkSource)
+        try self.init(name: name, format: format, source: source)
     }
 
     public func getSDKDocumentBlock() throws -> BedrockRuntimeClientTypes.DocumentBlock {
-        guard let data = Data(base64Encoded: source) else {
-            throw BedrockServiceError.decodingError(
-                "Could not decode document source from base64 string. String: \(source)"
-            )
-        }
-        return BedrockRuntimeClientTypes.DocumentBlock(
+        BedrockRuntimeClientTypes.DocumentBlock(
             format: format.getSDKDocumentFormat(),
             name: name,
-            source: BedrockRuntimeClientTypes.DocumentSource.bytes(data)
+            source: try source.getSDKDocumentSource()
         )
     }
 
@@ -105,9 +95,9 @@ public struct DocumentBlock: Codable, Sendable {
             case .txt: self = .txt
             case .xls: self = .xls
             case .xlsx: self = .xlsx
-            case .sdkUnknown(let unknownDocumentFormat):
+            default:
                 throw BedrockServiceError.notImplemented(
-                    "DocumentFormat \(unknownDocumentFormat) is not implemented by BedrockRuntimeClientTypes"
+                    "DocumentFormat \(sdkDocumentFormat) is not implemented by BedrockService or not implemented by BedrockRuntimeClientTypes in case of `sdkUnknown`"
                 )
             }
         }
@@ -123,6 +113,45 @@ public struct DocumentBlock: Codable, Sendable {
             case .txt: return .txt
             case .xls: return .xls
             case .xlsx: return .xlsx
+            }
+        }
+    }
+
+    public enum Source: Codable, Sendable {
+        case bytes(String)
+        case s3(S3Location)
+
+        public init(bytes: String) throws {
+            guard !bytes.isEmpty else {
+                throw BedrockServiceError.invalidName("Document source is not allowed to be empty")
+            }
+            self = .bytes(bytes)
+        }
+
+        public init(from sdkSource: BedrockRuntimeClientTypes.DocumentSource) throws {
+            switch sdkSource {
+            case .bytes(let data):
+                self = .bytes(data.base64EncodedString())
+            case .s3location(let sdkS3Location):
+                self = .s3(try S3Location(from: sdkS3Location))
+            case .sdkUnknown(let unknownSource):
+                throw BedrockServiceError.notImplemented(
+                    "DocumentSource \(unknownSource) is not implemented by BedrockRuntimeClientTypes"
+                )
+            }
+        }
+
+        public func getSDKDocumentSource() throws -> BedrockRuntimeClientTypes.DocumentSource {
+            switch self {
+            case .bytes(let data):
+                guard let sdkData = Data(base64Encoded: data) else {
+                    throw BedrockServiceError.decodingError(
+                        "Could not decode document source from base64 string. String: \(data)"
+                    )
+                }
+                return .bytes(sdkData)
+            case .s3(let s3Location):
+                return .s3location(s3Location.getSDKS3Location())
             }
         }
     }

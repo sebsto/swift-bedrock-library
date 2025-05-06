@@ -15,7 +15,7 @@
 
 import Foundation
 
-struct NovaText: TextModality, ConverseModality, StreamingModality {
+struct NovaText: TextModality, ConverseModality, ConverseStreamingModality {
     func getName() -> String { "Nova Text Generation" }
 
     let parameters: TextGenerationParameters

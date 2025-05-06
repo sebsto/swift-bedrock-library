@@ -14,7 +14,7 @@
 //===----------------------------------------------------------------------===//
 @preconcurrency import AWSBedrockRuntime
 
-// To consider: do we want the developer to use ConverseReplyStream or do we simply use it to return the stream? 
+// To consider: do we want the developer to use ConverseReplyStream or do we simply use it to return the stream?
 // This will determine the visibility
 package struct ConverseReplyStream {
     package var stream: AsyncThrowingStream<ConverseStreamElement, Error>
@@ -22,7 +22,7 @@ package struct ConverseReplyStream {
     package init(_ inputStream: AsyncThrowingStream<BedrockRuntimeClientTypes.ConverseStreamOutput, Error>) {
 
         self.stream = AsyncThrowingStream(ConverseStreamElement.self) { continuation in
-            Task { @Sendable in
+            let t = Task {
                 var indexes: [Int] = []
                 var contentParts: [ContentSegment] = []
                 var content: [Content] = []
@@ -80,8 +80,22 @@ package struct ConverseReplyStream {
                             print("Unexpected delta type")  // FIXME
                         }
                     }
+                    // when we reach here, the stream is finished or the Task is cancelled
+                    // when cancelled, it will throw CancellationError
+                    // not really necessary as this seems to be handled by the Stream anyway.
+                    try Task.checkCancellation() 
+                    
                 } catch {
+                    // report any error, including cancellation (but cancellation result in silent stream termination for the consumer)
+                    // https://forums.swift.org/t/why-does-asyncthrowingstream-silently-finish-without-error-if-cancelled/72777
                     continuation.finish(throwing: error)
+                }
+            }
+            continuation.onTermination = {
+                (termination: AsyncThrowingStream<ConverseStreamElement, Error>.Continuation.Termination) -> Void in
+                    if case .cancelled = termination {
+                        t.cancel()  // Cancel the task when the stream is terminated
+                        // print("Stream cancelled")
                 }
             }
         }
@@ -115,3 +129,60 @@ public enum ContentSegment: Sendable {
         }
     }
 }
+
+/*
+
+extension AsyncSequence where Element == (BedrockRuntimeClientTypes.ConverseStreamOutput, Error) {
+    func asyncMap<T>(_ transform: @escaping (Element) async throws -> T) -> AsyncThrowingMapSequence<Self, T> {
+        return AsyncThrowingMapSequence(self, transform: transform)
+    }
+}
+
+extension AsyncThrowingMapSequence.Iterator
+where Base.Element == (BedrockRuntimeClientTypes.ConverseStreamOutput, Error),
+    Output == ConverseStreamElement {
+
+    mutating func next() async throws -> Output? {
+        guard let element = try await iterator.next() else {
+            return nil
+        }
+
+        // Otherwise, apply the transform to the element
+        return try await transform(element)
+    }
+}
+
+struct AsyncThrowingMapSequence<Base: AsyncSequence, Output>: AsyncSequence {
+    typealias Element = Output
+    typealias AsyncIterator = Iterator
+
+    let base: Base
+    let transform: (Base.Element) async throws -> Output
+
+    init(_ base: Base, transform: @escaping (Base.Element) async throws -> Output) {
+        self.base = base
+        self.transform = transform
+    }
+
+    struct Iterator: AsyncIteratorProtocol {
+        var iterator: Base.AsyncIterator
+        let transform: (Base.Element) async throws -> Output
+
+        init(iterator: Base.AsyncIterator, transform: @escaping (Base.Element) async throws -> Output) {
+            self.iterator = iterator
+            self.transform = transform
+        }
+
+        mutating func next() async throws -> Output? {
+            guard let element = try await iterator.next() else {
+                return nil
+            }
+            return try await transform(element)
+        }
+    }
+
+    func makeAsyncIterator() -> Iterator {
+        return Iterator(iterator: base.makeAsyncIterator(), transform: transform)
+    }
+}
+*/

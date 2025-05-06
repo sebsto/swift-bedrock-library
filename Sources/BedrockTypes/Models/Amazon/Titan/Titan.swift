@@ -15,7 +15,7 @@
 
 import Foundation
 
-struct TitanText: TextModality, ConverseModality, StreamingModality {
+struct TitanText: TextModality, ConverseModality, ConverseStreamingModality {
     func getName() -> String { "Titan Text Generation" }
 
     let parameters: TextGenerationParameters
