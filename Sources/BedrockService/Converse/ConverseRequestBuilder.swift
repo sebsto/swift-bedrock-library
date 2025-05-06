@@ -70,14 +70,21 @@ public struct ConverseRequestBuilder {
             .withHistory(reply.getHistory())
     }
 
-    // public init(from builder: ConverseRequestBuilder, with reply: ConverseReplyStream) throws 
-    /// Creates a ConverseRequestBuilder object based of a ConverseRequestBuilder object
-    /// with an updated history and all the user input emptied out.
-    public init(from builder: ConverseRequestBuilder, with message: Message) throws {
-        let history = builder.history + [message]
-        self = try .init(from: builder)
-            .withHistory(history)
-    }
+    // // public init(from builder: ConverseRequestBuilder, with reply: ConverseReplyStream) throws 
+    // /// Creates a ConverseRequestBuilder object based of a ConverseRequestBuilder object
+    // /// with an updated history and all the user input emptied out.
+    // public init(from builder: ConverseRequestBuilder, with message: Message) throws {
+    //     let history = builder.history + [message]
+    //     self = try .init(from: builder)
+    //         .withHistory(history)
+    // }
+
+    // /// Creates a ConverseRequestBuilder object based of a ConverseRequestBuilder object
+    // /// with an updated history and all the user input emptied out.
+    // public init(from builder: ConverseRequestBuilder, with reply: ConverseStreamReply) throws {
+    //     self = try .init(from: builder)
+    //         .withHistory(reply.getHistory())
+    // }
 
     // MARK - builder methods
 

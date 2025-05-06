@@ -26,6 +26,7 @@ package struct ConverseReplyStream {
                 var indexes: [Int] = []
                 var contentParts: [ContentSegment] = []
                 var content: [Content] = []
+                var toolUseStarts: [ToolUseStart] = []
                 do {
                     for try await output in inputStream {
                         switch output {
@@ -34,7 +35,13 @@ package struct ConverseReplyStream {
                                 throw BedrockServiceError.streamingError("TODO")
                             }
                             indexes.append(index)
-
+                            if let start: BedrockRuntimeClientTypes.ContentBlockStart = event.start {
+                                if case .tooluse(let toolUseBlockStart) = start {
+                                    toolUseStarts.append(
+                                        try ToolUseStart(index: index, sdkToolUseStart: toolUseBlockStart)
+                                    )
+                                }
+                            }
                         case .contentblockdelta(let event):
                             guard let index = event.contentBlockIndex else {
                                 throw BedrockServiceError.streamingError("TODO")
@@ -45,7 +52,11 @@ package struct ConverseReplyStream {
                             guard let delta = event.delta else {
                                 throw BedrockServiceError.streamingError("TODO")
                             }
-                            let segment = try ContentSegment(index: index, delta: delta)
+                            let segment = try ContentSegment(
+                                index: index,
+                                sdkContentBlockDelta: delta,
+                                toolUseStarts: toolUseStarts
+                            )
                             contentParts.append(segment)
                             continuation.yield(.contentSegment(segment))
 
@@ -56,20 +67,9 @@ package struct ConverseReplyStream {
                             guard indexes.contains(completedIndex) else {
                                 throw BedrockServiceError.streamingError("TODO")
                             }
-                            var text = ""
-                            contentParts.forEach { segment in
-                                switch segment {
-                                case .text(let index, let textPart):
-                                    if index == completedIndex {
-                                        text += textPart
-                                    }
-                                }
-                            }
-                            if text != "" {
-                                let contentBlock: Content = .text(text)
-                                content.append(contentBlock)
-                                continuation.yield(.contentBlockComplete(completedIndex, contentBlock))
-                            }
+                            let contentBlock = try Content.getFromSegements(with: completedIndex, from: contentParts)
+                            content.append(contentBlock)
+                            continuation.yield(.contentBlockComplete(completedIndex, contentBlock))
 
                         case .messagestop(_):
                             let message = Message(from: .assistant, content: content)
@@ -83,8 +83,8 @@ package struct ConverseReplyStream {
                     // when we reach here, the stream is finished or the Task is cancelled
                     // when cancelled, it will throw CancellationError
                     // not really necessary as this seems to be handled by the Stream anyway.
-                    try Task.checkCancellation() 
-                    
+                    try Task.checkCancellation()
+
                 } catch {
                     // report any error, including cancellation (but cancellation result in silent stream termination for the consumer)
                     // https://forums.swift.org/t/why-does-asyncthrowingstream-silently-finish-without-error-if-cancelled/72777
@@ -93,96 +93,11 @@ package struct ConverseReplyStream {
             }
             continuation.onTermination = {
                 (termination: AsyncThrowingStream<ConverseStreamElement, Error>.Continuation.Termination) -> Void in
-                    if case .cancelled = termination {
-                        t.cancel()  // Cancel the task when the stream is terminated
-                        // print("Stream cancelled")
+                if case .cancelled = termination {
+                    t.cancel()  // Cancel the task when the stream is terminated
+                    // print("Stream cancelled")
                 }
             }
         }
     }
 }
-
-public enum ConverseStreamElement: Sendable {
-    case contentSegment(ContentSegment)
-    case contentBlockComplete(Int, Content)
-    case messageComplete(Message)
-}
-
-public enum ContentSegment: Sendable {
-    case text(Int, String)
-
-    func getIndex() -> Int {
-        switch self {
-        case .text(let index, _):
-            return index
-        }
-    }
-
-    init(index: Int, delta sdkContentBlockDelta: BedrockRuntimeClientTypes.ContentBlockDelta) throws {
-        switch sdkContentBlockDelta {
-        case .text(let text):
-            self = .text(index, text)
-        case .sdkUnknown:
-            throw BedrockServiceError.streamingError("TODO")
-        default:
-            throw BedrockServiceError.streamingError("TODO")
-        }
-    }
-}
-
-/*
-
-extension AsyncSequence where Element == (BedrockRuntimeClientTypes.ConverseStreamOutput, Error) {
-    func asyncMap<T>(_ transform: @escaping (Element) async throws -> T) -> AsyncThrowingMapSequence<Self, T> {
-        return AsyncThrowingMapSequence(self, transform: transform)
-    }
-}
-
-extension AsyncThrowingMapSequence.Iterator
-where Base.Element == (BedrockRuntimeClientTypes.ConverseStreamOutput, Error),
-    Output == ConverseStreamElement {
-
-    mutating func next() async throws -> Output? {
-        guard let element = try await iterator.next() else {
-            return nil
-        }
-
-        // Otherwise, apply the transform to the element
-        return try await transform(element)
-    }
-}
-
-struct AsyncThrowingMapSequence<Base: AsyncSequence, Output>: AsyncSequence {
-    typealias Element = Output
-    typealias AsyncIterator = Iterator
-
-    let base: Base
-    let transform: (Base.Element) async throws -> Output
-
-    init(_ base: Base, transform: @escaping (Base.Element) async throws -> Output) {
-        self.base = base
-        self.transform = transform
-    }
-
-    struct Iterator: AsyncIteratorProtocol {
-        var iterator: Base.AsyncIterator
-        let transform: (Base.Element) async throws -> Output
-
-        init(iterator: Base.AsyncIterator, transform: @escaping (Base.Element) async throws -> Output) {
-            self.iterator = iterator
-            self.transform = transform
-        }
-
-        mutating func next() async throws -> Output? {
-            guard let element = try await iterator.next() else {
-                return nil
-            }
-            return try await transform(element)
-        }
-    }
-
-    func makeAsyncIterator() -> Iterator {
-        return Iterator(iterator: base.makeAsyncIterator(), transform: transform)
-    }
-}
-*/

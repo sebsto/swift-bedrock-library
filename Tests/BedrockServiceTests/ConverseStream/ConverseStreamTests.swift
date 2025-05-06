@@ -59,34 +59,34 @@ extension BedrockServiceTests {
         #expect(message.content.count == 1)
         #expect(message.role == .assistant)
 
-    //     builder = try ConverseRequestBuilder(from: builder, with: message)
-    //         .withPrompt("Second prompt")
-    //     #expect(builder.prompt == "Second prompt")
-    //     #expect(builder.maxTokens == 100)
-    //     #expect(builder.temperature == 0.5)
-    //     #expect(builder.topP == 0.5)
-    //     #expect(builder.stopSequences == ["\n\nHuman:"])
-    //     #expect(builder.systemPrompts == ["You are a helpful assistant."])
-    //     #expect(builder.history.count == 2)
+        builder = try ConverseRequestBuilder(from: builder, with: message)
+            .withPrompt("Second prompt")
+        #expect(builder.prompt == "Second prompt")
+        #expect(builder.maxTokens == 100)
+        #expect(builder.temperature == 0.5)
+        #expect(builder.topP == 0.5)
+        #expect(builder.stopSequences == ["\n\nHuman:"])
+        #expect(builder.systemPrompts == ["You are a helpful assistant."])
+        // #expect(builder.history.count == 2)
 
-    //     stream = try await bedrock.converse(with: builder)
-    //     // Collect all the stream elements
-    //     streamElements = []
-    //     for try await element in stream {
-    //         streamElements.append(element)
-    //     }
+        stream = try await bedrock.converse(with: builder)
+        // Collect all the stream elements
+        streamElements = []
+        for try await element in stream {
+            streamElements.append(element)
+        }
 
-    //     // Verify the stream elements
-    //     #expect(streamElements.count == 6)
+        // Verify the stream elements
+        #expect(streamElements.count == 6)
         
-    //     message = Message("")
-    //     if case .messageComplete(let msg) = streamElements.last {
-    //         message = msg
-    //     } else {
-    //         Issue.record("Expected message")
-    //     }
+        message = Message("")
+        if case .messageComplete(let msg) = streamElements.last {
+            message = msg
+        } else {
+            Issue.record("Expected message")
+        }
 
-    //     #expect(message.content.count == 1)
-    //     #expect(message.role == .assistant)
+        #expect(message.content.count == 1)
+        #expect(message.role == .assistant)
     }
 }
