@@ -109,9 +109,9 @@ public struct ToolResultBlock: Codable, Sendable {
             switch sdkToolStatus {
             case .success: self = .success
             case .error: self = .error
-            case .sdkUnknown(let unknownToolStatus):
+            default:
                 throw BedrockServiceError.notImplemented(
-                    "ToolResultStatus \(unknownToolStatus) is not implemented by BedrockRuntimeClientTypes"
+                    "ToolStatus \(sdkToolStatus) is not implemented by BedrockService or not implemented by BedrockRuntimeClientTypes in case of `sdkUnknown`"
                 )
             }
         }
@@ -143,14 +143,10 @@ public struct ToolResultBlock: Codable, Sendable {
                 self = .video(try VideoBlock(from: sdkVideoBlock))
             case .json(let document):
                 self = .json(try document.toJSON())
-            case .sdkUnknown(let unknownToolResultContent):
+            default:
                 throw BedrockServiceError.notImplemented(
-                    "ToolResultContentBlock \(unknownToolResultContent) is not implemented by BedrockRuntimeClientTypes"
+                    "ToolResultContent \(sdkToolResultContent) is not implemented by BedrockService or not implemented by BedrockRuntimeClientTypes in case of `sdkUnknown`"
                 )
-            // default:
-            //     throw BedrockServiceError.notImplemented(
-            //         "ToolResultContentBlock \(sdkToolResultContent) is not implemented by BedrockTypes"
-            //     )
             }
         }
 

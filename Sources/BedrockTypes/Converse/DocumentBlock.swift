@@ -134,9 +134,9 @@ public struct DocumentBlock: Codable, Sendable {
                 self = .bytes(data.base64EncodedString())
             case .s3location(let sdkS3Location):
                 self = .s3(try S3Location(from: sdkS3Location))
-            case .sdkUnknown(let unknownSource):
+            default:
                 throw BedrockServiceError.notImplemented(
-                    "DocumentSource \(unknownSource) is not implemented by BedrockRuntimeClientTypes"
+                    "DocumentSource \(sdkSource) is not implemented by BedrockService or not implemented by BedrockRuntimeClientTypes in case of `sdkUnknown`"
                 )
             }
         }

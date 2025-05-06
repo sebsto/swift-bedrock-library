@@ -65,9 +65,9 @@ public struct ImageBlock: Codable, Sendable {
             case .jpeg: self = .jpeg
             case .png: self = .png
             case .webp: self = .webp
-            case .sdkUnknown(let unknownImageFormat):
+            default:
                 throw BedrockServiceError.notImplemented(
-                    "ImageFormat \(unknownImageFormat) is not implemented by BedrockRuntimeClientTypes"
+                    "ImageFormat \(sdkImageFormat) is not implemented by BedrockService or not implemented by BedrockRuntimeClientTypes in case of `sdkUnknown`"
                 )
             }
         }
@@ -95,9 +95,9 @@ public struct ImageBlock: Codable, Sendable {
                 self = .bytes(data.base64EncodedString())
             case .s3location(let sdkS3Location):
                 self = .s3(try S3Location(from: sdkS3Location))
-            case .sdkUnknown(let unknownSource):
+            default:
                 throw BedrockServiceError.notImplemented(
-                    "ImageSource \(unknownSource) is not implemented by BedrockRuntimeClientTypes"
+                    "ImageSource \(sdkSource) is not implemented by BedrockService or not implemented by BedrockRuntimeClientTypes in case of `sdkUnknown`"
                 )
             }
         }

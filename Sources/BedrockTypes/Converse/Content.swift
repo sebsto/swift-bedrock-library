@@ -39,13 +39,9 @@ public enum Content: Codable, CustomStringConvertible, Sendable {
             self = .toolResult(try ToolResultBlock(from: sdkToolResultBlock))
         case .video(let sdkVideoBlock):
             self = .video(try VideoBlock(from: sdkVideoBlock))
-        case .sdkUnknown(let unknownContentBlock):
-            throw BedrockServiceError.notImplemented(
-                "ContentBlock \(unknownContentBlock) is not implemented by BedrockRuntimeClientTypes"
-            )
         default:
             throw BedrockServiceError.notImplemented(
-                "\(sdkContentBlock.self) is not implemented by this library"
+                "ContentBlock \(sdkContentBlock) is not implemented by BedrockService or not implemented by BedrockRuntimeClientTypes in case of `sdkUnknown`"
             )
         }
     }
@@ -64,9 +60,6 @@ public enum Content: Codable, CustomStringConvertible, Sendable {
             return BedrockRuntimeClientTypes.ContentBlock.tooluse(try toolUseBlock.getSDKToolUseBlock())
         case .video(let videoBlock):
             return BedrockRuntimeClientTypes.ContentBlock.video(try videoBlock.getSDKVideoBlock())
-        // default:
-        //     print("TODO")
-        //     return BedrockRuntimeClientTypes.ContentBlock.text("TODO")
         }
     }
 

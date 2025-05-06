@@ -13,16 +13,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-public typealias History = [Message]
-extension History {
-    public var description: String {
-        var result = "\(self.count) turns:\n"
-        for message in self {
-            result += "\(message)\n"
-        }
-        return result
-    }
-}
 public struct ConverseReply: Codable, CustomStringConvertible {
     let history: History
     let textReply: String?
