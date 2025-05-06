@@ -25,7 +25,8 @@ public struct ConverseReply: Codable, CustomStringConvertible {
         if let textReply {
             return textReply
         } else {
-            return "No text reply found in the last message."
+            let lastMessage = getLastMessage()
+            return lastMessage.content.description
         }
     }
 

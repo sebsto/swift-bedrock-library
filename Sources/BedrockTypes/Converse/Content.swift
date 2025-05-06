@@ -25,6 +25,8 @@ public enum Content: Codable, CustomStringConvertible, Sendable {
     case video(VideoBlock)
     // case reasoningcontent(ReasoningBlock)
 
+    // MARK - Initialiaser
+
     public init(from sdkContentBlock: BedrockRuntimeClientTypes.ContentBlock) throws {
         switch sdkContentBlock {
         case .text(let text):
@@ -63,6 +65,9 @@ public enum Content: Codable, CustomStringConvertible, Sendable {
         }
     }
 
+    // MARK - convenience methods
+
+    /// a description of the Content depending on the case
     public var description: String {
         switch self {
         case .text(let text):
@@ -79,4 +84,74 @@ public enum Content: Codable, CustomStringConvertible, Sendable {
             return "Video: \(videoBlock.format)"
         }
     }
+
+    /// convenience method to check what is inside the Content
+    public func isText() -> Bool {
+        switch self {
+        case .text:
+            return true
+        default:
+            return false
+        }
+    }
+
+    /// convenience method to check what is inside the Content
+    public func isImage() -> Bool {
+        switch self {
+        case .image:
+            return true
+        default:
+            return false
+        }
+    }
+
+    /// convenience method to check what is inside the Content
+    public func isToolUse() -> Bool {
+        switch self {
+        case .toolUse:
+            return true
+        default:
+            return false
+        }
+    }
+
+    /// convenience method to check what is inside the Content
+    public func isToolResult() -> Bool {
+        switch self {
+        case .toolResult:
+            return true
+        default:
+            return false
+        }
+    }
+
+    /// convenience method to check what is inside the Content
+    public func isDocument() -> Bool {
+        switch self {
+        case .document:
+            return true
+        default:
+            return false
+        }
+    }
+
+    /// convenience method to check what is inside the Content
+    public func isVideo() -> Bool {
+        switch self {
+        case .video:
+            return true
+        default:
+            return false
+        }
+    }
+
+    // /// convenience method to check what is inside the Content
+    // public func isReasoning() -> Bool {
+    //     switch self {
+    //     case .video:
+    //         return true
+    //     default:
+    //         return false
+    //     }
+    // }
 }
