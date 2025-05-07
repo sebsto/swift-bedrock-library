@@ -29,7 +29,7 @@ extension BedrockServiceTests {
         let builder = try ConverseRequestBuilder(with: .nova_lite)
             .withPrompt("What is this?")
             .withDocument(documentBlock)
-        let reply = try await bedrock.converse(with: builder)
+        let reply: ConverseReply = try await bedrock.converse(with: builder)
         #expect(reply.textReply == "Document received")
     }
 
@@ -39,7 +39,7 @@ extension BedrockServiceTests {
         let builder = try ConverseRequestBuilder(with: .nova_lite)
             .withPrompt("What is this?")
             .withDocument(name: "doc", format: .pdf, source: source)
-        let reply = try await bedrock.converse(with: builder)
+        let reply: ConverseReply = try await bedrock.converse(with: builder)
         #expect(reply.textReply == "Document received")
     }
 
@@ -54,10 +54,14 @@ extension BedrockServiceTests {
         #expect(builder.document != nil)
         #expect(builder.document!.name == "doc")
         #expect(builder.document!.format == .pdf)
-        #expect(builder.document!.source == source)
+        var docBytes = ""
+        if case .bytes(let string) = builder.document?.source {
+            docBytes = string
+        }
+        #expect(docBytes == source)
         #expect(builder.temperature == 0.4)
 
-        var reply = try await bedrock.converse(with: builder)
+        var reply: ConverseReply = try await bedrock.converse(with: builder)
         #expect(reply.textReply == "Document received")
 
         builder = try ConverseRequestBuilder(from: builder, with: reply)

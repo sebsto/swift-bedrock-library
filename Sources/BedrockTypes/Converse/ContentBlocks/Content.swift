@@ -23,7 +23,7 @@ public enum Content: Codable, CustomStringConvertible {
     case toolResult(ToolResultBlock)
     case document(DocumentBlock)
     case video(VideoBlock)
-    // case reasoningcontent(ReasoningBlock)
+    case reasoningcontent(ReasoningBlock)
 
     public init(from sdkContentBlock: BedrockRuntimeClientTypes.ContentBlock) throws {
         switch sdkContentBlock {
@@ -39,6 +39,8 @@ public enum Content: Codable, CustomStringConvertible {
             self = .toolResult(try ToolResultBlock(from: sdkToolResultBlock))
         case .video(let sdkVideoBlock):
             self = .video(try VideoBlock(from: sdkVideoBlock))
+        case .reasoningcontent(let sdkReasoningBlock):
+            self = .reasoningcontent(try ReasoningBlock(from: sdkReasoningBlock))
         case .sdkUnknown(let unknownContentBlock):
             throw BedrockServiceError.notImplemented(
                 "ContentBlock \(unknownContentBlock) is not implemented by BedrockRuntimeClientTypes"
@@ -64,9 +66,8 @@ public enum Content: Codable, CustomStringConvertible {
             return BedrockRuntimeClientTypes.ContentBlock.tooluse(try toolUseBlock.getSDKToolUseBlock())
         case .video(let videoBlock):
             return BedrockRuntimeClientTypes.ContentBlock.video(try videoBlock.getSDKVideoBlock())
-        // default:
-        //     print("TODO")
-        //     return BedrockRuntimeClientTypes.ContentBlock.text("TODO")
+        case .reasoningcontent(let reasoningBlock):
+            return BedrockRuntimeClientTypes.ContentBlock.reasoningcontent(try reasoningBlock.getSDKReasoningBlock())
         }
     }
 
@@ -84,6 +85,8 @@ public enum Content: Codable, CustomStringConvertible {
             return "Document: \(documentBlock.name) - \(documentBlock.format)"
         case .video(let videoBlock):
             return "Video: \(videoBlock.format)"
+        case .reasoningcontent(let reasoningBlock):
+            return "Reasoning: \(reasoningBlock)"
         }
     }
 }

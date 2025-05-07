@@ -16,15 +16,16 @@
 @preconcurrency import AWSBedrockRuntime
 import Foundation
 
-public struct ImageBlock: Codable {
+public struct ImageBlock: Codable, Sendable {
     public let format: Format
-    public let source: String  // 64 encoded
+    public let source: Source
 
     public init(format: Format, source: String) throws {
+        self = try .init(format: format, source: .bytes(source))
+    }
+
+    public init(format: Format, source: Source) throws {
         // https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_ImageSource.html
-        guard !source.isEmpty else {
-            throw BedrockServiceError.invalidName("Image source is not allowed to be empty")
-        }
         self.format = format
         self.source = source
     }
@@ -40,30 +41,19 @@ public struct ImageBlock: Codable {
                 "Could not extract source from BedrockRuntimeClientTypes.ImageBlock"
             )
         }
-        let format = try ImageBlock.Format(from: sdkFormat)
-        switch sdkImageSource {
-        case .bytes(let data):
-            self = try ImageBlock(format: format, source: data.base64EncodedString())
-        case .sdkUnknown(let unknownImageSource):
-            throw BedrockServiceError.notImplemented(
-                "ImageSource \(unknownImageSource) is not implemented by BedrockRuntimeClientTypes"
-            )
-        }
+        let format = try Format(from: sdkFormat)
+        let source = try Source(from: sdkImageSource)
+        self = try .init(format: format, source: source)
     }
 
     public func getSDKImageBlock() throws -> BedrockRuntimeClientTypes.ImageBlock {
-        guard let data = Data(base64Encoded: source) else {
-            throw BedrockServiceError.decodingError(
-                "Could not decode image source from base64 string. String: \(source)"
-            )
-        }
-        return BedrockRuntimeClientTypes.ImageBlock(
+        BedrockRuntimeClientTypes.ImageBlock(
             format: format.getSDKImageFormat(),
-            source: BedrockRuntimeClientTypes.ImageSource.bytes(data)
+            source: try source.getSDKImageSource()
         )
     }
 
-    public enum Format: Codable {
+    public enum Format: Codable, Sendable {
         case gif
         case jpeg
         case png
@@ -75,9 +65,9 @@ public struct ImageBlock: Codable {
             case .jpeg: self = .jpeg
             case .png: self = .png
             case .webp: self = .webp
-            case .sdkUnknown(let unknownImageFormat):
+            default:
                 throw BedrockServiceError.notImplemented(
-                    "ImageFormat \(unknownImageFormat) is not implemented by BedrockRuntimeClientTypes"
+                    "ImageFormat \(sdkImageFormat) is not implemented by BedrockService or not implemented by BedrockRuntimeClientTypes in case of `sdkUnknown`"
                 )
             }
         }
@@ -88,6 +78,41 @@ public struct ImageBlock: Codable {
             case .jpeg: return .jpeg
             case .png: return .png
             case .webp: return .webp
+            }
+        }
+    }
+
+    public enum Source: Codable, Sendable {
+        case bytes(String)
+        case s3(S3Location)
+
+        public init(from sdkSource: BedrockRuntimeClientTypes.ImageSource) throws {
+            switch sdkSource {
+            case .bytes(let data):
+                guard !data.isEmpty else {
+                    throw BedrockServiceError.invalidName("Image source is not allowed to be empty")
+                }
+                self = .bytes(data.base64EncodedString())
+            case .s3location(let sdkS3Location):
+                self = .s3(try S3Location(from: sdkS3Location))
+            default:
+                throw BedrockServiceError.notImplemented(
+                    "ImageSource \(sdkSource) is not implemented by BedrockService or not implemented by BedrockRuntimeClientTypes in case of `sdkUnknown`"
+                )
+            }
+        }
+
+        public func getSDKImageSource() throws -> BedrockRuntimeClientTypes.ImageSource {
+            switch self {
+            case .bytes(let data):
+                guard let sdkData = Data(base64Encoded: data) else {
+                    throw BedrockServiceError.decodingError(
+                        "Could not decode image source from base64 string. String: \(data)"
+                    )
+                }
+                return .bytes(sdkData)
+            case .s3(let s3Location):
+                return .s3location(s3Location.getSDKS3Location())
             }
         }
     }
