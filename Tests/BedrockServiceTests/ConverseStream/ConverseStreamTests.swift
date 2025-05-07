@@ -67,7 +67,7 @@ extension BedrockServiceTests {
         #expect(builder.topP == 0.5)
         #expect(builder.stopSequences == ["\n\nHuman:"])
         #expect(builder.systemPrompts == ["You are a helpful assistant."])
-        // #expect(builder.history.count == 2)
+        #expect(builder.history.count == 2)
 
         stream = try await bedrock.converse(with: builder)
         // Collect all the stream elements
