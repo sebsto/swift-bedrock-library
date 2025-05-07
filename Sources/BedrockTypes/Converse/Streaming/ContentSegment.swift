@@ -17,7 +17,7 @@
 
 public enum ContentSegment: Sendable {
     case text(Int, String)
-    // case reasoning(Int, String)
+    // case reasoning(Int, ReasoningBlock)
     case toolUse(Int, ToolUseBlock)
 
     public var index: Int {
@@ -43,11 +43,11 @@ public enum ContentSegment: Sendable {
             self = .text(index, text)
         case .tooluse(let toolUseBlockDelta):
             guard let input = toolUseBlockDelta.input else {
-                throw BedrockServiceError.streamingError("TODO")
+                throw BedrockServiceError.invalidSDKType(No input found in ToolUseBlockDelta)
             }
-            guard let toolUseStart: ToolUseStart = toolUseStarts.first(where: { $0.index == index })
+            guard let toolUseStart = toolUseStarts.first(where: { $0.index == index })
             else {
-                throw BedrockServiceError.streamingError("TODO")
+                throw BedrockServiceError.streamingError("No ToolUse can be constructed, because no matching name and toolUseId from ContentBlockStart for ToolUseBlockDelta were found ")
             }
             self = .toolUse(
                 index,
@@ -60,7 +60,9 @@ public enum ContentSegment: Sendable {
         // case .reasoningcontent(let sdkReasoningBlock):
         //     ...
         default:
-            throw BedrockServiceError.streamingError("TODO")
+            throw BedrockServiceError.notImplemented(
+                "ContentBlockDelta \(sdkContentBlockDelta) is not implemented by BedrockService or not implemented by BedrockRuntimeClientTypes in case of `sdkUnknown`"
+            )
         }
     }
 
@@ -94,15 +96,15 @@ extension Content {
                 switch segment {
                 case .text(_, let textPart):
                     guard toolUse == nil else {
-                        throw BedrockServiceError.streamingError("TODO")
+                        throw BedrockServiceError.streamingError("A text segment was found in a contentBlock that already contained toolUse segments")
                     }
                     text += textPart
                 case .toolUse(_, let toolUseBlock):
                     guard text == "" else {
-                        throw BedrockServiceError.streamingError("TODO")
+                        throw BedrockServiceError.streamingError("A toolUse segment was found in a contentBlock that already contained text segments")
                     }
                     toolUse = toolUseBlock
-                    break
+                    break // CHECKME: are we sure only one input is send here?
                 }
             }
         }
@@ -123,10 +125,10 @@ package struct ToolUseStart: Sendable {
 
     init(index: Int, sdkToolUseStart: BedrockRuntimeClientTypes.ToolUseBlockStart) throws {
         guard let name = sdkToolUseStart.name else {
-            throw BedrockServiceError.streamingError("TODO")
+            throw BedrockServiceError.invalidSDKType("No name found in ToolUseBlockStart")
         }
         guard let toolUseId = sdkToolUseStart.toolUseId else {
-            throw BedrockServiceError.streamingError("TODO")
+            throw BedrockServiceError.invalidSDKType("No toolUseId found in ToolUseBlockStart")
         }
         self.index = index
         self.name = name
