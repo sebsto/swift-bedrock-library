@@ -48,6 +48,10 @@ public struct MockBedrockRuntimeClient: BedrockRuntimeClientProtocol {
             // "Hello, your prompt was: Tool result received for toolUseId: \(toolUseId)"
         case .image(_):
             stream = getTextStream("Image received")
+        case .document(_):
+            stream = getTextStream("Document received")
+        case .video(_):
+            stream = getTextStream("Video received")
         default:
             throw AWSBedrockRuntime.ValidationException(
                 message: "Malformed input request, please reformat your input and try again."
