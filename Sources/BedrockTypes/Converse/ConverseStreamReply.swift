@@ -32,7 +32,9 @@ package struct ConverseReplyStream {
                         switch output {
                         case .contentblockstart(let event):
                             guard let index = event.contentBlockIndex else {
-                                throw BedrockServiceError.invalidSDKType("No contentBlockIndex found in ContentBlockStart")
+                                throw BedrockServiceError.invalidSDKType(
+                                    "No contentBlockIndex found in ContentBlockStart"
+                                )
                             }
                             indexes.append(index)
                             if let start: BedrockRuntimeClientTypes.ContentBlockStart = event.start {
@@ -44,10 +46,14 @@ package struct ConverseReplyStream {
                             }
                         case .contentblockdelta(let event):
                             guard let index = event.contentBlockIndex else {
-                                throw BedrockServiceError.invalidSDKType("No contentBlockIndex found in ContentBlockDelta")
+                                throw BedrockServiceError.invalidSDKType(
+                                    "No contentBlockIndex found in ContentBlockDelta"
+                                )
                             }
                             guard indexes.contains(index) else {
-                                throw BedrockServiceError.streamingError("No matching index from ContentBlockStart found for index from ContentBlockDelta")
+                                throw BedrockServiceError.streamingError(
+                                    "No matching index from ContentBlockStart found for index from ContentBlockDelta"
+                                )
                             }
                             guard let delta = event.delta else {
                                 throw BedrockServiceError.invalidSDKType("No delta found in ContentBlockDelta")
@@ -62,10 +68,14 @@ package struct ConverseReplyStream {
 
                         case .contentblockstop(let event):
                             guard let completedIndex = event.contentBlockIndex else {
-                                throw BedrockServiceError.invalidSDKType("No contentBlockIndex found in ContentBlockStop")
+                                throw BedrockServiceError.invalidSDKType(
+                                    "No contentBlockIndex found in ContentBlockStop"
+                                )
                             }
                             guard indexes.contains(completedIndex) else {
-                                throw BedrockServiceError.streamingError("No matching index from ContentBlockStart found for index from ContentBlockDelta")
+                                throw BedrockServiceError.streamingError(
+                                    "No matching index from ContentBlockStart found for index from ContentBlockDelta"
+                                )
                             }
                             let contentBlock = try Content.getFromSegements(with: completedIndex, from: contentParts)
                             content.append(contentBlock)

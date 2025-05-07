@@ -37,15 +37,16 @@ public struct MockBedrockRuntimeClient: BedrockRuntimeClientProtocol {
         switch content {
         case .text(let prompt):
             if prompt == "Use tool",
-            input.toolConfig?.tools != nil {
+                input.toolConfig?.tools != nil
+            {
                 stream = getToolUseStream(for: "toolname")
             } else {
                 stream = getTextStream(prompt)
             }
         case .toolresult(let block):
             let toolUseId = block.toolUseId ?? "not found"
-            stream = getTextStream("Tool result received for toolUseId: \(toolUseId)") 
-            // "Hello, your prompt was: Tool result received for toolUseId: \(toolUseId)"
+            stream = getTextStream("Tool result received for toolUseId: \(toolUseId)")
+        // "Hello, your prompt was: Tool result received for toolUseId: \(toolUseId)"
         case .image(_):
             stream = getTextStream("Image received")
         case .document(_):
@@ -153,7 +154,9 @@ public struct MockBedrockRuntimeClient: BedrockRuntimeClientProtocol {
             continuation.yield(.contentblockstart(contentBlockStartEvent))
 
             // Content block delta
-            let contentBlockDelta = BedrockRuntimeClientTypes.ContentBlockDelta.tooluse(BedrockRuntimeClientTypes.ToolUseBlockDelta(input: "tooluseinput"))
+            let contentBlockDelta = BedrockRuntimeClientTypes.ContentBlockDelta.tooluse(
+                BedrockRuntimeClientTypes.ToolUseBlockDelta(input: "tooluseinput")
+            )
             let contentBlockDeltaEvent = BedrockRuntimeClientTypes.ContentBlockDeltaEvent(
                 contentBlockIndex: 0,
                 delta: contentBlockDelta

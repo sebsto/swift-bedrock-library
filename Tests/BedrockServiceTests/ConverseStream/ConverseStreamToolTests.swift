@@ -74,7 +74,7 @@ extension BedrockServiceTests {
 
         builder = try ConverseRequestBuilder(from: builder, with: message)
             .withToolResult(ToolResultBlock("tool result", id: toolUseId))
-        
+
         #expect(builder.prompt == nil)
         #expect(builder.toolResult != nil)
         #expect(builder.maxTokens == 100)

@@ -15,7 +15,7 @@
 
 import Foundation
 
-public struct JSON: Codable, @unchecked Sendable { // FIXME: make Sendable
+public struct JSON: Codable, @unchecked Sendable {  // FIXME: make Sendable
     public var value: Any?
 
     public subscript<T>(key: String) -> T? {
