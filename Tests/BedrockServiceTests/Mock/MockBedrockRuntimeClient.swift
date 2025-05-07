@@ -31,18 +31,36 @@ public struct MockBedrockRuntimeClient: BedrockRuntimeClientProtocol {
         else {
             throw AWSBedrockRuntime.ValidationException(message: "Missing required message content")
         }
-        
-        var textPrompt: String
+
+        var stream: AsyncThrowingStream<BedrockRuntimeClientTypes.ConverseStreamOutput, Error>
 
         switch content {
         case .text(let prompt):
-            textPrompt = prompt
+            if prompt == "Use tool",
+            input.toolConfig?.tools != nil {
+                stream = getToolUseStream(for: "toolname")
+            } else {
+                stream = getTextStream(prompt)
+            }
+        case .toolresult(let block):
+            let toolUseId = block.toolUseId ?? "not found"
+            stream = getTextStream("Tool result received for toolUseId: \(toolUseId)") 
+            // "Hello, your prompt was: Tool result received for toolUseId: \(toolUseId)"
+        case .image(_):
+            stream = getTextStream("Image received")
         default:
             throw AWSBedrockRuntime.ValidationException(
                 message: "Malformed input request, please reformat your input and try again."
             )
         }
-        let stream = AsyncThrowingStream<BedrockRuntimeClientTypes.ConverseStreamOutput, Error> { continuation in
+        return ConverseStreamOutput(stream: stream)
+    }
+
+    // returns "Hello, your prompt was: \(textPrompt)"
+    private func getTextStream(
+        _ textPrompt: String = "Streaming Text"
+    ) -> AsyncThrowingStream<BedrockRuntimeClientTypes.ConverseStreamOutput, Error> {
+        AsyncThrowingStream<BedrockRuntimeClientTypes.ConverseStreamOutput, Error> { continuation in
             // Message start
             let messageStartEvent = BedrockRuntimeClientTypes.MessageStartEvent(
                 role: .assistant
@@ -58,7 +76,8 @@ public struct MockBedrockRuntimeClient: BedrockRuntimeClientProtocol {
 
             // Content block delta (first part)
             let contentBlockDelta1 = BedrockRuntimeClientTypes.ContentBlockDelta.text(
-                "Hello, ")
+                "Hello, "
+            )
             let contentBlockDeltaEvent1 = BedrockRuntimeClientTypes.ContentBlockDeltaEvent(
                 contentBlockIndex: 0,
                 delta: contentBlockDelta1
@@ -67,7 +86,8 @@ public struct MockBedrockRuntimeClient: BedrockRuntimeClientProtocol {
 
             // Content block delta (second part)
             let contentBlockDelta2 = BedrockRuntimeClientTypes.ContentBlockDelta.text(
-                "your prompt ")
+                "your prompt "
+            )
             let contentBlockDeltaEvent2 = BedrockRuntimeClientTypes.ContentBlockDeltaEvent(
                 contentBlockIndex: 0,
                 delta: contentBlockDelta2
@@ -76,7 +96,8 @@ public struct MockBedrockRuntimeClient: BedrockRuntimeClientProtocol {
 
             // Content block delta (third part)
             let contentBlockDelta3 = BedrockRuntimeClientTypes.ContentBlockDelta.text(
-                "was: ")
+                "was: "
+            )
             let contentBlockDeltaEvent3 = BedrockRuntimeClientTypes.ContentBlockDeltaEvent(
                 contentBlockIndex: 0,
                 delta: contentBlockDelta3
@@ -85,7 +106,8 @@ public struct MockBedrockRuntimeClient: BedrockRuntimeClientProtocol {
 
             // Content block delta (third part)
             let contentBlockDelta4 = BedrockRuntimeClientTypes.ContentBlockDelta.text(
-                textPrompt)
+                textPrompt
+            )
             let contentBlockDeltaEvent4 = BedrockRuntimeClientTypes.ContentBlockDeltaEvent(
                 contentBlockIndex: 0,
                 delta: contentBlockDelta4
@@ -107,9 +129,49 @@ public struct MockBedrockRuntimeClient: BedrockRuntimeClientProtocol {
 
             continuation.finish()
         }
-        return ConverseStreamOutput(stream: stream)
     }
 
+    private func getToolUseStream(
+        for toolName: String
+    ) -> AsyncThrowingStream<BedrockRuntimeClientTypes.ConverseStreamOutput, Error> {
+        AsyncThrowingStream<BedrockRuntimeClientTypes.ConverseStreamOutput, Error> { continuation in
+            // Message start
+            let messageStartEvent = BedrockRuntimeClientTypes.MessageStartEvent(
+                role: .assistant
+            )
+            continuation.yield(.messagestart(messageStartEvent))
+
+            // Content block start
+            let contentBlockStartEvent = BedrockRuntimeClientTypes.ContentBlockStartEvent(
+                contentBlockIndex: 0,
+                start: .tooluse(BedrockRuntimeClientTypes.ToolUseBlockStart(name: toolName, toolUseId: "tooluseid"))
+            )
+            continuation.yield(.contentblockstart(contentBlockStartEvent))
+
+            // Content block delta
+            let contentBlockDelta = BedrockRuntimeClientTypes.ContentBlockDelta.tooluse(BedrockRuntimeClientTypes.ToolUseBlockDelta(input: "tooluseinput"))
+            let contentBlockDeltaEvent = BedrockRuntimeClientTypes.ContentBlockDeltaEvent(
+                contentBlockIndex: 0,
+                delta: contentBlockDelta
+            )
+            continuation.yield(.contentblockdelta(contentBlockDeltaEvent))
+
+            // Content block stop
+            let contentBlockStopEvent = BedrockRuntimeClientTypes.ContentBlockStopEvent(
+                contentBlockIndex: 0
+            )
+            continuation.yield(.contentblockstop(contentBlockStopEvent))
+
+            // Message stop
+            let messageStopEvent = BedrockRuntimeClientTypes.MessageStopEvent(
+                additionalModelResponseFields: nil,
+                stopReason: nil
+            )
+            continuation.yield(.messagestop(messageStopEvent))
+
+            continuation.finish()
+        }
+    }
 
     // MARK: converse
     public func converse(input: ConverseInput) async throws -> ConverseOutput {

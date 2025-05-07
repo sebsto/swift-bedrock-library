@@ -18,9 +18,10 @@ import Testing
 @testable import BedrockService
 @testable import BedrockTypes
 
-// Streaming converse text
+// MARK - Streaming converse tekst
 
 extension BedrockServiceTests {
+
     @Test("Continue conversation reusing builder")
     func converseStreamWithReusedBuilder() async throws {
         var builder = try ConverseRequestBuilder(with: .nova_lite)
@@ -38,7 +39,7 @@ extension BedrockServiceTests {
         #expect(builder.stopSequences == ["\n\nHuman:"])
         #expect(builder.systemPrompts == ["You are a helpful assistant."])
 
-        var stream: AsyncThrowingStream<ConverseStreamElement, any Error>  = try await bedrock.converse(with: builder)
+        var stream: AsyncThrowingStream<ConverseStreamElement, any Error> = try await bedrock.converse(with: builder)
 
         // Collect all the stream elements
         var streamElements: [ConverseStreamElement] = []
@@ -48,7 +49,7 @@ extension BedrockServiceTests {
 
         // Verify the stream elements
         #expect(streamElements.count == 6)
-        
+
         var message: Message = Message("")
         if case .messageComplete(let msg) = streamElements.last {
             message = msg
@@ -58,6 +59,10 @@ extension BedrockServiceTests {
 
         #expect(message.content.count == 1)
         #expect(message.role == .assistant)
+
+        if case .text(let text) = message.content.last {
+            #expect(text == "Hello, your prompt was: First prompt")
+        }
 
         builder = try ConverseRequestBuilder(from: builder, with: message)
             .withPrompt("Second prompt")
@@ -78,7 +83,7 @@ extension BedrockServiceTests {
 
         // Verify the stream elements
         #expect(streamElements.count == 6)
-        
+
         message = Message("")
         if case .messageComplete(let msg) = streamElements.last {
             message = msg
@@ -88,5 +93,9 @@ extension BedrockServiceTests {
 
         #expect(message.content.count == 1)
         #expect(message.role == .assistant)
+
+        if case .text(let text) = message.content.last {
+            #expect(text == "Hello, your prompt was: Second prompt")
+        }
     }
 }
