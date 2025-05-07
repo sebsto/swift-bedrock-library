@@ -105,7 +105,6 @@ package struct ConverseReplyStream {
                 (termination: AsyncThrowingStream<ConverseStreamElement, Error>.Continuation.Termination) -> Void in
                 if case .cancelled = termination {
                     t.cancel()  // Cancel the task when the stream is terminated
-                    // print("Stream cancelled")
                 }
             }
         }
