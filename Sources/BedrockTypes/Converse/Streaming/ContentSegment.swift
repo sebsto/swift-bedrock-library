@@ -43,7 +43,7 @@ public enum ContentSegment: Sendable {
             self = .text(index, text)
         case .tooluse(let toolUseBlockDelta):
             guard let input = toolUseBlockDelta.input else {
-                throw BedrockServiceError.invalidSDKType(No input found in ToolUseBlockDelta)
+                throw BedrockServiceError.invalidSDKType("No input found in ToolUseBlockDelta")
             }
             guard let toolUseStart = toolUseStarts.first(where: { $0.index == index })
             else {

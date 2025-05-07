@@ -23,7 +23,7 @@ public enum Content: Codable, CustomStringConvertible, Sendable {
     case toolResult(ToolResultBlock)
     case document(DocumentBlock)
     case video(VideoBlock)
-    // case reasoningcontent(ReasoningBlock)
+    // case reasoning(ReasoningBlock)
 
     // MARK - Initialiaser
 
