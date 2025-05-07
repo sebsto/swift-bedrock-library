@@ -56,9 +56,13 @@ public enum ReasoningBlock: Codable, CustomStringConvertible {
 
 public struct ReasoningEncrypted: Codable {
     public var reasoning: Data
+
+    public var description: String {
+        "Encrypted reasoning: \(reasoning)"
+    }
 }
 
-public struct ReasoningText: Codable {
+public struct ReasoningText: Codable, CustomStringConvertible {
     public var signature: String
     public var reasoning: String
 
@@ -71,5 +75,9 @@ public struct ReasoningText: Codable {
         }
         self.signature = signature
         self.reasoning = text
+    }
+
+    public var description: String {
+        "Reasoning: \(reasoning) \nSignature: \(signature)"
     }
 }

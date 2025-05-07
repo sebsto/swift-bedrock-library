@@ -144,7 +144,7 @@ public struct ConverseReply: Codable, CustomStringConvertible {
 
     static private func getReasoningBlock(_ reply: Message) throws -> ReasoningBlock {
         for content in reply.content {
-            if case .reasoningcontent(let block) = content {
+            if case .reasoning(let block) = content {
                 return block
             }
         }
