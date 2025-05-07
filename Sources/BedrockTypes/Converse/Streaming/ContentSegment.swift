@@ -93,7 +93,7 @@ extension Content {
     static func getFromSegements(with index: Int, from segments: [ContentSegment]) throws -> Content {
         var text = ""
         var toolUse: ToolUseBlock? = nil
-        try segments.forEach { segment in
+        for segment in segments {
             if segment.index == index {
                 switch segment {
                 case .text(_, let textPart):
