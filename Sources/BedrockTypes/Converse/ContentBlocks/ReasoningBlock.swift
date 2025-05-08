@@ -33,17 +33,14 @@ public struct EncryptedReasoning: Codable, Sendable {
 }
 
 public struct Reasoning: Codable, CustomStringConvertible, Sendable {
-    public var signature: String
+    public var signature: String?
     public var reasoning: String
 
     public init(from sdkReasoningText: BedrockRuntimeClientTypes.ReasoningTextBlock) throws {
-        guard let signature = sdkReasoningText.signature else {
-            throw BedrockServiceError.invalidSDKType("Signature is missing from ReasoningTextBlock")
-        }
         guard let text = sdkReasoningText.text else {
             throw BedrockServiceError.invalidSDKType("Text is missing from ReasoningTextBlock")
         }
-        self.signature = signature
+        self.signature = sdkReasoningText.signature
         self.reasoning = text
     }
 
@@ -54,7 +51,10 @@ public struct Reasoning: Codable, CustomStringConvertible, Sendable {
     }
 
     public var description: String {
-        "Reasoning: \(reasoning) \nSignature: \(signature)"
+        if let signature {
+            return "Reasoning: \(reasoning) \nSignature: \(signature)"
+        }
+        return "Reasoning: \(reasoning)"
     }
 }
 

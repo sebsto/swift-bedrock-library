@@ -54,13 +54,13 @@ extension BedrockServiceTests {
         #expect(!str2.contains("SECRET"))
     }
 
-    // Only works when SSO is actually expired
-    @Test("Authentication Error: SSO expired")
-    func authErrorSSOExpired() async throws {
-        await #expect(throws: BedrockServiceError.self) {
-            let auth = BedrockAuthentication.sso()
-            let bedrock = try await BedrockService(authentication: auth)
-            let _ = try await bedrock.listModels()
-        }
-    }
+    // // Only works when SSO is actually expired
+    // @Test("Authentication Error: SSO expired")
+    // func authErrorSSOExpired() async throws {
+    //     await #expect(throws: BedrockServiceError.self) {
+    //         let auth = BedrockAuthentication.sso()
+    //         let bedrock = try await BedrockService(authentication: auth)
+    //         let _ = try await bedrock.listModels()
+    //     }
+    // }
 }
