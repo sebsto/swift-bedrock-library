@@ -25,6 +25,8 @@ public enum Content: Codable, CustomStringConvertible, Sendable {
     case video(VideoBlock)
     case reasoning(ReasoningBlock)
 
+    // MARK - Initialiser
+
     public init(from sdkContentBlock: BedrockRuntimeClientTypes.ContentBlock) throws {
         switch sdkContentBlock {
         case .text(let text):
@@ -149,13 +151,13 @@ public enum Content: Codable, CustomStringConvertible, Sendable {
         }
     }
 
-    // /// convenience method to check what is inside the Content
-    // public func isReasoning() -> Bool {
-    //     switch self {
-    //     case .video:
-    //         return true
-    //     default:
-    //         return false
-    //     }
-    // }
+    /// convenience method to check what is inside the Content
+    public func isReasoning() -> Bool {
+        switch self {
+        case .video:
+            return true
+        default:
+            return false
+        }
+    }
 }
