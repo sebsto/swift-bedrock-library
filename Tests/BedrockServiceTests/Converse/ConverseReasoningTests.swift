@@ -27,10 +27,23 @@ extension BedrockServiceTests {
         let builder = try ConverseRequestBuilder(with: .claudev3_7_sonnet)
             .withPrompt("What is this?")
         let reply: ConverseReply = try await bedrock.converse(with: builder)
+
         #expect(reply.textReply == "Your prompt was: What is this?")
         #expect(reply.reasoningBlock != nil)
         #expect(reply.reasoningBlock?.reasoning == "reasoning text")
         #expect(reply.reasoningBlock?.signature == "reasoning signature")
+    }
+
+    @Test("Converse with encrypted reasoning")
+    func converseEncryptedReasoning() async throws {
+        let builder = try ConverseRequestBuilder(with: .deepseek_r1_v1)
+            .withPrompt("What is this?")
+        let reply: ConverseReply = try await bedrock.converse(with: builder)
+
+        #expect(reply.textReply == "Your prompt was: What is this?")
+        #expect(reply.reasoningBlock == nil)
+        #expect(reply.encryptedReasoning != nil)
+        #expect(reply.encryptedReasoning?.reasoning != nil)
     }
 
     @Test("Converse without reasoning when not supported by model")
@@ -38,6 +51,7 @@ extension BedrockServiceTests {
         let builder = try ConverseRequestBuilder(with: .nova_micro)
             .withPrompt("What is this?")
         let reply: ConverseReply = try await bedrock.converse(with: builder)
+
         #expect(reply.textReply == "Your prompt was: What is this?")
         #expect(reply.reasoningBlock == nil)
     }

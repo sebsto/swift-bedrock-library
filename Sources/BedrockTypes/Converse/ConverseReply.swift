@@ -20,6 +20,7 @@ public struct ConverseReply: Codable, CustomStringConvertible {
     let imageBlock: ImageBlock?
     let videoBlock: VideoBlock?
     let reasoningBlock: Reasoning?
+    let encryptedReasoning: EncryptedReasoning?
 
     public var description: String {
         if let textReply {
@@ -45,6 +46,7 @@ public struct ConverseReply: Codable, CustomStringConvertible {
         self.imageBlock = try? ConverseReply.getImageBlock(lastMessage)
         self.videoBlock = try? ConverseReply.getVideoBlock(lastMessage)
         self.reasoningBlock = try? ConverseReply.getReasoningBlock(lastMessage)
+        self.encryptedReasoning = try? ConverseReply.getEncryptedReasoning(lastMessage)
     }
 
     // MARK: Public functions
@@ -140,6 +142,15 @@ public struct ConverseReply: Codable, CustomStringConvertible {
             }
         }
         throw BedrockServiceError.invalidConverseReply("No Reasoning block found in last message.")
+    }
+
+    static private func getEncryptedReasoning(_ reply: Message) throws -> EncryptedReasoning {
+        for content in reply.content {
+            if case .encryptedReasoning(let block) = content {
+                return block
+            }
+        }
+        throw BedrockServiceError.invalidConverseReply("No EncryptedReasoning found in last message.")
     }
 }
 
