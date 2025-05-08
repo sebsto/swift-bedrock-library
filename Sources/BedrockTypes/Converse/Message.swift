@@ -16,7 +16,7 @@
 @preconcurrency import AWSBedrockRuntime
 import Foundation
 
-public struct Message: Codable, CustomStringConvertible {
+public struct Message: Codable, CustomStringConvertible, Sendable {
     public let role: Role
     public let content: [Content]
 

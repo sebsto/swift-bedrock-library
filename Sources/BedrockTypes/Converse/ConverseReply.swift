@@ -13,16 +13,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-public typealias History = [Message]
-extension History {
-    public var description: String {
-        var result = "\(self.count) turns:\n"
-        for message in self {
-            result += "\(message)\n"
-        }
-        return result
-    }
-}
 public struct ConverseReply: Codable, CustomStringConvertible {
     let history: History
     let textReply: String?
@@ -35,7 +25,8 @@ public struct ConverseReply: Codable, CustomStringConvertible {
         if let textReply {
             return textReply
         } else {
-            return "No text reply found in the last message."
+            let lastMessage = getLastMessage()
+            return lastMessage.content.description
         }
     }
 

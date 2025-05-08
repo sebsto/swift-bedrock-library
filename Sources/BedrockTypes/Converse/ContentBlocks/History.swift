@@ -13,19 +13,14 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
+public typealias History = [Message]
 
-public struct StandardConverse: ConverseModality, StreamingModality {
-    public func getName() -> String { "Standard Converse Modality" }
-
-    public let converseParameters: ConverseParameters
-    public let converseFeatures: [ConverseFeature]
-
-    public init(parameters: ConverseParameters, features: [ConverseFeature]) {
-        self.converseParameters = parameters
-        self.converseFeatures = features
+extension History {
+    public var description: String {
+        var result = "\(self.count) turns:\n"
+        for message in self {
+            result += "\(message)\n"
+        }
+        return result
     }
-
-    public func getConverseParameters() -> ConverseParameters { converseParameters }
-    public func getConverseFeatures() -> [ConverseFeature] { converseFeatures }
 }

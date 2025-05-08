@@ -202,6 +202,12 @@ public struct BedrockModel: Hashable, Sendable, Equatable, RawRepresentable {
         modality as? any ConverseModality != nil
     }
 
+    /// Checks if the model supports converse streaming
+    /// - Returns: True if the model supports converse streaming
+    public func hasConverseStreamingModality() -> Bool {
+        modality as? any ConverseStreamingModality != nil
+    }
+
     /// Checks if the model supports a specific converse feature
     /// - Parameters:
     ///         - feature: the ConverseFeature that will be checked

@@ -13,19 +13,18 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
+@preconcurrency import AWSBedrockRuntime
+import BedrockTypes
 
-public struct StandardConverse: ConverseModality, StreamingModality {
-    public func getName() -> String { "Standard Converse Modality" }
-
-    public let converseParameters: ConverseParameters
-    public let converseFeatures: [ConverseFeature]
-
-    public init(parameters: ConverseParameters, features: [ConverseFeature]) {
-        self.converseParameters = parameters
-        self.converseFeatures = features
+public typealias ConverseStreamingRequest = ConverseRequest
+extension ConverseStreamingRequest {
+    func getConverseStreamingInput() throws -> ConverseStreamInput {
+        ConverseStreamInput(
+            inferenceConfig: inferenceConfig?.getSDKInferenceConfig(),
+            messages: try getSDKMessages(),
+            modelId: model.id,
+            system: getSDKSystemPrompts(),
+            toolConfig: try toolConfig?.getSDKToolConfig()
+        )
     }
-
-    public func getConverseParameters() -> ConverseParameters { converseParameters }
-    public func getConverseFeatures() -> [ConverseFeature] { converseFeatures }
 }

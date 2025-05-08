@@ -16,7 +16,7 @@
 @preconcurrency import AWSBedrockRuntime
 import Foundation
 
-public struct ToolResultBlock: Codable {
+public struct ToolResultBlock: Codable, Sendable {
     public let id: String
     public let content: [Content]
     public let status: Status?  // currently only supported by Anthropic Claude 3 models
@@ -101,7 +101,7 @@ public struct ToolResultBlock: Codable {
         )
     }
 
-    public enum Status: Codable {
+    public enum Status: Codable, Sendable {
         case success
         case error
 
@@ -109,9 +109,9 @@ public struct ToolResultBlock: Codable {
             switch sdkToolStatus {
             case .success: self = .success
             case .error: self = .error
-            case .sdkUnknown(let unknownToolStatus):
+            default:
                 throw BedrockServiceError.notImplemented(
-                    "ToolResultStatus \(unknownToolStatus) is not implemented by BedrockRuntimeClientTypes"
+                    "ToolStatus \(sdkToolStatus) is not implemented by BedrockService or not implemented by BedrockRuntimeClientTypes in case of `sdkUnknown`"
                 )
             }
         }
@@ -124,7 +124,7 @@ public struct ToolResultBlock: Codable {
         }
     }
 
-    public enum Content {
+    public enum Content: Sendable {
         case json(JSON)
         case text(String)
         case image(ImageBlock)  // currently only supported by Anthropic Claude 3 models
@@ -143,14 +143,10 @@ public struct ToolResultBlock: Codable {
                 self = .video(try VideoBlock(from: sdkVideoBlock))
             case .json(let document):
                 self = .json(try document.toJSON())
-            case .sdkUnknown(let unknownToolResultContent):
+            default:
                 throw BedrockServiceError.notImplemented(
-                    "ToolResultContentBlock \(unknownToolResultContent) is not implemented by BedrockRuntimeClientTypes"
+                    "ToolResultContent \(sdkToolResultContent) is not implemented by BedrockService or not implemented by BedrockRuntimeClientTypes in case of `sdkUnknown`"
                 )
-            // default:
-            //     throw BedrockServiceError.notImplemented(
-            //         "ToolResultContentBlock \(sdkToolResultContent) is not implemented by BedrockTypes"
-            //     )
             }
         }
 

@@ -16,14 +16,16 @@
 @preconcurrency import AWSBedrockRuntime
 import Foundation
 
-public enum Content: Codable, CustomStringConvertible {
+public enum Content: Codable, CustomStringConvertible, Sendable {
     case text(String)
     case image(ImageBlock)
     case toolUse(ToolUseBlock)
     case toolResult(ToolResultBlock)
     case document(DocumentBlock)
     case video(VideoBlock)
-    // case reasoningcontent(ReasoningBlock)
+    // case reasoning(ReasoningBlock)
+
+    // MARK - Initialiaser
 
     public init(from sdkContentBlock: BedrockRuntimeClientTypes.ContentBlock) throws {
         switch sdkContentBlock {
@@ -39,13 +41,9 @@ public enum Content: Codable, CustomStringConvertible {
             self = .toolResult(try ToolResultBlock(from: sdkToolResultBlock))
         case .video(let sdkVideoBlock):
             self = .video(try VideoBlock(from: sdkVideoBlock))
-        case .sdkUnknown(let unknownContentBlock):
-            throw BedrockServiceError.notImplemented(
-                "ContentBlock \(unknownContentBlock) is not implemented by BedrockRuntimeClientTypes"
-            )
         default:
             throw BedrockServiceError.notImplemented(
-                "\(sdkContentBlock.self) is not implemented by this library"
+                "ContentBlock \(sdkContentBlock) is not implemented by BedrockService or not implemented by BedrockRuntimeClientTypes in case of `sdkUnknown`"
             )
         }
     }
@@ -64,12 +62,12 @@ public enum Content: Codable, CustomStringConvertible {
             return BedrockRuntimeClientTypes.ContentBlock.tooluse(try toolUseBlock.getSDKToolUseBlock())
         case .video(let videoBlock):
             return BedrockRuntimeClientTypes.ContentBlock.video(try videoBlock.getSDKVideoBlock())
-        // default:
-        //     print("TODO")
-        //     return BedrockRuntimeClientTypes.ContentBlock.text("TODO")
         }
     }
 
+    // MARK - convenience methods
+
+    /// a description of the Content depending on the case
     public var description: String {
         switch self {
         case .text(let text):
@@ -86,4 +84,74 @@ public enum Content: Codable, CustomStringConvertible {
             return "Video: \(videoBlock.format)"
         }
     }
+
+    /// convenience method to check what is inside the Content
+    public func isText() -> Bool {
+        switch self {
+        case .text:
+            return true
+        default:
+            return false
+        }
+    }
+
+    /// convenience method to check what is inside the Content
+    public func isImage() -> Bool {
+        switch self {
+        case .image:
+            return true
+        default:
+            return false
+        }
+    }
+
+    /// convenience method to check what is inside the Content
+    public func isToolUse() -> Bool {
+        switch self {
+        case .toolUse:
+            return true
+        default:
+            return false
+        }
+    }
+
+    /// convenience method to check what is inside the Content
+    public func isToolResult() -> Bool {
+        switch self {
+        case .toolResult:
+            return true
+        default:
+            return false
+        }
+    }
+
+    /// convenience method to check what is inside the Content
+    public func isDocument() -> Bool {
+        switch self {
+        case .document:
+            return true
+        default:
+            return false
+        }
+    }
+
+    /// convenience method to check what is inside the Content
+    public func isVideo() -> Bool {
+        switch self {
+        case .video:
+            return true
+        default:
+            return false
+        }
+    }
+
+    // /// convenience method to check what is inside the Content
+    // public func isReasoning() -> Bool {
+    //     switch self {
+    //     case .video:
+    //         return true
+    //     default:
+    //         return false
+    //     }
+    // }
 }
