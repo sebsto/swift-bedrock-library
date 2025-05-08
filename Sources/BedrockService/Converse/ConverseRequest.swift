@@ -16,6 +16,7 @@
 @preconcurrency import AWSBedrockRuntime
 import BedrockTypes
 import Foundation
+import Smithy
 
 public struct ConverseRequest {
     let model: BedrockModel
@@ -52,12 +53,27 @@ public struct ConverseRequest {
 
     func getConverseInput() throws -> ConverseInput {
         ConverseInput(
+            additionalModelRequestFields: try getAdditionalModelRequestFields(),
             inferenceConfig: inferenceConfig?.getSDKInferenceConfig(),
             messages: try getSDKMessages(),
             modelId: model.id,
             system: getSDKSystemPrompts(),
             toolConfig: try toolConfig?.getSDKToolConfig()
         )
+    }
+
+    func getAdditionalModelRequestFields() throws -> Smithy.Document? {
+        // automatically enables reasoning when Claude Sonnet 3.7 is used
+        if model == .claudev3_7_sonnet {
+            let reasoningConfigJSON = JSON([
+                "thinking": [
+                    "type": "enabled",
+                    "budget_tokens": 2000,
+                ]
+            ])
+            return try reasoningConfigJSON.toDocument()
+        }
+        return nil
     }
 
     func getSDKMessages() throws -> [BedrockRuntimeClientTypes.Message] {
