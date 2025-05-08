@@ -168,7 +168,17 @@ public enum Content: Codable, CustomStringConvertible, Sendable {
     /// convenience method to check what is inside the Content
     public func isReasoning() -> Bool {
         switch self {
-        case .video:
+        case .reasoning:
+            return true
+        default:
+            return false
+        }
+    }
+
+    /// convenience method to check what is inside the Content
+    public func isEncryptedReasoning() -> Bool {
+        switch self {
+        case .encryptedReasoning:
             return true
         default:
             return false
