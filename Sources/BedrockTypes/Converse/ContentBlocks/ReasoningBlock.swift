@@ -16,7 +16,7 @@
 @preconcurrency import AWSBedrockRuntime
 import Foundation
 
-public enum ReasoningBlock: Codable, CustomStringConvertible {
+public enum ReasoningBlock: Codable, CustomStringConvertible, Sendable {
     case reasoning(ReasoningText)
     case reasoningEncrypted(ReasoningEncrypted)
 
@@ -54,7 +54,7 @@ public enum ReasoningBlock: Codable, CustomStringConvertible {
     }
 }
 
-public struct ReasoningEncrypted: Codable {
+public struct ReasoningEncrypted: Codable, Sendable {
     public var reasoning: Data
 
     public var description: String {
@@ -62,7 +62,7 @@ public struct ReasoningEncrypted: Codable {
     }
 }
 
-public struct ReasoningText: Codable, CustomStringConvertible {
+public struct ReasoningText: Codable, CustomStringConvertible, Sendable {
     public var signature: String
     public var reasoning: String
 

@@ -23,6 +23,7 @@ import Foundation
 public protocol BedrockRuntimeClientProtocol: Sendable {
     func invokeModel(input: InvokeModelInput) async throws -> InvokeModelOutput
     func converse(input: ConverseInput) async throws -> ConverseOutput
+    func converseStream(input: ConverseStreamInput) async throws -> ConverseStreamOutput
 }
 
 extension BedrockRuntimeClient: @retroactive @unchecked Sendable, BedrockRuntimeClientProtocol {}

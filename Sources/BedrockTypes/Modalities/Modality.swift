@@ -18,3 +18,4 @@ import Foundation
 public protocol Modality: Sendable {
     func getName() -> String
 }
+public protocol StreamingModality: Sendable {}

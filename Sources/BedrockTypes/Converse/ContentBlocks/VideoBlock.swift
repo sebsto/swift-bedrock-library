@@ -16,7 +16,7 @@
 @preconcurrency import AWSBedrockRuntime
 import Foundation
 
-public struct VideoBlock: Codable {
+public struct VideoBlock: Codable, Sendable {
     public let format: Format
     public let source: Source
 
@@ -61,19 +61,19 @@ public struct VideoBlock: Codable {
         )
     }
 
-    public enum Source: Codable {
+    public enum Source: Codable, Sendable {
         case bytes(String)  // base64
         case s3(S3Location)
 
-        public init(from sdkVideoSource: BedrockRuntimeClientTypes.VideoSource) throws {
-            switch sdkVideoSource {
+        public init(from sdkSource: BedrockRuntimeClientTypes.VideoSource) throws {
+            switch sdkSource {
             case .bytes(let data):
                 self = .bytes(data.base64EncodedString())
             case .s3location(let sdkS3Location):
                 self = .s3(try S3Location(from: sdkS3Location))
-            case .sdkUnknown(let unknownVideoSource):
+            default:
                 throw BedrockServiceError.notImplemented(
-                    "VideoSource \(unknownVideoSource) is not implemented by BedrockRuntimeClientTypes"
+                    "VideoSource \(sdkSource) is not implemented by BedrockService or not implemented by BedrockRuntimeClientTypes in case of `sdkUnknown`"
                 )
             }
         }
@@ -93,7 +93,7 @@ public struct VideoBlock: Codable {
         }
     }
 
-    public enum Format: Codable {
+    public enum Format: Codable, Sendable {
         case flv
         case mkv
         case mov
@@ -115,14 +115,10 @@ public struct VideoBlock: Codable {
             case .threeGp: self = .threeGp
             case .webm: self = .webm
             case .wmv: self = .wmv
-            case .sdkUnknown(let unknownVideoFormat):
+            default:
                 throw BedrockServiceError.notImplemented(
-                    "VideoFormat \(unknownVideoFormat) is not implemented by BedrockRuntimeClientTypes"
+                    "VideoFormat \(sdkVideoFormat) is not implemented by BedrockService or not implemented by BedrockRuntimeClientTypes in case of `sdkUnknown`"
                 )
-            // default: // in case new video formats get added to the sdk
-            //     throw BedrockServiceError.notSupported(
-            //         "VideoFormat \(sdkVideoFormat) is not supported by BedrockTypes"
-            //     )
             }
         }
 

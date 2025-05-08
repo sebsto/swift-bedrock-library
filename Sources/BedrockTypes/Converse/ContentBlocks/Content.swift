@@ -16,7 +16,7 @@
 @preconcurrency import AWSBedrockRuntime
 import Foundation
 
-public enum Content: Codable, CustomStringConvertible {
+public enum Content: Codable, CustomStringConvertible, Sendable {
     case text(String)
     case image(ImageBlock)
     case toolUse(ToolUseBlock)
@@ -41,13 +41,9 @@ public enum Content: Codable, CustomStringConvertible {
             self = .video(try VideoBlock(from: sdkVideoBlock))
         case .reasoningcontent(let sdkReasoningBlock):
             self = .reasoning(try ReasoningBlock(from: sdkReasoningBlock))
-        case .sdkUnknown(let unknownContentBlock):
-            throw BedrockServiceError.notImplemented(
-                "ContentBlock \(unknownContentBlock) is not implemented by BedrockRuntimeClientTypes"
-            )
         default:
             throw BedrockServiceError.notImplemented(
-                "\(sdkContentBlock.self) is not implemented by this library"
+                "ContentBlock \(sdkContentBlock) is not implemented by BedrockService or not implemented by BedrockRuntimeClientTypes in case of `sdkUnknown`"
             )
         }
     }
@@ -71,6 +67,9 @@ public enum Content: Codable, CustomStringConvertible {
         }
     }
 
+    // MARK - convenience methods
+
+    /// a description of the Content depending on the case
     public var description: String {
         switch self {
         case .text(let text):
@@ -89,4 +88,74 @@ public enum Content: Codable, CustomStringConvertible {
             return "Reasoning: \(reasoningBlock)"
         }
     }
+
+    /// convenience method to check what is inside the Content
+    public func isText() -> Bool {
+        switch self {
+        case .text:
+            return true
+        default:
+            return false
+        }
+    }
+
+    /// convenience method to check what is inside the Content
+    public func isImage() -> Bool {
+        switch self {
+        case .image:
+            return true
+        default:
+            return false
+        }
+    }
+
+    /// convenience method to check what is inside the Content
+    public func isToolUse() -> Bool {
+        switch self {
+        case .toolUse:
+            return true
+        default:
+            return false
+        }
+    }
+
+    /// convenience method to check what is inside the Content
+    public func isToolResult() -> Bool {
+        switch self {
+        case .toolResult:
+            return true
+        default:
+            return false
+        }
+    }
+
+    /// convenience method to check what is inside the Content
+    public func isDocument() -> Bool {
+        switch self {
+        case .document:
+            return true
+        default:
+            return false
+        }
+    }
+
+    /// convenience method to check what is inside the Content
+    public func isVideo() -> Bool {
+        switch self {
+        case .video:
+            return true
+        default:
+            return false
+        }
+    }
+
+    // /// convenience method to check what is inside the Content
+    // public func isReasoning() -> Bool {
+    //     switch self {
+    //     case .video:
+    //         return true
+    //     default:
+    //         return false
+    //     }
+    // }
 }

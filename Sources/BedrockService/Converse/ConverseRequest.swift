@@ -60,11 +60,11 @@ public struct ConverseRequest {
         )
     }
 
-    private func getSDKMessages() throws -> [BedrockRuntimeClientTypes.Message] {
+    func getSDKMessages() throws -> [BedrockRuntimeClientTypes.Message] {
         try messages.map { try $0.getSDKMessage() }
     }
 
-    private func getSDKSystemPrompts() -> [BedrockRuntimeClientTypes.SystemContentBlock]? {
+    func getSDKSystemPrompts() -> [BedrockRuntimeClientTypes.SystemContentBlock]? {
         systemPrompts?.map {
             BedrockRuntimeClientTypes.SystemContentBlock.text($0)
         }

@@ -16,7 +16,7 @@
 @preconcurrency import AWSBedrockRuntime
 import Foundation
 
-public struct ToolUseBlock: Codable {
+public struct ToolUseBlock: Codable, Sendable {
     public let id: String
     public let name: String
     public let input: JSON
