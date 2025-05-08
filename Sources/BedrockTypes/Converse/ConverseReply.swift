@@ -19,7 +19,7 @@ public struct ConverseReply: Codable, CustomStringConvertible {
     let toolUse: ToolUseBlock?
     let imageBlock: ImageBlock?
     let videoBlock: VideoBlock?
-    let reasoningBlock: ReasoningBlock?
+    let reasoningBlock: Reasoning?
 
     public var description: String {
         if let textReply {
@@ -88,7 +88,7 @@ public struct ConverseReply: Codable, CustomStringConvertible {
     }
 
     /// Returns the latest reasoning block or throws if the latest message does not contain a reasoning block
-    public func getReasoningBlock() throws -> ReasoningBlock {
+    public func getReasoningBlock() throws -> Reasoning {
         guard let reasoningBlock else {
             throw BedrockServiceError.invalidConverseReply("No Reasoning block found in last message.")
         }
@@ -133,7 +133,7 @@ public struct ConverseReply: Codable, CustomStringConvertible {
         throw BedrockServiceError.invalidConverseReply("No Video block found in last message.")
     }
 
-    static private func getReasoningBlock(_ reply: Message) throws -> ReasoningBlock {
+    static private func getReasoningBlock(_ reply: Message) throws -> Reasoning {
         for content in reply.content {
             if case .reasoning(let block) = content {
                 return block

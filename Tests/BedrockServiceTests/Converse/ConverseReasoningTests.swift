@@ -29,6 +29,8 @@ extension BedrockServiceTests {
         let reply: ConverseReply = try await bedrock.converse(with: builder)
         #expect(reply.textReply == "Your prompt was: What is this?")
         #expect(reply.reasoningBlock != nil)
+        #expect(reply.reasoningBlock?.reasoning == "reasoning text")
+        #expect(reply.reasoningBlock?.signature == "reasoning signature")
     }
 
     @Test("Converse without reasoning when not supported by model")

@@ -23,7 +23,8 @@ public enum Content: Codable, CustomStringConvertible, Sendable {
     case toolResult(ToolResultBlock)
     case document(DocumentBlock)
     case video(VideoBlock)
-    case reasoning(ReasoningBlock)
+    case reasoning(Reasoning)
+    case encryptedReasoning(EncryptedReasoning)
 
     // MARK - Initialiser
 
@@ -42,7 +43,16 @@ public enum Content: Codable, CustomStringConvertible, Sendable {
         case .video(let sdkVideoBlock):
             self = .video(try VideoBlock(from: sdkVideoBlock))
         case .reasoningcontent(let sdkReasoningBlock):
-            self = .reasoning(try ReasoningBlock(from: sdkReasoningBlock))
+            switch sdkReasoningBlock {
+            case .reasoningtext(let sdkReasoningText):
+                self = .reasoning(try Reasoning(from: sdkReasoningText))
+            case .redactedcontent(let data):
+                self = .encryptedReasoning(EncryptedReasoning(data))
+            default:
+                throw BedrockServiceError.notImplemented(
+                    "ReasoningContentBlock \(sdkReasoningBlock) is not implemented by BedrockService or not implemented by BedrockRuntimeClientTypes in case of `sdkUnknown`"
+                )
+            }
         default:
             throw BedrockServiceError.notImplemented(
                 "ContentBlock \(sdkContentBlock) is not implemented by BedrockService or not implemented by BedrockRuntimeClientTypes in case of `sdkUnknown`"
@@ -65,7 +75,9 @@ public enum Content: Codable, CustomStringConvertible, Sendable {
         case .video(let videoBlock):
             return BedrockRuntimeClientTypes.ContentBlock.video(try videoBlock.getSDKVideoBlock())
         case .reasoning(let reasoningBlock):
-            return BedrockRuntimeClientTypes.ContentBlock.reasoningcontent(try reasoningBlock.getSDKReasoningBlock())
+            return BedrockRuntimeClientTypes.ContentBlock.reasoningcontent(reasoningBlock.getSDKReasoningBlock())
+        case .encryptedReasoning(let encryptedReasoning):
+            return BedrockRuntimeClientTypes.ContentBlock.reasoningcontent(encryptedReasoning.getSDKReasoningBlock())
         }
     }
 
@@ -86,8 +98,10 @@ public enum Content: Codable, CustomStringConvertible, Sendable {
             return "Document: \(documentBlock.name) - \(documentBlock.format)"
         case .video(let videoBlock):
             return "Video: \(videoBlock.format)"
-        case .reasoning(let reasoningBlock):
-            return "Reasoning: \(reasoningBlock)"
+        case .reasoning(let reasoning):
+            return reasoning.description
+        case .encryptedReasoning(let encryptedReasoning):
+            return encryptedReasoning.description
         }
     }
 
