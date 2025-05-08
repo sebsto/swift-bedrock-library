@@ -187,52 +187,74 @@ public struct MockBedrockRuntimeClient: BedrockRuntimeClientProtocol {
         else {
             throw AWSBedrockRuntime.ValidationException(message: "Missing required message content")
         }
-        var message: BedrockRuntimeClientTypes.Message
 
+        var replyContent: [BedrockRuntimeClientTypes.ContentBlock] = []
+        guard let modelId = input.modelId else {
+            throw AWSBedrockRuntime.ValidationException(message: "Missing required modelId")
+        }
+        // Only for testing purposes: Claude 3.7 will always add a reasoning block,
+        // while Deepseek will always return an encrypted reasoning block
+        if modelId == "us.anthropic.claude-3-7-sonnet-20250219-v1:0" {
+            replyContent.append(
+                .reasoningcontent(
+                    .reasoningtext(
+                        BedrockRuntimeClientTypes.ReasoningTextBlock(
+                            signature: "reasoning signature",
+                            text: "reasoning text"
+                        )
+                    )
+                )
+            )
+        } else if modelId == "us.deepseek.r1-v1:0" {
+            let data: Data = try JSONEncoder().encode(["redacted": "data"])
+            replyContent.append(
+                .reasoningcontent(
+                    .redactedcontent(data)
+                )
+            )
+        }
         switch content {
         case .text(let prompt):
             if prompt == "Use tool", let _ = input.toolConfig?.tools {
                 let toolInputJson = JSON(["code": "abc"])
                 let toolInput = try? toolInputJson.toDocument()
-                let message = BedrockRuntimeClientTypes.Message(
-                    content: [
-                        .tooluse(
-                            BedrockRuntimeClientTypes.ToolUseBlock(
-                                input: toolInput,
-                                name: "toolName",
-                                toolUseId: "toolId"
-                            )
+                replyContent.append(
+                    .tooluse(
+                        BedrockRuntimeClientTypes.ToolUseBlock(
+                            input: toolInput,
+                            name: "toolName",
+                            toolUseId: "toolId"
                         )
-                    ],
+                    )
+                )
+                let message = BedrockRuntimeClientTypes.Message(
+                    content: replyContent,
                     role: .assistant
                 )
                 return ConverseOutput(output: .message(message))
             }
-            message = BedrockRuntimeClientTypes.Message(
-                content: [.text("Your prompt was: \(prompt)")],
-                role: .assistant
+            replyContent.append(
+                .text("Your prompt was: \(prompt)")
             )
         case .toolresult(_):
-            message = BedrockRuntimeClientTypes.Message(
-                content: [.text("Tool result received")],
-                role: .assistant
-            )
+            replyContent.append(.text("Tool result received"))
         case .image(_):
-            message = BedrockRuntimeClientTypes.Message(
-                content: [.text("Image received")],
-                role: .assistant
-            )
+            replyContent.append(.text("Image received"))
         case .document(_):
-            message = BedrockRuntimeClientTypes.Message(
-                content: [.text("Document received")],
-                role: .assistant
-            )
+            replyContent.append(.text("Document received"))
         default:
             throw AWSBedrockRuntime.ValidationException(
                 message: "Malformed input request, please reformat your input and try again."
             )
         }
-        return ConverseOutput(output: .message(message))
+        return ConverseOutput(
+            output: .message(
+                BedrockRuntimeClientTypes.Message(
+                    content: replyContent,
+                    role: .assistant
+                )
+            )
+        )
     }
 
     // MARK: invokeModel
