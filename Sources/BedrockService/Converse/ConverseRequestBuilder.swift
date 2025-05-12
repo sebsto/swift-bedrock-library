@@ -34,7 +34,7 @@ public struct ConverseRequestBuilder {
     public private(set) var topP: Double?
     public private(set) var stopSequences: [String]?
     public private(set) var systemPrompts: [String]?
-    
+
     public private(set) var enableReasoning: Bool
     public private(set) var maxReasoningTokens: Int?
 
