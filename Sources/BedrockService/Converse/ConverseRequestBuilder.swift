@@ -408,7 +408,7 @@ public struct ConverseRequestBuilder {
     public func withReasoning(maxReasoningTokens: Int) throws -> ConverseRequestBuilder {
         try self.withReasoning(true).withMaxReasoningTokens(maxReasoningTokens)
     }
-    
+
     /// private convenience method
     private func withReasoning(enabled: Bool, maxReasoningTokens: Int? = nil) throws -> ConverseRequestBuilder {
         let copy = self
