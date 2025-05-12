@@ -15,9 +15,9 @@
 
 import Foundation
 
-// ConverseModality was taken out, because DeepSeek automatically uses reasoning 
+// ConverseModality was taken out, because DeepSeek automatically uses reasoning
 // and does not tolerate the way reasoning is handled in this library.
-// DeepSeek always uses reasoning, meaning that with every response it returns a 
+// DeepSeek always uses reasoning, meaning that with every response it returns a
 // reasoning content block. However, DeepSeek does not tolerate reasoning
 // content blocks in the conversation history.
 // This library chooses not to manipulate the conversation history.
@@ -26,7 +26,7 @@ import Foundation
 // contain reasoning content. Please remove the reasoning content and try again."
 // To avoid this problem altogether, the ConverseModality was taken out.
 // If a developer would want to reintroduce DeepSeek to converse and converseStream
-// a solution should be found where only in the case of DeepSeek, the history is 
+// a solution should be found where only in the case of DeepSeek, the history is
 // filtered to remove the reasoning content blocks before it is sent to the model.
 // The same goes for ConverseStreamingModality.
 
@@ -39,7 +39,7 @@ struct DeepSeekText: TextModality {
 
     init(
         parameters: TextGenerationParameters,
-        features: [ConverseFeature] = [.textGeneration, .systemPrompts, .document] // .reasoning
+        features: [ConverseFeature] = [.textGeneration, .systemPrompts, .document]  // .reasoning
     ) {
         self.parameters = parameters
         self.converseFeatures = features
