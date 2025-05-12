@@ -24,6 +24,8 @@ public struct ConverseRequest {
     let inferenceConfig: InferenceConfig?
     let toolConfig: ToolConfig?
     let systemPrompts: [String]?
+    let enableReasoning: Bool
+    let maxReasoningTokens: Int?
 
     init(
         model: BedrockModel,
@@ -33,7 +35,9 @@ public struct ConverseRequest {
         topP: Double?,
         stopSequences: [String]?,
         systemPrompts: [String]?,
-        tools: [Tool]?
+        tools: [Tool]?,
+        enableReasoning: Bool?,
+        maxReasoningTokens: Int?
     ) {
         self.messages = messages
         self.model = model
@@ -44,6 +48,8 @@ public struct ConverseRequest {
             stopSequences: stopSequences
         )
         self.systemPrompts = systemPrompts
+        self.enableReasoning = enableReasoning ?? false
+        self.maxReasoningTokens = maxReasoningTokens
         if let tools {
             self.toolConfig = ToolConfig(tools: tools)
         } else {
@@ -63,12 +69,11 @@ public struct ConverseRequest {
     }
 
     func getAdditionalModelRequestFields() throws -> Smithy.Document? {
-        // automatically enables reasoning when Claude Sonnet 3.7 is used
-        if model == .claudev3_7_sonnet {
+        if model == .claudev3_7_sonnet, enableReasoning {
             let reasoningConfigJSON = JSON([
                 "thinking": [
                     "type": "enabled",
-                    "budget_tokens": 2000,
+                    "budget_tokens": maxReasoningTokens ?? 2000,
                 ]
             ])
             return try reasoningConfigJSON.toDocument()

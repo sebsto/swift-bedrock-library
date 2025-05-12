@@ -21,27 +21,34 @@ public struct ConverseParameters: Parameters {
     public let topP: Parameter<Double>
     public let prompt: PromptParams
     public let stopSequences: StopSequenceParams
+    public let maxReasoningTokens: Parameter<Int>
 
     public init(
         temperature: Parameter<Double>,
         maxTokens: Parameter<Int>,
         topP: Parameter<Double>,
         stopSequences: StopSequenceParams,
-        maxPromptSize: Int?
+        maxPromptSize: Int?,
+        maxReasoningTokens: Parameter<Int> = .notSupported(.maxReasoningTokens)
     ) {
         self.temperature = temperature
         self.maxTokens = maxTokens
         self.topP = topP
         self.prompt = PromptParams(maxSize: maxPromptSize)
         self.stopSequences = stopSequences
+        self.maxReasoningTokens = maxReasoningTokens
     }
 
-    public init(textGenerationParameters: TextGenerationParameters) {
+    public init(
+        textGenerationParameters: TextGenerationParameters,
+        maxReasoningTokens: Parameter<Int> = .notSupported(.maxReasoningTokens)
+    ) {
         self.temperature = textGenerationParameters.temperature
         self.maxTokens = textGenerationParameters.maxTokens
         self.topP = textGenerationParameters.topP
         self.prompt = textGenerationParameters.prompt
         self.stopSequences = textGenerationParameters.stopSequences
+        self.maxReasoningTokens = .notSupported(.maxReasoningTokens)
     }
 
     package func validate(

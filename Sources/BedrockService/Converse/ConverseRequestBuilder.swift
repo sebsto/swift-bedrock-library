@@ -34,6 +34,9 @@ public struct ConverseRequestBuilder {
     public private(set) var topP: Double?
     public private(set) var stopSequences: [String]?
     public private(set) var systemPrompts: [String]?
+    
+    public private(set) var enableReasoning: Bool
+    public private(set) var maxReasoningTokens: Int?
 
     // MARK - Initializers
 
@@ -42,6 +45,11 @@ public struct ConverseRequestBuilder {
         let modality = try model.getConverseModality()
         self.parameters = modality.getConverseParameters()
         self.history = []
+        if model == .claudev3_5_sonnet_v2 {
+            self.enableReasoning = true
+        } else {
+            self.enableReasoning = false
+        }
     }
 
     public init(with modelId: String) throws {
@@ -358,6 +366,33 @@ public struct ConverseRequestBuilder {
             systemPrompts = [systemPrompt]
         }
         return try self.withSystemPrompts(systemPrompts)
+    }
+
+    public func withoutReasoning() throws -> ConverseRequestBuilder {
+        try validateFeature(.reasoning)
+        var copy = self
+        guard model != .deepseek_r1_v1 else {
+            throw BedrockServiceError.notSupported("Cannot disable reasoning on DeepSeek R1 V1")
+        }
+        copy.enableReasoning = false
+        return copy
+    }
+
+    public func withReasoning() throws -> ConverseRequestBuilder {
+        try validateFeature(.reasoning)
+        var copy = self
+        copy.enableReasoning = true
+        return copy
+    }
+
+    public func withMaxReasoningTokens(_ maxReasoningTokens: Int?) throws -> ConverseRequestBuilder {
+        try validateFeature(.reasoning)
+        var copy = self
+        if let maxReasoningTokens {
+            try copy.parameters.maxReasoningTokens.validateValue(maxReasoningTokens)
+            copy.maxReasoningTokens = maxReasoningTokens
+        }
+        return copy
     }
 
     // MARK - public methods

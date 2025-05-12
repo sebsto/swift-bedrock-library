@@ -176,7 +176,8 @@ extension BedrockModel {
                 stopSequences: StopSequenceParams(maxSequences: 8191, defaultValue: []),
                 maxPromptSize: 200_000
             ),
-            features: [.textGeneration, .systemPrompts, .document, .vision, .toolUse]
+            features: [.textGeneration, .systemPrompts, .document, .vision, .toolUse, .reasoning],
+            maxReasoningTokens: Parameter(.maxReasoningTokens, minValue: 1_024, maxValue: 8_191, defaultValue: 4_000)
         )
     )
 }

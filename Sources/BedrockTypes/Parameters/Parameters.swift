@@ -75,6 +75,7 @@ public enum ParameterName: Sendable {
     case cfgScale
     case seed
     case resolution
+    case maxReasoningTokens
 }
 
 public struct PromptParams: Parameters {

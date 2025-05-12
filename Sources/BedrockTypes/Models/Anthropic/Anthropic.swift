@@ -19,16 +19,19 @@ struct AnthropicText: TextModality, ConverseModality, ConverseStreamingModality 
     let parameters: TextGenerationParameters
     let converseParameters: ConverseParameters
     let converseFeatures: [ConverseFeature]
+    let maxReasoningTokens: Parameter<Int>
 
     func getName() -> String { "Anthropic Text Generation" }
 
     init(
         parameters: TextGenerationParameters,
-        features: [ConverseFeature] = [.textGeneration, .systemPrompts, .document]
+        features: [ConverseFeature] = [.textGeneration, .systemPrompts, .document],
+        maxReasoningTokens: Parameter<Int> = .notSupported(.maxReasoningTokens)
     ) {
         self.parameters = parameters
         self.converseFeatures = features
         self.converseParameters = ConverseParameters(textGenerationParameters: parameters)
+        self.maxReasoningTokens = maxReasoningTokens
     }
 
     func getParameters() -> TextGenerationParameters {
@@ -36,7 +39,7 @@ struct AnthropicText: TextModality, ConverseModality, ConverseStreamingModality 
     }
 
     func getConverseParameters() -> ConverseParameters {
-        ConverseParameters(textGenerationParameters: parameters)
+        ConverseParameters(textGenerationParameters: parameters, maxReasoningTokens: maxReasoningTokens)
     }
 
     func getTextRequestBody(

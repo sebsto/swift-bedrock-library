@@ -24,7 +24,7 @@ struct DeepSeekText: TextModality, ConverseModality, ConverseStreamingModality {
 
     init(
         parameters: TextGenerationParameters,
-        features: [ConverseFeature] = [.textGeneration, .systemPrompts, .document]
+        features: [ConverseFeature] = [.textGeneration, .systemPrompts, .document, .reasoning]
     ) {
         self.parameters = parameters
         self.converseFeatures = features
