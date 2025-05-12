@@ -66,7 +66,8 @@ public struct ConverseRequestBuilder {
             .withSystemPrompts(builder.systemPrompts)
             .withTools(builder.tools)
         if builder.enableReasoning {
-            self = try newBuilder
+            self =
+                try newBuilder
                 .withReasoning()
                 .withMaxReasoningTokens(newBuilder.maxReasoningTokens)
         } else {
@@ -382,7 +383,9 @@ public struct ConverseRequestBuilder {
     public func withMaxReasoningTokens(_ maxReasoningTokens: Int?) throws -> ConverseRequestBuilder {
         try validateFeature(.reasoning)
         guard enableReasoning else {
-            throw BedrockServiceError.ConverseRequestBuilder("Cannot set max reasoning tokens when reasoning is not enabled.")
+            throw BedrockServiceError.ConverseRequestBuilder(
+                "Cannot set max reasoning tokens when reasoning is not enabled."
+            )
         }
         var copy = self
         if let maxReasoningTokens {
