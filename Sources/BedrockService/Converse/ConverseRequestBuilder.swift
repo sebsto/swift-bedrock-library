@@ -404,7 +404,12 @@ public struct ConverseRequestBuilder {
         return copy
     }
 
-    /// convenience method
+    /// convenience method to enable reasoning and set maxReasoningTokens at the same time
+    public func withReasoning(maxReasoningTokens: Int) throws -> ConverseRequestBuilder {
+        try self.withReasoning(true).withMaxReasoningTokens(maxReasoningTokens)
+    }
+    
+    /// private convenience method
     private func withReasoning(enabled: Bool, maxReasoningTokens: Int? = nil) throws -> ConverseRequestBuilder {
         let copy = self
         if let maxReasoningTokens {
