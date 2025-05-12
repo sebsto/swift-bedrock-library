@@ -45,6 +45,7 @@ extension BedrockService {
         stopSequences: [String]? = nil,
         systemPrompts: [String]? = nil,
         tools: [Tool]? = nil,
+        enableReasoning: Bool? = false,
         maxReasoningTokens: Int? = nil
     ) async throws -> Message {
         do {
