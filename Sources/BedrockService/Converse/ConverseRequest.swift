@@ -69,11 +69,11 @@ public struct ConverseRequest {
     }
 
     func getAdditionalModelRequestFields() throws -> Smithy.Document? {
-        if model == .claudev3_7_sonnet, enableReasoning {
+        if model == .claudev3_7_sonnet, enableReasoning, let maxReasoningTokens {
             let reasoningConfigJSON = JSON([
                 "thinking": [
                     "type": "enabled",
-                    "budget_tokens": maxReasoningTokens ?? 2000,
+                    "budget_tokens": maxReasoningTokens,
                 ]
             ])
             return try reasoningConfigJSON.toDocument()

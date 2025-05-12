@@ -21,7 +21,7 @@ import Foundation
 // reasoning content block. However, DeepSeek does not tolerate reasoning
 // content blocks in the conversation history.
 // This library chooses not to manipulate the conversation history.
-// Due to this difference, no more then one question could be sent to DeepSeek
+// Due to this difference, no more than one question could be sent to DeepSeek
 // per conversation before an error would be thrown saying: "User messages cannot
 // contain reasoning content. Please remove the reasoning content and try again."
 // To avoid this problem altogether, the ConverseModality was taken out.
