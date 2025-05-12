@@ -34,6 +34,8 @@ public struct ConverseRequestBuilder {
     public private(set) var topP: Double?
     public private(set) var stopSequences: [String]?
     public private(set) var systemPrompts: [String]?
+    public private(set) var maxReasoningTokens: Int?
+    public private(set) var enableReasoning: Bool = false
 
     // MARK - Initializers
 
@@ -61,6 +63,7 @@ public struct ConverseRequestBuilder {
             .withStopSequences(builder.stopSequences)
             .withSystemPrompts(builder.systemPrompts)
             .withTools(builder.tools)
+            .withReasoning(enabled: builder.enableReasoning, maxReasoningTokens: builder.maxReasoningTokens)
     }
 
     /// Creates a ConverseRequestBuilder object based of a ConverseRequestBuilder object
@@ -358,6 +361,62 @@ public struct ConverseRequestBuilder {
             systemPrompts = [systemPrompt]
         }
         return try self.withSystemPrompts(systemPrompts)
+    }
+
+    public func withReasoning(_ maxReasoningTokens: Int? = nil) throws -> ConverseRequestBuilder {
+        var copy = self
+
+        try validateFeature(.reasoning)
+        guard let maxReasoningTokens = maxReasoningTokens ?? parameters.maxReasoningTokens.defaultValue else {
+            throw BedrockServiceError.ConverseRequestBuilder("Cannot set reasoning without maxReasoningTokens")
+        }
+        try copy.parameters.maxReasoningTokens.validateValue(maxReasoningTokens)
+        copy.maxReasoningTokens = maxReasoningTokens
+
+        return copy
+    }
+
+    public func withReasoning(_ enabled: Bool = true) throws -> ConverseRequestBuilder {
+        var copy = self
+        if enabled {
+            try validateFeature(.reasoning)
+            copy.enableReasoning = true
+            copy.maxReasoningTokens = self.maxReasoningTokens ?? parameters.maxReasoningTokens.defaultValue
+        } else {
+            copy.enableReasoning = false
+            copy.maxReasoningTokens = nil
+        }
+        return copy
+    }
+
+    public func withMaxReasoningTokens(_ maxReasoningTokens: Int?) throws -> ConverseRequestBuilder {
+        var copy = self
+        if let maxReasoningTokens {
+            try validateFeature(.reasoning)
+            guard enableReasoning else {
+                throw BedrockServiceError.ConverseRequestBuilder(
+                    "Cannot set maxReasoningTokens when reasoning is disabled"
+                )
+            }
+            try copy.parameters.maxReasoningTokens.validateValue(maxReasoningTokens)
+            copy.maxReasoningTokens = maxReasoningTokens
+        }
+        return copy
+    }
+
+    /// convenience method to enable reasoning and set maxReasoningTokens at the same time
+    public func withReasoning(maxReasoningTokens: Int) throws -> ConverseRequestBuilder {
+        try self.withReasoning(true).withMaxReasoningTokens(maxReasoningTokens)
+    }
+
+    /// private convenience method
+    private func withReasoning(enabled: Bool, maxReasoningTokens: Int? = nil) throws -> ConverseRequestBuilder {
+        let copy = self
+        if let maxReasoningTokens {
+            return try copy.withReasoning(true)
+                .withMaxReasoningTokens(maxReasoningTokens)
+        }
+        return try copy.withReasoning(enabled)
     }
 
     // MARK - public methods

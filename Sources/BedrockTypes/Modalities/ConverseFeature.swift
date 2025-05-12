@@ -22,4 +22,5 @@ public enum ConverseFeature: String, Codable, Sendable {
     case document = "document"
     case toolUse = "tool-use"
     case systemPrompts = "system-prompts"
+    case reasoning = "reasoning"
 }

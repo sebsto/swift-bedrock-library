@@ -44,7 +44,9 @@ extension BedrockService {
         topP: Double? = nil,
         stopSequences: [String]? = nil,
         systemPrompts: [String]? = nil,
-        tools: [Tool]? = nil
+        tools: [Tool]? = nil,
+        enableReasoning: Bool? = false,
+        maxReasoningTokens: Int? = nil
     ) async throws -> Message {
         do {
             let modality = try model.getConverseModality()
@@ -78,7 +80,8 @@ extension BedrockService {
                 topP: topP,
                 stopSequences: stopSequences,
                 systemPrompts: systemPrompts,
-                tools: tools
+                tools: tools,
+                maxReasoningTokens: maxReasoningTokens
             )
 
             logger.trace("Creating ConverseInput")
@@ -120,7 +123,8 @@ extension BedrockService {
                 topP: builder.topP,
                 stopSequences: builder.stopSequences,
                 systemPrompts: builder.systemPrompts,
-                tools: builder.tools
+                tools: builder.tools,
+                maxReasoningTokens: builder.maxReasoningTokens
             )
             history.append(assistantMessage)
             logger.trace(

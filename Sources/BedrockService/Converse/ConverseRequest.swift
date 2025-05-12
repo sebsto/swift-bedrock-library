@@ -16,6 +16,7 @@
 @preconcurrency import AWSBedrockRuntime
 import BedrockTypes
 import Foundation
+import Smithy
 
 public struct ConverseRequest {
     let model: BedrockModel
@@ -23,6 +24,7 @@ public struct ConverseRequest {
     let inferenceConfig: InferenceConfig?
     let toolConfig: ToolConfig?
     let systemPrompts: [String]?
+    let maxReasoningTokens: Int?
 
     init(
         model: BedrockModel,
@@ -32,7 +34,8 @@ public struct ConverseRequest {
         topP: Double?,
         stopSequences: [String]?,
         systemPrompts: [String]?,
-        tools: [Tool]?
+        tools: [Tool]?,
+        maxReasoningTokens: Int?
     ) {
         self.messages = messages
         self.model = model
@@ -43,6 +46,7 @@ public struct ConverseRequest {
             stopSequences: stopSequences
         )
         self.systemPrompts = systemPrompts
+        self.maxReasoningTokens = maxReasoningTokens
         if let tools {
             self.toolConfig = ToolConfig(tools: tools)
         } else {
@@ -52,12 +56,26 @@ public struct ConverseRequest {
 
     func getConverseInput() throws -> ConverseInput {
         ConverseInput(
+            additionalModelRequestFields: try getAdditionalModelRequestFields(),
             inferenceConfig: inferenceConfig?.getSDKInferenceConfig(),
             messages: try getSDKMessages(),
             modelId: model.id,
             system: getSDKSystemPrompts(),
             toolConfig: try toolConfig?.getSDKToolConfig()
         )
+    }
+
+    func getAdditionalModelRequestFields() throws -> Smithy.Document? {
+        if model == .claudev3_7_sonnet, let maxReasoningTokens {
+            let reasoningConfigJSON = JSON([
+                "thinking": [
+                    "type": "enabled",
+                    "budget_tokens": maxReasoningTokens,
+                ]
+            ])
+            return try reasoningConfigJSON.toDocument()
+        }
+        return nil
     }
 
     func getSDKMessages() throws -> [BedrockRuntimeClientTypes.Message] {

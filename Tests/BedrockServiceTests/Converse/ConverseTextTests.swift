@@ -83,12 +83,14 @@ extension BedrockServiceTests {
         #expect(builder.topP == 0.5)
         #expect(builder.stopSequences == ["\n\nHuman:"])
         #expect(builder.systemPrompts == ["You are a helpful assistant."])
+        #expect(builder.maxReasoningTokens == nil)
 
         var reply: ConverseReply = try await bedrock.converse(with: builder)
         #expect(reply.textReply == "Your prompt was: First prompt")
 
         builder = try ConverseRequestBuilder(from: builder, with: reply)
             .withPrompt("Second prompt")
+
         #expect(builder.prompt == "Second prompt")
         #expect(builder.maxTokens == 100)
         #expect(builder.temperature == 0.5)
@@ -96,6 +98,7 @@ extension BedrockServiceTests {
         #expect(builder.stopSequences == ["\n\nHuman:"])
         #expect(builder.systemPrompts == ["You are a helpful assistant."])
         #expect(builder.history.count == 2)
+        #expect(builder.maxReasoningTokens == nil)
 
         reply = try await bedrock.converse(with: builder)
         #expect(reply.textReply == "Your prompt was: Second prompt")
@@ -110,6 +113,7 @@ extension BedrockServiceTests {
         #expect(builder.stopSequences == ["\n\nHuman:"])
         #expect(builder.systemPrompts == ["You are a helpful assistant."])
         #expect(builder.history.count == 4)
+        #expect(builder.maxReasoningTokens == nil)
 
         reply = try await bedrock.converse(with: builder)
         #expect(reply.textReply == "Your prompt was: Third prompt")

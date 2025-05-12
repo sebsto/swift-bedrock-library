@@ -36,11 +36,11 @@ extension BedrockServiceTests {
 
     @Test("Converse with encrypted reasoning")
     func converseEncryptedReasoning() async throws {
-        let builder = try ConverseRequestBuilder(with: .deepseek_r1_v1)
-            .withPrompt("What is this?")
+        let builder = try ConverseRequestBuilder(with: .claudev3_7_sonnet)
+            .withPrompt("encrypted")
         let reply: ConverseReply = try await bedrock.converse(with: builder)
 
-        #expect(reply.textReply == "Your prompt was: What is this?")
+        #expect(reply.textReply == "Your prompt was: encrypted")
         #expect(reply.reasoningBlock == nil)
         #expect(reply.encryptedReasoning != nil)
         #expect(reply.encryptedReasoning?.reasoning != nil)

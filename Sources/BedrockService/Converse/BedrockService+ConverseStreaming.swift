@@ -44,7 +44,9 @@ extension BedrockService {
         topP: Double? = nil,
         stopSequences: [String]? = nil,
         systemPrompts: [String]? = nil,
-        tools: [Tool]? = nil
+        tools: [Tool]? = nil,
+        enableReasoning: Bool? = false,
+        maxReasoningTokens: Int? = nil
     ) async throws -> AsyncThrowingStream<ConverseStreamElement, any Error> {
         do {
             guard model.hasConverseStreamingModality() else {
@@ -85,7 +87,8 @@ extension BedrockService {
                 topP: topP,
                 stopSequences: stopSequences,
                 systemPrompts: systemPrompts,
-                tools: tools
+                tools: tools,
+                maxReasoningTokens: maxReasoningTokens
             )
 
             logger.trace("Creating ConverseStreamingInput")
@@ -156,7 +159,8 @@ extension BedrockService {
                 topP: builder.topP,
                 stopSequences: builder.stopSequences,
                 systemPrompts: builder.systemPrompts,
-                tools: builder.tools
+                tools: builder.tools,
+                maxReasoningTokens: builder.maxReasoningTokens
             )
             return streamingResponse
         } catch {
