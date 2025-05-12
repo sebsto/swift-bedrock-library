@@ -90,7 +90,7 @@ extension BedrockServiceTests {
 
         builder = try ConverseRequestBuilder(from: builder, with: reply)
             .withPrompt("Second prompt")
-        
+
         #expect(builder.prompt == "Second prompt")
         #expect(builder.maxTokens == 100)
         #expect(builder.temperature == 0.5)
