@@ -24,7 +24,6 @@ public struct ConverseRequest {
     let inferenceConfig: InferenceConfig?
     let toolConfig: ToolConfig?
     let systemPrompts: [String]?
-    let enableReasoning: Bool
     let maxReasoningTokens: Int?
 
     init(
@@ -36,7 +35,6 @@ public struct ConverseRequest {
         stopSequences: [String]?,
         systemPrompts: [String]?,
         tools: [Tool]?,
-        enableReasoning: Bool?,
         maxReasoningTokens: Int?
     ) {
         self.messages = messages
@@ -48,7 +46,6 @@ public struct ConverseRequest {
             stopSequences: stopSequences
         )
         self.systemPrompts = systemPrompts
-        self.enableReasoning = enableReasoning ?? false
         self.maxReasoningTokens = maxReasoningTokens
         if let tools {
             self.toolConfig = ToolConfig(tools: tools)
@@ -69,7 +66,7 @@ public struct ConverseRequest {
     }
 
     func getAdditionalModelRequestFields() throws -> Smithy.Document? {
-        if model == .claudev3_7_sonnet, enableReasoning, let maxReasoningTokens {
+        if model == .claudev3_7_sonnet, let maxReasoningTokens {
             let reasoningConfigJSON = JSON([
                 "thinking": [
                     "type": "enabled",

@@ -88,7 +88,6 @@ extension BedrockService {
                 stopSequences: stopSequences,
                 systemPrompts: systemPrompts,
                 tools: tools,
-                enableReasoning: enableReasoning,
                 maxReasoningTokens: maxReasoningTokens
             )
 
@@ -161,7 +160,6 @@ extension BedrockService {
                 stopSequences: builder.stopSequences,
                 systemPrompts: builder.systemPrompts,
                 tools: builder.tools,
-                enableReasoning: builder.enableReasoning,
                 maxReasoningTokens: builder.maxReasoningTokens
             )
             return streamingResponse

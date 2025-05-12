@@ -45,7 +45,6 @@ extension BedrockService {
         stopSequences: [String]? = nil,
         systemPrompts: [String]? = nil,
         tools: [Tool]? = nil,
-        enableReasoning: Bool? = false,
         maxReasoningTokens: Int? = nil
     ) async throws -> Message {
         do {
@@ -81,7 +80,6 @@ extension BedrockService {
                 stopSequences: stopSequences,
                 systemPrompts: systemPrompts,
                 tools: tools,
-                enableReasoning: enableReasoning,
                 maxReasoningTokens: maxReasoningTokens
             )
 
@@ -125,7 +123,6 @@ extension BedrockService {
                 stopSequences: builder.stopSequences,
                 systemPrompts: builder.systemPrompts,
                 tools: builder.tools,
-                enableReasoning: builder.enableReasoning,
                 maxReasoningTokens: builder.maxReasoningTokens
             )
             history.append(assistantMessage)
