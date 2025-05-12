@@ -372,14 +372,6 @@ public struct ConverseRequestBuilder {
         return try self.withSystemPrompts(systemPrompts)
     }
 
-    public func withReasoning() throws -> ConverseRequestBuilder {
-        try validateFeature(.reasoning)
-        var copy = self
-        copy.enableReasoning = true
-        copy.maxReasoningTokens = parameters.maxReasoningTokens.defaultValue
-        return copy
-    }
-
     public func withMaxReasoningTokens(_ maxReasoningTokens: Int?) throws -> ConverseRequestBuilder {
         try validateFeature(.reasoning)
         guard enableReasoning else {
@@ -391,6 +383,16 @@ public struct ConverseRequestBuilder {
         if let maxReasoningTokens {
             try copy.parameters.maxReasoningTokens.validateValue(maxReasoningTokens)
             copy.maxReasoningTokens = maxReasoningTokens
+        }
+        return copy
+    }
+
+    public func withReasoning() throws -> ConverseRequestBuilder {
+        try validateFeature(.reasoning)
+        var copy = self
+        copy.enableReasoning = true
+        if maxReasoningTokens == nil {
+            copy.maxReasoningTokens = parameters.maxReasoningTokens.defaultValue
         }
         return copy
     }

@@ -30,7 +30,7 @@ struct AnthropicText: TextModality, ConverseModality, ConverseStreamingModality 
     ) {
         self.parameters = parameters
         self.converseFeatures = features
-        self.converseParameters = ConverseParameters(textGenerationParameters: parameters)
+        self.converseParameters = ConverseParameters(textGenerationParameters: parameters, maxReasoningTokens: maxReasoningTokens)
         self.maxReasoningTokens = maxReasoningTokens
     }
 

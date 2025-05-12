@@ -48,7 +48,7 @@ public struct ConverseParameters: Parameters {
         self.topP = textGenerationParameters.topP
         self.prompt = textGenerationParameters.prompt
         self.stopSequences = textGenerationParameters.stopSequences
-        self.maxReasoningTokens = .notSupported(.maxReasoningTokens)
+        self.maxReasoningTokens = maxReasoningTokens
     }
 
     package func validate(
