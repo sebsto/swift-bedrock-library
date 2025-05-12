@@ -193,26 +193,29 @@ public struct MockBedrockRuntimeClient: BedrockRuntimeClientProtocol {
             throw AWSBedrockRuntime.ValidationException(message: "Missing required modelId")
         }
         // Only for testing purposes: Claude 3.7 will always add a reasoning block,
-        // while Deepseek will always return an encrypted reasoning block
+        // unless prompt "encrypted" is used
         if modelId == "us.anthropic.claude-3-7-sonnet-20250219-v1:0" {
-            replyContent.append(
-                .reasoningcontent(
-                    .reasoningtext(
-                        BedrockRuntimeClientTypes.ReasoningTextBlock(
-                            signature: "reasoning signature",
-                            text: "reasoning text"
+            if case .text(let prompt) = content, prompt == "encrypted" {
+                let data: Data = try JSONEncoder().encode(["redacted": "data"])
+                replyContent.append(
+                    .reasoningcontent(
+                        .redactedcontent(data)
+                    )
+                )
+            } else {
+                replyContent.append(
+                    .reasoningcontent(
+                        .reasoningtext(
+                            BedrockRuntimeClientTypes.ReasoningTextBlock(
+                                signature: "reasoning signature",
+                                text: "reasoning text"
+                            )
                         )
                     )
                 )
-            )
-        } else if modelId == "us.deepseek.r1-v1:0" {
-            let data: Data = try JSONEncoder().encode(["redacted": "data"])
-            replyContent.append(
-                .reasoningcontent(
-                    .redactedcontent(data)
-                )
-            )
+            }
         }
+
         switch content {
         case .text(let prompt):
             if prompt == "Use tool", let _ = input.toolConfig?.tools {

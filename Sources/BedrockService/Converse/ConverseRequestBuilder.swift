@@ -371,9 +371,6 @@ public struct ConverseRequestBuilder {
     public func withoutReasoning() throws -> ConverseRequestBuilder {
         try validateFeature(.reasoning)
         var copy = self
-        guard model != .deepseek_r1_v1 else {
-            throw BedrockServiceError.notSupported("Cannot disable reasoning on DeepSeek R1 V1")
-        }
         copy.enableReasoning = false
         return copy
     }
