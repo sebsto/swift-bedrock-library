@@ -26,118 +26,94 @@ extension BedrockServiceTests {
     func streamingConverseReasoning() async throws {
 
         // First call, with reasoning enabled
-
+        var prompt = "What is this?"
         var builder = try ConverseRequestBuilder(with: .claudev3_7_sonnet)
-            .withPrompt("What is this?")
+            .withPrompt(prompt)
             .withReasoning()
 
-        #expect(builder.prompt == "What is this?")
+        #expect(builder.prompt == prompt)
         #expect(builder.enableReasoning == true)
         #expect(builder.maxReasoningTokens == 4096)
+        #expect(builder.history.count == 0)
 
         var stream: AsyncThrowingStream<ConverseStreamElement, Error> = try await bedrock.converse(with: builder)
+        var message: Message = try await validateStream(stream, elementsCount: 6)
 
-        // Collect all the stream elements
-        var streamElements: [ConverseStreamElement] = []
-        for try await element in stream {
-            streamElements.append(element)
-        }
-
-        // Verify the stream elements
-        #expect(streamElements.count == 6)
-
-        var message: Message = Message("")
-        if case .messageComplete(let msg) = streamElements.last {
-            message = msg
-        } else {
-            Issue.record("Expected message")
-        }
-
-        #expect(message.content.count == 1)
-        #expect(message.role == .assistant)
-
-        if case .reasoning(let reasoning) = message.content.first {
-            #expect(reasoning.reasoning == "reasoning text")
-        }
-        if case .text(let text) = message.content.last {
-            #expect(text == "Hello, your prompt was: What is this?")
-        }
+        try checkReasoningContent(message)
+        try checkTextContent(message, prompt: prompt)
 
         // Second call, still with reasoning enabled
-
+        prompt = "Second prompt"
         builder = try ConverseRequestBuilder(from: builder, with: message)
-            .withPrompt("Second prompt")
+            .withPrompt(prompt)
 
-        #expect(builder.prompt == "Second prompt")
+        #expect(builder.prompt == prompt)
         #expect(builder.enableReasoning == true)
         #expect(builder.maxReasoningTokens == 4096)
         #expect(builder.history.count == 2)
 
         stream = try await bedrock.converse(with: builder)
+        message = try await validateStream(stream, elementsCount: 6)
 
-        // Collect all the stream elements
-        streamElements = []
-        for try await element in stream {
-            streamElements.append(element)
-        }
-
-        // Verify the stream elements
-        #expect(streamElements.count == 6)
-
-        message = Message("")
-        if case .messageComplete(let msg) = streamElements.last {
-            message = msg
-        } else {
-            Issue.record("Expected message")
-        }
-
-        #expect(message.content.count == 1)
-        #expect(message.role == .assistant)
-
-        if case .reasoning(let reasoning) = message.content.first {
-            #expect(reasoning.reasoning == "reasoning text")
-        }
-        if case .text(let text) = message.content.last {
-            #expect(text == "Hello, your prompt was: Second prompt")
-        }
+        try checkReasoningContent(message)
+        try checkTextContent(message, prompt: prompt)
 
         // Third call, without reasoning enabled
-
+        prompt = "Third prompt"
         builder = try ConverseRequestBuilder(from: builder, with: message)
-            .withPrompt("Third prompt")
+            .withPrompt(prompt)
             .withReasoning(false)
 
-        #expect(builder.prompt == "Third prompt")
+        #expect(builder.prompt == prompt)
         #expect(builder.enableReasoning == false)
         #expect(builder.maxReasoningTokens == nil)
         #expect(builder.history.count == 4)
 
         stream = try await bedrock.converse(with: builder)
+        message = try await validateStream(stream, elementsCount: 6, contentCount: 1)
+        try checkTextContent(message, prompt: prompt)
+        try checkReasoningContent(message, hasReasoningContent: false)
+    }
 
-        // Collect all the stream elements
-        streamElements = []
+    // MARK - helper functions
+
+    func validateStream(
+        _ stream: AsyncThrowingStream<ConverseStreamElement, Error>,
+        elementsCount: Int,
+        contentCount: Int = 1
+    ) async throws -> Message {
+        var streamElements: [ConverseStreamElement] = []
         for try await element in stream {
             streamElements.append(element)
         }
 
-        // Verify the stream elements
-        #expect(streamElements.count == 6)
+        #expect(streamElements.count == elementsCount)
 
-        message = Message("")
-        if case .messageComplete(let msg) = streamElements.last {
-            message = msg
+        if case .messageComplete(let message) = streamElements.last {
+            #expect(message.role == .assistant)
+            #expect(message.content.count == contentCount)
+            return message
         } else {
             Issue.record("Expected message")
+            return Message("WRONG")
         }
+    }
 
-        #expect(message.content.count == 1)
-        #expect(message.role == .assistant)
-
-        if case .reasoning = message.content.first {
-            Issue.record("Expected no reasoning text")
-        }
+    func checkTextContent(_ message: Message, prompt: String) throws {
         if case .text(let text) = message.content.last {
-            #expect(text == "Hello, your prompt was: Third prompt")
+            #expect(text == "Hello, your prompt was: \(prompt)")
+        }
+    }
+
+    func checkReasoningContent(_ message: Message, hasReasoningContent: Bool = true) throws {
+        if hasReasoningContent {
+            if case .reasoning(let reasoning) = message.content.first {
+                #expect(reasoning.reasoning == "reasoning text")
+            }
+        } else {
+            if case .reasoning = message.content.first {
+                Issue.record("Expected no reasoning text")
+            }
         }
     }
 }
