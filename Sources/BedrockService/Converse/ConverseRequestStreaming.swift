@@ -20,6 +20,7 @@ public typealias ConverseStreamingRequest = ConverseRequest
 extension ConverseStreamingRequest {
     func getConverseStreamingInput() throws -> ConverseStreamInput {
         ConverseStreamInput(
+            additionalModelRequestFields: try getAdditionalModelRequestFields(),
             inferenceConfig: inferenceConfig?.getSDKInferenceConfig(),
             messages: try getSDKMessages(),
             modelId: model.id,
