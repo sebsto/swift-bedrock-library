@@ -64,20 +64,6 @@ public struct Parameter<T: Sendable & Hashable & Equatable & Numeric & Comparabl
     }
 }
 
-public enum ParameterName: Sendable {
-    case maxTokens
-    case temperature
-    case topK
-    case topP
-    case nrOfImages
-    case images
-    case similarity
-    case cfgScale
-    case seed
-    case resolution
-    case maxReasoningTokens
-}
-
 public struct PromptParams: Parameters {
     public let maxSize: Int?
 

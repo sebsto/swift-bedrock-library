@@ -43,7 +43,7 @@ public enum BedrockServiceError: Error {
         case .invalidParameter(let parameterName, let message):
             return "Invalid parameter \(parameterName): \(message)"
         case .invalidModality(let model, let modality, let message):
-            return "Invalid modality \(modality) for model \(model.rawValue): \(message)"
+            return "Invalid modality \(modality.getName()) for model \(model.name): \(message)"
         case .invalidPrompt(let message):
             return "Invalid prompt with value \(message)"
         case .invalid(let message):
