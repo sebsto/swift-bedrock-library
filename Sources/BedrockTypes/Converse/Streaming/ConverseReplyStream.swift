@@ -50,10 +50,8 @@ package struct ConverseReplyStream {
                                     "No contentBlockIndex found in ContentBlockDelta"
                                 )
                             }
-                            guard indexes.contains(index) else {
-                                throw BedrockServiceError.streamingError(
-                                    "No matching index from ContentBlockStart found for index from ContentBlockDelta"
-                                )
+                            if !indexes.contains(index) {
+                                indexes.append(index)
                             }
                             guard let delta = event.delta else {
                                 throw BedrockServiceError.invalidSDKType("No delta found in ContentBlockDelta")
@@ -74,7 +72,7 @@ package struct ConverseReplyStream {
                             }
                             guard indexes.contains(completedIndex) else {
                                 throw BedrockServiceError.streamingError(
-                                    "No matching index from ContentBlockStart found for index from ContentBlockDelta"
+                                    "No matching index from ContentBlockStart or ContentBlockDelta found for index from ContentBlockStop"
                                 )
                             }
                             let contentBlock = try Content.getFromSegements(with: completedIndex, from: contentParts)
@@ -87,7 +85,7 @@ package struct ConverseReplyStream {
                             continuation.finish()
 
                         default:
-                            print("Unexpected delta type")  // FIXME
+                            break
                         }
                     }
                     // when we reach here, the stream is finished or the Task is cancelled

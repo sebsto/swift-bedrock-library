@@ -14,18 +14,21 @@
 //===----------------------------------------------------------------------===//
 
 @preconcurrency import AWSBedrockRuntime
-import BedrockTypes
 
-public typealias ConverseStreamingRequest = ConverseRequest
-extension ConverseStreamingRequest {
-    func getConverseStreamingInput() throws -> ConverseStreamInput {
-        ConverseStreamInput(
-            additionalModelRequestFields: try getAdditionalModelRequestFields(),
-            inferenceConfig: inferenceConfig?.getSDKInferenceConfig(),
-            messages: try getSDKMessages(),
-            modelId: model.id,
-            system: getSDKSystemPrompts(),
-            toolConfig: try toolConfig?.getSDKToolConfig()
-        )
+package struct ToolUseStart: Sendable {
+    var index: Int
+    var name: String
+    var toolUseId: String
+
+    init(index: Int, sdkToolUseStart: BedrockRuntimeClientTypes.ToolUseBlockStart) throws {
+        guard let name = sdkToolUseStart.name else {
+            throw BedrockServiceError.invalidSDKType("No name found in ToolUseBlockStart")
+        }
+        guard let toolUseId = sdkToolUseStart.toolUseId else {
+            throw BedrockServiceError.invalidSDKType("No toolUseId found in ToolUseBlockStart")
+        }
+        self.index = index
+        self.name = name
+        self.toolUseId = toolUseId
     }
 }

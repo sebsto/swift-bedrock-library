@@ -363,19 +363,6 @@ public struct ConverseRequestBuilder {
         return try self.withSystemPrompts(systemPrompts)
     }
 
-    public func withReasoning(_ maxReasoningTokens: Int? = nil) throws -> ConverseRequestBuilder {
-        var copy = self
-
-        try validateFeature(.reasoning)
-        guard let maxReasoningTokens = maxReasoningTokens ?? parameters.maxReasoningTokens.defaultValue else {
-            throw BedrockServiceError.ConverseRequestBuilder("Cannot set reasoning without maxReasoningTokens")
-        }
-        try copy.parameters.maxReasoningTokens.validateValue(maxReasoningTokens)
-        copy.maxReasoningTokens = maxReasoningTokens
-
-        return copy
-    }
-
     public func withReasoning(_ enabled: Bool = true) throws -> ConverseRequestBuilder {
         var copy = self
         if enabled {
