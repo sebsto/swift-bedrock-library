@@ -218,7 +218,9 @@ public struct MockBedrockRuntimeClient: BedrockRuntimeClientProtocol {
             continuation.yield(.contentblockstart(contentBlockStartEvent))
 
             // Content block delta (reasoning - first part)
-            let contentBlockDeltaReasoning1 = BedrockRuntimeClientTypes.ContentBlockDelta.reasoningcontent(BedrockRuntimeClientTypes.ReasoningContentBlockDelta.text("reasoning "))
+            let contentBlockDeltaReasoning1 = BedrockRuntimeClientTypes.ContentBlockDelta.reasoningcontent(
+                BedrockRuntimeClientTypes.ReasoningContentBlockDelta.text("reasoning ")
+            )
             let contentBlockDeltaReasoningEvent1 = BedrockRuntimeClientTypes.ContentBlockDeltaEvent(
                 contentBlockIndex: 0,
                 delta: contentBlockDeltaReasoning1
@@ -226,7 +228,9 @@ public struct MockBedrockRuntimeClient: BedrockRuntimeClientProtocol {
             continuation.yield(.contentblockdelta(contentBlockDeltaReasoningEvent1))
 
             // Content block delta (reasoning - second part)
-            let contentBlockDeltaReasoning2 = BedrockRuntimeClientTypes.ContentBlockDelta.reasoningcontent(BedrockRuntimeClientTypes.ReasoningContentBlockDelta.text("text "))
+            let contentBlockDeltaReasoning2 = BedrockRuntimeClientTypes.ContentBlockDelta.reasoningcontent(
+                BedrockRuntimeClientTypes.ReasoningContentBlockDelta.text("text ")
+            )
             let contentBlockDeltaReasoningEvent2 = BedrockRuntimeClientTypes.ContentBlockDeltaEvent(
                 contentBlockIndex: 0,
                 delta: contentBlockDeltaReasoning2
