@@ -14,10 +14,12 @@
 //===----------------------------------------------------------------------===//
 
 @preconcurrency import AWSBedrockRuntime
+import Foundation
 
 public enum ContentSegment: Sendable {
     case text(Int, String)
-    // case reasoning(Int, ReasoningBlock)
+    case reasoning(Int, String, String)  // index, text, signature
+    case encryptedReasoning(Int, Data)
     case toolUse(Int, ToolUseBlock)
 
     public var index: Int {
@@ -26,8 +28,28 @@ public enum ContentSegment: Sendable {
             return index
         case .toolUse(let index, _):
             return index
-        // case .reasoning(let index, _):
-        //     return index
+        case .reasoning(let index, _, _):
+            return index
+        case .encryptedReasoning(let index, _):
+            return index
+        }
+    }
+
+    public var reasoningText: String? {
+        switch self {
+        case .reasoning(_, let text, _):
+            return text
+        default:
+            return nil
+        }
+    }
+
+    public var reasoningSignature: String? {
+        switch self {
+        case .reasoning(_, _, let signature):
+            return signature
+        default:
+            return nil
         }
     }
 
@@ -59,8 +81,19 @@ public enum ContentSegment: Sendable {
                     input: JSON(input)
                 )
             )
-        // case .reasoningcontent(let sdkReasoningBlock):
-        //     ...
+        case .reasoningcontent(let sdkReasoningBlock):
+            switch sdkReasoningBlock {
+            case .text(let reasoningText):
+                self = .reasoning(index, reasoningText, "")
+            case .signature(let reasoningSignature):
+                self = .reasoning(index, "", reasoningSignature)
+            case .redactedcontent(let data):
+                self = .encryptedReasoning(index, data)
+            default:
+                throw BedrockServiceError.notImplemented(
+                    "ReasoningBlockContent \(sdkReasoningBlock) is not implemented by BedrockService or not implemented by BedrockRuntimeClientTypes in case of `sdkUnknown`"
+                )
+            }
         default:
             throw BedrockServiceError.notImplemented(
                 "ContentBlockDelta \(sdkContentBlockDelta) is not implemented by BedrockService or not implemented by BedrockRuntimeClientTypes in case of `sdkUnknown`"
@@ -87,57 +120,22 @@ public enum ContentSegment: Sendable {
             return false
         }
     }
-}
 
-extension Content {
-    static func getFromSegements(with index: Int, from segments: [ContentSegment]) throws -> Content {
-        var text = ""
-        var toolUse: ToolUseBlock? = nil
-        for segment in segments {
-            if segment.index == index {
-                switch segment {
-                case .text(_, let textPart):
-                    guard toolUse == nil else {
-                        throw BedrockServiceError.streamingError(
-                            "A text segment was found in a contentBlock that already contained toolUse segments"
-                        )
-                    }
-                    text += textPart
-                case .toolUse(_, let toolUseBlock):
-                    guard text == "" else {
-                        throw BedrockServiceError.streamingError(
-                            "A toolUse segment was found in a contentBlock that already contained text segments"
-                        )
-                    }
-                    toolUse = toolUseBlock
-                    break  // CHECKME: are we sure only one input is send here?
-                }
-            }
-        }
-        if text != "" {
-            return .text(text)
-        } else if let toolUse {
-            return .toolUse(toolUse)
-        } else {
-            throw BedrockServiceError.streamingError("No content found in ContentSegments to create Content")
+    public func hasReasoning() -> Bool {
+        switch self {
+        case .reasoning:
+            return true
+        default:
+            return false
         }
     }
-}
 
-package struct ToolUseStart: Sendable {
-    var index: Int
-    var name: String
-    var toolUseId: String
-
-    init(index: Int, sdkToolUseStart: BedrockRuntimeClientTypes.ToolUseBlockStart) throws {
-        guard let name = sdkToolUseStart.name else {
-            throw BedrockServiceError.invalidSDKType("No name found in ToolUseBlockStart")
+    public func hasEncryptedReasoning() -> Bool {
+        switch self {
+        case .encryptedReasoning:
+            return true
+        default:
+            return false
         }
-        guard let toolUseId = sdkToolUseStart.toolUseId else {
-            throw BedrockServiceError.invalidSDKType("No toolUseId found in ToolUseBlockStart")
-        }
-        self.index = index
-        self.name = name
-        self.toolUseId = toolUseId
     }
 }

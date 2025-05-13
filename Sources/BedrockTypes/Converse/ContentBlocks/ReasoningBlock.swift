@@ -36,6 +36,15 @@ public struct Reasoning: Codable, CustomStringConvertible, Sendable {
     public var signature: String?
     public var reasoning: String
 
+    public init(_ reasoning: String, signature: String? = nil) {
+        self.reasoning = reasoning
+        if signature == "" {
+            self.signature = nil
+        } else {
+            self.signature = signature
+        }
+    }
+
     public init(from sdkReasoningText: BedrockRuntimeClientTypes.ReasoningTextBlock) throws {
         guard let text = sdkReasoningText.text else {
             throw BedrockServiceError.invalidSDKType("Text is missing from ReasoningTextBlock")

@@ -177,7 +177,7 @@ extension BedrockModel {
                 maxPromptSize: 200_000
             ),
             features: [.textGeneration, .systemPrompts, .document, .vision, .toolUse, .reasoning],
-            maxReasoningTokens: Parameter(.maxReasoningTokens, minValue: 1_024, maxValue: 8_191, defaultValue: 4_000)
+            maxReasoningTokens: Parameter(.maxReasoningTokens, minValue: 1_024, maxValue: 8_191, defaultValue: 4_096)
         )
     )
 }
