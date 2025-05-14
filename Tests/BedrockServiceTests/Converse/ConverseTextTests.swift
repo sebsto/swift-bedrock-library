@@ -30,7 +30,7 @@ extension BedrockServiceTests {
     func converseWithValidPrompt(prompt: String) async throws {
         let builder = try ConverseRequestBuilder(with: .nova_micro)
             .withPrompt(prompt)
-        let reply: ConverseReply = try await bedrock.converse(with: builder)
+        let reply = try await bedrock.converse(with: builder)
         #expect(reply.textReply == "Your prompt was: \(prompt)")
     }
 
@@ -42,7 +42,7 @@ extension BedrockServiceTests {
         await #expect(throws: BedrockServiceError.self) {
             let builder = try ConverseRequestBuilder(with: .nova_micro)
                 .withPrompt(prompt)
-            let _: ConverseReply = try await bedrock.converse(with: builder)
+            let _ = try await bedrock.converse(with: builder)
         }
     }
 
@@ -55,7 +55,7 @@ extension BedrockServiceTests {
         var builder = try ConverseRequestBuilder(with: .nova_micro)
             .withPrompt(prompt)
         #expect(builder.prompt == prompt)
-        var reply: ConverseReply = try await bedrock.converse(with: builder)
+        var reply = try await bedrock.converse(with: builder)
         #expect(reply.textReply == "Your prompt was: \(prompt)")
 
         builder = try ConverseRequestBuilder(from: builder, with: reply)
@@ -85,7 +85,7 @@ extension BedrockServiceTests {
         #expect(builder.systemPrompts == ["You are a helpful assistant."])
         #expect(builder.maxReasoningTokens == nil)
 
-        var reply: ConverseReply = try await bedrock.converse(with: builder)
+        var reply = try await bedrock.converse(with: builder)
         #expect(reply.textReply == "Your prompt was: First prompt")
 
         builder = try ConverseRequestBuilder(from: builder, with: reply)
@@ -129,7 +129,7 @@ extension BedrockServiceTests {
         let builder = try ConverseRequestBuilder(with: .nova_micro)
             .withPrompt(prompt)
             .withTemperature(temperature)
-        let reply: ConverseReply = try await bedrock.converse(with: builder)
+        let reply = try await bedrock.converse(with: builder)
         #expect(reply.textReply == "Your prompt was: \(prompt)")
     }
 
@@ -143,7 +143,7 @@ extension BedrockServiceTests {
             let builder = try ConverseRequestBuilder(with: .nova_micro)
                 .withPrompt(prompt)
                 .withTemperature(temperature)
-            let _: ConverseReply = try await bedrock.converse(with: builder)
+            let _ = try await bedrock.converse(with: builder)
         }
     }
 
@@ -157,7 +157,7 @@ extension BedrockServiceTests {
         let builder = try ConverseRequestBuilder(with: .nova_micro)
             .withPrompt(prompt)
             .withMaxTokens(maxTokens)
-        let reply: ConverseReply = try await bedrock.converse(with: builder)
+        let reply = try await bedrock.converse(with: builder)
         #expect(reply.textReply == "Your prompt was: \(prompt)")
     }
 
@@ -171,7 +171,7 @@ extension BedrockServiceTests {
             let builder = try ConverseRequestBuilder(with: .nova_micro)
                 .withPrompt(prompt)
                 .withMaxTokens(maxTokens)
-            let _: ConverseReply = try await bedrock.converse(with: builder)
+            let _ = try await bedrock.converse(with: builder)
         }
     }
 
@@ -185,7 +185,7 @@ extension BedrockServiceTests {
         let builder = try ConverseRequestBuilder(with: .nova_micro)
             .withPrompt(prompt)
             .withTopP(topP)
-        let reply: ConverseReply = try await bedrock.converse(with: builder)
+        let reply = try await bedrock.converse(with: builder)
         #expect(reply.textReply == "Your prompt was: \(prompt)")
     }
 
@@ -199,7 +199,7 @@ extension BedrockServiceTests {
             let builder = try ConverseRequestBuilder(with: .nova_micro)
                 .withPrompt(prompt)
                 .withTopP(topP)
-            let _: ConverseReply = try await bedrock.converse(with: builder)
+            let _ = try await bedrock.converse(with: builder)
         }
     }
 
@@ -213,7 +213,7 @@ extension BedrockServiceTests {
         let builder = try ConverseRequestBuilder(with: .nova_micro)
             .withPrompt(prompt)
             .withStopSequences(stopSequences)
-        let reply: ConverseReply = try await bedrock.converse(with: builder)
+        let reply = try await bedrock.converse(with: builder)
         #expect(reply.textReply == "Your prompt was: \(prompt)")
     }
 }

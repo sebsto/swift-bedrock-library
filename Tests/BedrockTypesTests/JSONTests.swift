@@ -44,15 +44,19 @@ extension BedrockTypesTests {
                 "city": JSON("Anytown"),
                 "state": JSON("CA"),
                 "zip": JSON("12345"),
+                "isSomething": JSON(true),
             ]),
         ])
         #expect(json.getValue("name") == "Jane Doe")
         #expect(json.getValue("age") == 30)
         #expect(json.getValue("isMember") == true)
         #expect(json.getValue("nonExistentKey") == nil)
-
-        let address = JSON(json.getValue("address"))
-        #expect(address.getValue("street") == "123 Main St")
+        #expect(json["address"]?.getValue("street") == "123 Main St")
+        #expect(json["address"]?.getValue("city") == "Anytown")
+        #expect(json["address"]?.getValue("state") == "CA")
+        #expect(json["address"]?.getValue("zip") == "12345")
+        #expect(json["address"]?.getValue("isSomething") == true)
+        #expect(json["address"]?.getValue("nonExistentKey") == nil)
     }
 
     @Test("JSON Subscript")
@@ -86,16 +90,12 @@ extension BedrockTypesTests {
         #expect(json["age"] == 30)
         #expect(json["isMember"] == true)
         #expect(json["nonExistentKey"] == nil)
-
-        let address = JSON(json["address"])
-        #expect(address["street"] == "123 Main St")
-        #expect(address["isSomething"] == true)
-
-        let zip: Int? = address["zip"]
-        #expect(zip == 12345)
-
-        let isSomething: Bool? = address["isSomething"]
-        #expect(isSomething == true)
+        #expect(json["address"]?["street"] == "123 Main St")
+        #expect(json["address"]?["city"] == "Anytown")
+        #expect(json["address"]?["state"] == "CA")
+        #expect(json["address"]?["zip"] == 12345)
+        #expect(json["address"]?["isSomething"] == true)
+        #expect(json["address"]?.getValue("nonExistentKey") == nil)
     }
 
     @Test("JSON String Initializer with Valid String")

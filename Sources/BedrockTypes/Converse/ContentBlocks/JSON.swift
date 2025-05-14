@@ -18,17 +18,39 @@ import Foundation
 public struct JSON: Codable, @unchecked Sendable {  // FIXME: make Sendable
     public var value: Any?
 
+    /// Returns the value inside the JSON object defined by the given key.
     public subscript<T>(key: String) -> T? {
         get {
-            getValue(key)
+            if let dictionary = value as? [String: JSON] {
+                let json: JSON? = dictionary[key]
+                let nestedValue: Any? = json?.getValue()
+                return nestedValue as? T
+            }
+            return nil
         }
     }
 
+    /// Returns the JSON object defined by the given key.
+    public subscript(key: String) -> JSON? {
+        get {
+            if let dictionary = value as? [String: JSON] {
+                return dictionary[key]
+            }
+            return nil
+        }
+    }
+
+    /// Returns the value inside the JSON object defined by the given key.
     public func getValue<T>(_ key: String) -> T? {
         if let dictionary = value as? [String: JSON] {
             return dictionary[key]?.value as? T
         }
         return nil
+    }
+
+    /// Returns the value inside the JSON object.
+    public func getValue<T>() -> T? {
+        value as? T
     }
 
     // MARK: Initializers

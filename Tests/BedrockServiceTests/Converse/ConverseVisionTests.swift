@@ -28,7 +28,7 @@ extension BedrockServiceTests {
         let builder = try ConverseRequestBuilder(with: .nova_lite)
             .withPrompt("What is this?")
             .withImage(format: .jpeg, source: bytes)
-        let reply: ConverseReply = try await bedrock.converse(with: builder)
+        let reply = try await bedrock.converse(with: builder)
         #expect(reply.textReply == "Image received")
     }
 
@@ -39,7 +39,7 @@ extension BedrockServiceTests {
         let builder = try ConverseRequestBuilder(with: .nova_lite)
             .withPrompt("What is this?")
             .withImage(image)
-        let reply: ConverseReply = try await bedrock.converse(with: builder)
+        let reply = try await bedrock.converse(with: builder)
         #expect(reply.textReply == "Image received")
     }
 
@@ -59,7 +59,7 @@ extension BedrockServiceTests {
         #expect(imageBytes == bytes)
         #expect(builder.prompt == "What is this?")
 
-        var reply: ConverseReply = try await bedrock.converse(with: builder)
+        var reply = try await bedrock.converse(with: builder)
         #expect(reply.textReply == "Image received")
 
         builder = try ConverseRequestBuilder(from: builder, with: reply)
@@ -112,7 +112,7 @@ extension BedrockServiceTests {
         #expect(docBytes == docSource)
         #expect(builder.prompt == "What is this?")
 
-        var reply: ConverseReply = try await bedrock.converse(with: builder)
+        var reply = try await bedrock.converse(with: builder)
         #expect(reply.textReply == "Document received")
 
         builder = try ConverseRequestBuilder(from: builder, with: reply)

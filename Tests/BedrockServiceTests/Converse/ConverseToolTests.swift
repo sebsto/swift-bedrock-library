@@ -28,7 +28,7 @@ extension BedrockServiceTests {
         let builder = try ConverseRequestBuilder(with: .nova_lite)
             .withPrompt("Use tool")
             .withTool(tool)
-        let reply: ConverseReply = try await bedrock.converse(with: builder)
+        let reply = try await bedrock.converse(with: builder)
         #expect(reply.textReply == nil)
         let id: String
         let name: String
@@ -57,7 +57,7 @@ extension BedrockServiceTests {
         #expect(builder.prompt! == "Use tool")
         #expect(builder.history.count == 0)
 
-        var reply: ConverseReply = try await bedrock.converse(with: builder)
+        var reply = try await bedrock.converse(with: builder)
 
         #expect(reply.textReply == nil)
 
@@ -115,7 +115,7 @@ extension BedrockServiceTests {
     func converseToolWithoutTools() async throws {
         let builder = try ConverseRequestBuilder(with: .nova_lite)
             .withPrompt("Use tool")
-        let reply: ConverseReply = try await bedrock.converse(with: builder)
+        let reply = try await bedrock.converse(with: builder)
         #expect(reply.textReply != nil)
         #expect(reply.toolUse == nil)
     }
@@ -132,7 +132,7 @@ extension BedrockServiceTests {
             .withTool(tool)
             .withToolResult("Information from tool")
 
-        let reply: ConverseReply = try await bedrock.converse(with: builder)
+        let reply = try await bedrock.converse(with: builder)
         #expect(reply.toolUse == nil)
         #expect(reply.textReply == "Tool result received")
     }

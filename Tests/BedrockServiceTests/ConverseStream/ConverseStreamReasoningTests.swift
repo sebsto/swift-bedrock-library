@@ -36,7 +36,7 @@ extension BedrockServiceTests {
         #expect(builder.maxReasoningTokens == 4096)
         #expect(builder.history.count == 0)
 
-        var stream: AsyncThrowingStream<ConverseStreamElement, Error> = try await bedrock.converse(with: builder)
+        var stream = try await bedrock.converseStream(with: builder)
         var message: Message = try await validateStream(stream, elementsCount: 6)
 
         try checkReasoningContent(message)
@@ -52,7 +52,7 @@ extension BedrockServiceTests {
         #expect(builder.maxReasoningTokens == 4096)
         #expect(builder.history.count == 2)
 
-        stream = try await bedrock.converse(with: builder)
+        stream = try await bedrock.converseStream(with: builder)
         message = try await validateStream(stream, elementsCount: 6)
 
         try checkReasoningContent(message)
@@ -69,7 +69,7 @@ extension BedrockServiceTests {
         #expect(builder.maxReasoningTokens == nil)
         #expect(builder.history.count == 4)
 
-        stream = try await bedrock.converse(with: builder)
+        stream = try await bedrock.converseStream(with: builder)
         message = try await validateStream(stream, elementsCount: 6, contentCount: 1)
         try checkTextContent(message, prompt: prompt)
         try checkReasoningContent(message, hasReasoningContent: false)

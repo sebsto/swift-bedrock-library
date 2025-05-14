@@ -301,6 +301,13 @@ public struct ConverseRequestBuilder {
         var copy = self
         if let maxTokens {
             try copy.parameters.maxTokens.validateValue(maxTokens)
+            if let maxReasoningTokens {
+                guard maxReasoningTokens < maxTokens else {
+                    throw BedrockServiceError.ConverseRequestBuilder(
+                        "maxTokens must be greater than maxReasoningTokens"
+                    )
+                }
+            }
             copy.maxTokens = maxTokens
         }
         return copy
@@ -368,7 +375,9 @@ public struct ConverseRequestBuilder {
         if enabled {
             try validateFeature(.reasoning)
             copy.enableReasoning = true
-            copy.maxReasoningTokens = self.maxReasoningTokens ?? parameters.maxReasoningTokens.defaultValue
+            copy = try copy.withMaxReasoningTokens(
+                self.maxReasoningTokens ?? parameters.maxReasoningTokens.defaultValue
+            )
         } else {
             copy.enableReasoning = false
             copy.maxReasoningTokens = nil
@@ -384,6 +393,13 @@ public struct ConverseRequestBuilder {
                 throw BedrockServiceError.ConverseRequestBuilder(
                     "Cannot set maxReasoningTokens when reasoning is disabled"
                 )
+            }
+            if let maxTokens {
+                guard maxReasoningTokens < maxTokens else {
+                    throw BedrockServiceError.ConverseRequestBuilder(
+                        "maxReasoningTokens must be less than maxTokens"
+                    )
+                }
             }
             try copy.parameters.maxReasoningTokens.validateValue(maxReasoningTokens)
             copy.maxReasoningTokens = maxReasoningTokens

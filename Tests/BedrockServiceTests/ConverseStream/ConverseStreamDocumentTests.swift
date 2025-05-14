@@ -43,7 +43,7 @@ extension BedrockServiceTests {
         #expect(builder.stopSequences == ["\n\nHuman:"])
         #expect(builder.systemPrompts == ["You are a helpful assistant."])
 
-        var stream: AsyncThrowingStream<ConverseStreamElement, any Error> = try await bedrock.converse(with: builder)
+        var stream = try await bedrock.converseStream(with: builder)
 
         // Collect all the stream elements
         var streamElements: [ConverseStreamElement] = []
@@ -80,7 +80,7 @@ extension BedrockServiceTests {
         #expect(builder.systemPrompts == ["You are a helpful assistant."])
         #expect(builder.history.count == 2)
 
-        stream = try await bedrock.converse(with: builder)
+        stream = try await bedrock.converseStream(with: builder)
         // Collect all the stream elements
         streamElements = []
         for try await element in stream {
