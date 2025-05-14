@@ -39,9 +39,8 @@ public struct MockBedrockRuntimeClient: BedrockRuntimeClientProtocol {
 
         if let additionalModelRequestFields = input.additionalModelRequestFields {
             let json: JSON = JSON(additionalModelRequestFields)
-            let thinking = JSON(json["thinking"])
-            reasoningEnabled = thinking["enabled"]
-            maxReasoningTokens = thinking["budget_tokens"]
+            reasoningEnabled = json["thinking"]?["enabled"]
+            maxReasoningTokens = json["thinking"]?["budget_tokens"]
         }
 
         if let reasoningEnabled, reasoningEnabled, let maxReasoningTokens {
