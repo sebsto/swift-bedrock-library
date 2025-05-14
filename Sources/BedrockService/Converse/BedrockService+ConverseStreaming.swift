@@ -36,7 +36,7 @@ extension BedrockService {
     ///           BedrockServiceError.invalidModality for invalid modality from the selected model
     ///           BedrockServiceError.invalidSDKResponse if the response body is missing
     /// - Returns: A stream of ConverseResponseStreaming objects
-    public func converse(
+    public func converseStream(
         with model: BedrockModel,
         conversation: [Message],
         maxTokens: Int? = nil,
@@ -143,7 +143,7 @@ extension BedrockService {
     ///   - builder: ConverseBuilder object
     /// - Throws: BedrockServiceError.invalidSDKResponse if the response body is missing
     /// - Returns: A stream of ConverseResponseStreaming objects
-    public func converse(
+    public func converseStream(
         with builder: ConverseRequestBuilder
     ) async throws -> AsyncThrowingStream<ConverseStreamElement, any Error> {
         logger.trace("Conversing and streaming")
@@ -151,7 +151,7 @@ extension BedrockService {
             var history = builder.history
             let userMessage = try builder.getUserMessage()
             history.append(userMessage)
-            let streamingResponse: AsyncThrowingStream<ConverseStreamElement, any Error> = try await converse(
+            let streamingResponse = try await converseStream(
                 with: builder.model,
                 conversation: history,
                 maxTokens: builder.maxTokens,

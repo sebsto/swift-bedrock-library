@@ -26,7 +26,7 @@ extension BedrockServiceTests {
     func converseReasoning() async throws {
         let builder = try ConverseRequestBuilder(with: .claudev3_7_sonnet)
             .withPrompt("What is this?")
-        let reply: ConverseReply = try await bedrock.converse(with: builder)
+        let reply = try await bedrock.converse(with: builder)
 
         #expect(reply.textReply == "Your prompt was: What is this?")
         #expect(reply.reasoningBlock != nil)
@@ -38,7 +38,7 @@ extension BedrockServiceTests {
     func converseEncryptedReasoning() async throws {
         let builder = try ConverseRequestBuilder(with: .claudev3_7_sonnet)
             .withPrompt("encrypted")
-        let reply: ConverseReply = try await bedrock.converse(with: builder)
+        let reply = try await bedrock.converse(with: builder)
 
         #expect(reply.textReply == "Your prompt was: encrypted")
         #expect(reply.reasoningBlock == nil)
@@ -50,7 +50,7 @@ extension BedrockServiceTests {
     func converseReasoningWrongModel() async throws {
         let builder = try ConverseRequestBuilder(with: .nova_micro)
             .withPrompt("What is this?")
-        let reply: ConverseReply = try await bedrock.converse(with: builder)
+        let reply = try await bedrock.converse(with: builder)
 
         #expect(reply.textReply == "Your prompt was: What is this?")
         #expect(reply.reasoningBlock == nil)
