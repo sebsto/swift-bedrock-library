@@ -55,7 +55,7 @@ extension BedrockTypesTests {
         #expect(json["address"]?.getValue("city") == "Anytown")
         #expect(json["address"]?.getValue("state") == "CA")
         #expect(json["address"]?.getValue("zip") == "12345")
-        #expect(json["address"]?["isSomething"] == true)
+        #expect(json["address"]?.getValue("isSomething") == true)
         #expect(json["address"]?.getValue("nonExistentKey") == nil)
     }
 
