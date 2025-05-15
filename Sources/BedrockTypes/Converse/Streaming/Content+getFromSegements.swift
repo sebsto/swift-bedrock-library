@@ -60,7 +60,7 @@ extension Content {
                         throw BedrockServiceError.streamingError(
                             "A toolUse segment was found in a contentBlock that contained multiple tools with different toolUseId"
                         )
-                    } 
+                    }
                     toolUseInput += toolUsePart.inputPart
 
                 case .encryptedReasoning(_, let data):
