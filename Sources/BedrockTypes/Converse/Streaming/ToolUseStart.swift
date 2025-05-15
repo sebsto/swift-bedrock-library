@@ -32,3 +32,22 @@ package struct ToolUseStart: Sendable {
         self.toolUseId = toolUseId
     }
 }
+
+public struct ToolUsePart: Sendable {
+    var index: Int
+    var name: String
+    var toolUseId: String
+    var inputPart: String
+
+    // init(index: Int, sdkToolUseStart: BedrockRuntimeClientTypes.ToolUseBlockStart) throws {
+    //     guard let name = sdkToolUseStart.name else {
+    //         throw BedrockServiceError.invalidSDKType("No name found in ToolUseBlockStart")
+    //     }
+    //     guard let toolUseId = sdkToolUseStart.toolUseId else {
+    //         throw BedrockServiceError.invalidSDKType("No toolUseId found in ToolUseBlockStart")
+    //     }
+    //     self.index = index
+    //     self.name = name
+    //     self.toolUseId = toolUseId
+    // }
+}

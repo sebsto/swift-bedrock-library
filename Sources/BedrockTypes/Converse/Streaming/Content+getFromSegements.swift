@@ -18,7 +18,9 @@ import Foundation
 extension Content {
     static func getFromSegements(with index: Int, from segments: [ContentSegment]) throws -> Content {
         var text = ""
-        var toolUse: ToolUseBlock? = nil
+        var toolUseName = ""
+        var toolUseId = ""
+        var toolUseInput = ""
         var reasoningText = ""
         var reasoningSignature = ""
         var encryptedReasoning: Data? = nil
@@ -39,14 +41,27 @@ extension Content {
                     reasoningText += textPart
                     reasoningSignature += signaturePart
 
-                case .toolUse(_, let toolUseBlock):
+                case .toolUse(_, let toolUsePart):
                     guard text == "" else {
                         throw BedrockServiceError.streamingError(
                             "A toolUse segment was found in a contentBlock that already contained text segments"
                         )
                     }
-                    toolUse = toolUseBlock
-                    break
+                    if toolUseName == "" {
+                        toolUseName = toolUsePart.name
+                    } else if toolUseName != toolUsePart.name {
+                        throw BedrockServiceError.streamingError(
+                            "A toolUse segment was found in a contentBlock that contained multiple tools with different toolUseName"
+                        )
+                    }
+                    if toolUseId == "" {
+                        toolUseId = toolUsePart.toolUseId
+                    } else if toolUseId != toolUsePart.toolUseId {
+                        throw BedrockServiceError.streamingError(
+                            "A toolUse segment was found in a contentBlock that contained multiple tools with different toolUseId"
+                        )
+                    } 
+                    toolUseInput += toolUsePart.inputPart
 
                 case .encryptedReasoning(_, let data):
                     guard text == "" else {
@@ -68,8 +83,8 @@ extension Content {
             return .text(text)
         } else if reasoningText != "" {
             return .reasoning(Reasoning(reasoningText, signature: reasoningSignature))
-        } else if let toolUse {
-            return .toolUse(toolUse)
+        } else if toolUseInput != "", toolUseName != "", toolUseId != "" {
+            return .toolUse(ToolUseBlock(id: toolUseId, name: toolUseName, input: JSON(toolUseInput)))
         } else if let encryptedReasoning {
             return .encryptedReasoning(EncryptedReasoning(encryptedReasoning))
         } else {

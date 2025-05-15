@@ -20,7 +20,7 @@ public enum ContentSegment: Sendable {
     case text(Int, String)
     case reasoning(Int, String, String)  // index, text, signature
     case encryptedReasoning(Int, Data)
-    case toolUse(Int, ToolUseBlock)
+    case toolUse(Int, ToolUsePart)
 
     public var index: Int {
         switch self {
@@ -75,10 +75,11 @@ public enum ContentSegment: Sendable {
             }
             self = .toolUse(
                 index,
-                ToolUseBlock(
-                    id: toolUseStart.toolUseId,
+                ToolUsePart(
+                    index: index,
                     name: toolUseStart.name,
-                    input: JSON(input)
+                    toolUseId: toolUseStart.toolUseId,
+                    inputPart: input
                 )
             )
         case .reasoningcontent(let sdkReasoningBlock):
