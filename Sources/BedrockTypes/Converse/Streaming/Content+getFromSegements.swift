@@ -84,7 +84,7 @@ extension Content {
         } else if reasoningText != "" {
             return .reasoning(Reasoning(reasoningText, signature: reasoningSignature))
         } else if toolUseInput != "", toolUseName != "", toolUseId != "" {
-            return .toolUse(ToolUseBlock(id: toolUseId, name: toolUseName, input: JSON(toolUseInput)))
+            return .toolUse(ToolUseBlock(id: toolUseId, name: toolUseName, input: try JSON(from: toolUseInput)))
         } else if let encryptedReasoning {
             return .encryptedReasoning(EncryptedReasoning(encryptedReasoning))
         } else {

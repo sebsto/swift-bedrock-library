@@ -23,7 +23,7 @@ import Testing
 extension BedrockServiceTests {
     @Test("Continue conversation with tool use")
     func converseStreamWithToolUse() async throws {
-        let tool = try Tool(name: "toolName", inputSchema: JSON(["code": "string"]), description: "toolDescription")
+        let tool = try Tool(name: "toolName", inputSchema: JSON(with: ["code": "string"]), description: "toolDescription")
         var builder = try ConverseRequestBuilder(with: .nova_lite)
             .withPrompt("Use tool")
             .withMaxTokens(100)

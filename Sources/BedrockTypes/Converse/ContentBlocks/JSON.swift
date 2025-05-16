@@ -55,7 +55,7 @@ public struct JSON: Codable, @unchecked Sendable {  // FIXME: make Sendable
 
     // MARK: Initializers
 
-    public init(_ value: Any?) {
+    public init(with value: Any?) {
         self.value = value
     }
 
@@ -87,9 +87,9 @@ public struct JSON: Codable, @unchecked Sendable {  // FIXME: make Sendable
         } else if let boolValue = try? container.decode(Bool.self) {
             self.value = boolValue
         } else if let arrayValue = try? container.decode([JSON].self) {
-            self.value = arrayValue.map { JSON($0.value) }
+            self.value = arrayValue.map { JSON(with: $0.value) }
         } else if let dictionaryValue = try? container.decode([String: JSON].self) {
-            self.value = dictionaryValue.mapValues { JSON($0.value) }
+            self.value = dictionaryValue.mapValues { JSON(with: $0.value) }
         } else {
             throw DecodingError.dataCorruptedError(in: container, debugDescription: "Unsupported type")
         }
@@ -110,10 +110,10 @@ public struct JSON: Codable, @unchecked Sendable {  // FIXME: make Sendable
         } else if let boolValue = value as? Bool {
             try container.encode(boolValue)
         } else if let arrayValue = value as? [Any] {
-            let jsonArray = arrayValue.map { JSON($0) }
+            let jsonArray = arrayValue.map { JSON(with: $0) }
             try container.encode(jsonArray)
         } else if let dictionaryValue = value as? [String: Any] {
-            let jsonDictionary = dictionaryValue.mapValues { JSON($0) }
+            let jsonDictionary = dictionaryValue.mapValues { JSON(with: $0) }
             try container.encode(jsonDictionary)
         } else {
             // try container.encode(String(describing: value ?? "nil"))
