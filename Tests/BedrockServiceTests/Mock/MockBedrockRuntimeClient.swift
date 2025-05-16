@@ -38,7 +38,7 @@ public struct MockBedrockRuntimeClient: BedrockRuntimeClientProtocol {
         var maxReasoningTokens: Int?
 
         if let additionalModelRequestFields = input.additionalModelRequestFields {
-            let json: JSON = JSON(additionalModelRequestFields)
+            let json: JSON = JSON(with: additionalModelRequestFields)
             reasoningEnabled = json["thinking"]?["enabled"]
             maxReasoningTokens = json["thinking"]?["budget_tokens"]
         }
@@ -174,7 +174,7 @@ public struct MockBedrockRuntimeClient: BedrockRuntimeClientProtocol {
 
             // Content block delta
             let contentBlockDelta = BedrockRuntimeClientTypes.ContentBlockDelta.tooluse(
-                BedrockRuntimeClientTypes.ToolUseBlockDelta(input: "tooluseinput")
+                BedrockRuntimeClientTypes.ToolUseBlockDelta(input: "{\"key\": \"ABC\"}")
             )
             let contentBlockDeltaEvent = BedrockRuntimeClientTypes.ContentBlockDeltaEvent(
                 contentBlockIndex: 0,
@@ -345,7 +345,7 @@ public struct MockBedrockRuntimeClient: BedrockRuntimeClientProtocol {
         switch content {
         case .text(let prompt):
             if prompt == "Use tool", let _ = input.toolConfig?.tools {
-                let toolInputJson = JSON(["code": "abc"])
+                let toolInputJson = JSON(with: ["code": "abc"])
                 let toolInput = try? toolInputJson.toDocument()
                 replyContent.append(
                     .tooluse(

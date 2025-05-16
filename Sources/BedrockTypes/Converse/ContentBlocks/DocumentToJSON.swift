@@ -21,26 +21,26 @@ extension SmithyDocument {
     public func toJSON() throws -> JSON {
         switch self.type {
         case .string:
-            return JSON(try self.asString())
+            return JSON(with: try self.asString())
         case .boolean:
-            return JSON(try self.asBoolean())
+            return JSON(with: try self.asBoolean())
         case .integer:
-            return JSON(try self.asInteger())
+            return JSON(with: try self.asInteger())
         case .double, .float:
-            return JSON(try self.asDouble())
+            return JSON(with: try self.asDouble())
         case .list:
             let array = try self.asList().map { try $0.toJSON() }
-            return JSON(array)
+            return JSON(with: array)
         case .map:
             let map = try self.asStringMap()
             var result: [String: JSON] = [:]
             for (key, value) in map {
                 result[key] = try value.toJSON()
             }
-            return JSON(result)
+            return JSON(with: result)
         case .blob:
             let data = try self.asBlob()
-            return JSON(data)
+            return JSON(with: data)
         default:
             throw DocumentError.typeMismatch("Unsupported type for JSON conversion: \(self.type)")
         }

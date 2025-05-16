@@ -22,10 +22,10 @@ extension BedrockTypesTests {
 
     @Test("JSON getValue")
     func jsonGetValue() async throws {
-        let json = JSON([
-            "name": JSON("Jane Doe"),
-            "age": JSON(30),
-            "isMember": JSON(true),
+        let json = JSON(with: [
+            "name": JSON(with: "Jane Doe"),
+            "age": JSON(with: 30),
+            "isMember": JSON(with: true),
         ])
         #expect(json.getValue("name") == "Jane Doe")
         #expect(json.getValue("age") == 30)
@@ -35,16 +35,16 @@ extension BedrockTypesTests {
 
     @Test("JSON getValue nested")
     func jsonGetValueNested() async throws {
-        let json = JSON([
-            "name": JSON("Jane Doe"),
-            "age": JSON(30),
-            "isMember": JSON(true),
-            "address": JSON([
-                "street": JSON("123 Main St"),
-                "city": JSON("Anytown"),
-                "state": JSON("CA"),
-                "zip": JSON("12345"),
-                "isSomething": JSON(true),
+        let json = JSON(with: [
+            "name": JSON(with: "Jane Doe"),
+            "age": JSON(with: 30),
+            "isMember": JSON(with: true),
+            "address": JSON(with: [
+                "street": JSON(with: "123 Main St"),
+                "city": JSON(with: "Anytown"),
+                "state": JSON(with: "CA"),
+                "zip": JSON(with: "12345"),
+                "isSomething": JSON(with: true),
             ]),
         ])
         #expect(json.getValue("name") == "Jane Doe")
@@ -61,10 +61,10 @@ extension BedrockTypesTests {
 
     @Test("JSON Subscript")
     func jsonSubscript() async throws {
-        let json = JSON([
-            "name": JSON("Jane Doe"),
-            "age": JSON(30),
-            "isMember": JSON(true),
+        let json = JSON(with: [
+            "name": JSON(with: "Jane Doe"),
+            "age": JSON(with: 30),
+            "isMember": JSON(with: true),
         ])
         #expect(json["name"] == "Jane Doe")
         #expect(json["age"] == 30)
@@ -74,16 +74,16 @@ extension BedrockTypesTests {
 
     @Test("JSON Subscript nested")
     func jsonSubscriptNested() async throws {
-        let json = JSON([
-            "name": JSON("Jane Doe"),
-            "age": JSON(30),
-            "isMember": JSON(true),
-            "address": JSON([
-                "street": JSON("123 Main St"),
-                "city": JSON("Anytown"),
-                "state": JSON("CA"),
-                "zip": JSON(12345),
-                "isSomething": JSON(true),
+        let json = JSON(with: [
+            "name": JSON(with: "Jane Doe"),
+            "age": JSON(with: 30),
+            "isMember": JSON(with: true),
+            "address": JSON(with: [
+                "street": JSON(with: "123 Main St"),
+                "city": JSON(with: "Anytown"),
+                "state": JSON(with: "CA"),
+                "zip": JSON(with: 12345),
+                "isSomething": JSON(with: true),
             ]),
         ])
         #expect(json["name"] == "Jane Doe")
